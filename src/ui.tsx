@@ -1,0 +1,20 @@
+import type { ReactNode } from 'react';
+import { Button as RadixButton, Badge as RadixBadge } from '@radix-ui/themes';
+import * as Dialog from '@radix-ui/react-dialog';
+import { X, ArrowUpRight, MagnifyingGlass, Tray } from '@phosphor-icons/react';
+
+export function Button({children, onClick, primary=false, quiet=false, disabled=false, type='button', className='', title}: {children: ReactNode; onClick?:()=>void; primary?:boolean; quiet?:boolean; disabled?:boolean; type?:'button'|'submit'; className?:string; title?:string}) {
+  return <RadixButton type={type} disabled={disabled} onClick={onClick} size="2" variant={primary?'solid':quiet?'ghost':'outline'} className={`button ${className}`} title={title}>{children}</RadixButton>;
+}
+export function Badge({children, tone='gray'}:{children:ReactNode; tone?:'green'|'amber'|'red'|'gray'|'blue'}) {return <RadixBadge color={{green:'jade',amber:'amber',red:'red',gray:'gray',blue:'blue'}[tone] as 'jade'} variant="soft" radius="medium" className="badge">{children}</RadixBadge>;}
+export function Panel({children,className=''}:{children:ReactNode;className?:string}) {return <section className={`panel ${className}`}>{children}</section>;}
+export function PanelHead({title,description,action}:{title:string;description?:string;action?:ReactNode}) {return <div className="panel-head"><div><h2>{title}</h2>{description&&<p>{description}</p>}</div>{action}</div>;}
+export function PageHead({eyebrow,title,description,actions}:{eyebrow:string;title:string;description:string;actions?:ReactNode}) {return <div className="page-head"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{description}</p></div><div className="page-actions">{actions}</div></div>;}
+export function Modal({open,onClose,title,description,children,wide=false}:{open:boolean;onClose:()=>void;title:string;description?:string;children:ReactNode;wide?:boolean}) {return <Dialog.Root open={open} onOpenChange={value=>!value&&onClose()}><Dialog.Portal><Dialog.Overlay className="modal-overlay"/><Dialog.Content className={`modal ${wide?'wide':''}`}><div className="modal-header"><div><Dialog.Title>{title}</Dialog.Title><Dialog.Description>{description||'查看并操作当前项目'}</Dialog.Description></div><Dialog.Close className="icon-button" aria-label="关闭窗口"><X size={20}/></Dialog.Close></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;}
+export function Empty({title='没有匹配的记录',description='试试调整筛选条件，或创建一条新记录。',action}:{title?:string;description?:string;action?:ReactNode}) {return <div className="empty"><Tray size={34} weight="duotone"/><h3>{title}</h3><p>{description}</p>{action}</div>;}
+export function SearchInput({value,onChange,placeholder='搜索名称、编号或关键词'}:{value:string;onChange:(value:string)=>void;placeholder?:string}) {return <div className="search-input"><MagnifyingGlass size={17}/><input aria-label={placeholder} placeholder={placeholder} value={value} onChange={event=>onChange(event.target.value)}/>{value&&<button onClick={()=>onChange('')} aria-label="清除搜索"><X size={14}/></button>}</div>;}
+export function DateText({value}:{value:string}) {return <time dateTime={value}>{new Date(value).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}</time>;}
+export function ExternalLink({href,children}:{href:string;children:ReactNode}) {return <a href={href} target="_blank" rel="noreferrer" className="text-link">{children}<ArrowUpRight size={14}/></a>;}
+export function Status({status}:{status:string}) {const labels:Record<string,string>={completed:'已完成',running:'运行中',failed:'运行失败',cancelled:'已取消',todo:'待处理',progress:'优化中',verify:'待验收',done:'已验收'};return <Badge tone={['completed','done'].includes(status)?'green':status==='failed'?'red':['running','verify','progress'].includes(status)?'amber':'gray'}><span className={`status-dot ${status==='running'?'pulse':''}`}/>{labels[status]||status}</Badge>;}
+export const percent = (value:number|undefined) => value===undefined ? '待评测' : value.toFixed(1);
+export const number = (value:number) => new Intl.NumberFormat('zh-CN').format(value);

@@ -1,0 +1,80 @@
+[
+  {
+    "name": "promptfoo",
+    "repository": "promptfoo/promptfoo",
+    "url": "https://github.com/promptfoo/promptfoo",
+    "stars": 25853,
+    "forks": 2452,
+    "subscribers": 77,
+    "license": "MIT",
+    "description": "Test your prompts, agents, and RAGs. Red teaming/pentesting/vulnerability scanning for AI. Compare performance of GPT, Claude, Gemini, DeepSeek, and more. Simple declarative configs with command line and CI/CD integration.  Used by OpenAI and Anthropic.",
+    "borrowed": "声明式测试用例、断言和模型回归对比",
+    "checkedAt": "2026-10-10T03:07:55.877Z",
+    "source": "https://api.github.com/repos/promptfoo/promptfoo"
+  },
+  {
+    "name": "deepeval",
+    "repository": "confident-ai/deepeval",
+    "url": "https://github.com/confident-ai/deepeval",
+    "stars": 18725,
+    "forks": 2038,
+    "subscribers": 70,
+    "license": "Apache-2.0",
+    "description": "The LLM Evaluation Framework",
+    "borrowed": "模块化评估器、指标阈值和测试报告",
+    "checkedAt": "2026-10-10T03:07:56.756Z",
+    "source": "https://api.github.com/repos/confident-ai/deepeval"
+  },
+  {
+    "name": "langfuse",
+    "repository": "langfuse/langfuse",
+    "url": "https://github.com/langfuse/langfuse",
+    "stars": 35581,
+    "forks": 3957,
+    "subscribers": 114,
+    "license": "NOASSERTION",
+    "description": "🪢 Open source agent evals & observability: Trace, evaluate, and improve LLM applications with one open platform.",
+    "borrowed": "交互追踪、用户反馈与评测集的关联",
+    "checkedAt": "2026-10-10T03:07:57.384Z",
+    "source": "https://api.github.com/repos/langfuse/langfuse"
+  },
+  {
+    "name": "ragas",
+    "repository": "explodinggradients/ragas",
+    "url": "https://github.com/vibrantlabsai/ragas",
+    "stars": 15979,
+    "forks": 1752,
+    "subscribers": 66,
+    "license": "Apache-2.0",
+    "description": "Supercharge Your LLM Application Evaluations 🚀",
+    "borrowed": "RAG 检索与生成质量分开评估",
+    "checkedAt": "2026-10-10T03:07:58.946Z",
+    "source": "https://api.github.com/repos/explodinggradients/ragas"
+  },
+  {
+    "name": "opencompass",
+    "repository": "open-compass/opencompass",
+    "url": "https://github.com/open-compass/opencompass",
+    "stars": 7504,
+    "forks": 882,
+    "subscribers": 30,
+    "license": "Apache-2.0",
+    "description": "OpenCompass is an LLM evaluation platform, supporting a wide range of models from OpenAI, Anthropic, Gemini, Qwen, GLM, DeepSeek, etc, across 100+ datasets covering knowledge, reasoning, coding, science, language, long-context, and safety.",
+    "borrowed": "评测集版本、任务配置和多维度能力评估",
+    "checkedAt": "2026-10-10T03:07:59.901Z",
+    "source": "https://api.github.com/repos/open-compass/opencompass"
+  },
+  {
+    "name": "lm-evaluation-harness",
+    "repository": "EleutherAI/lm-evaluation-harness",
+    "url": "https://github.com/EleutherAI/lm-evaluation-harness",
+    "stars": 14170,
+    "forks": 3658,
+    "subscribers": 55,
+    "license": "MIT",
+    "description": "A framework for few-shot evaluation of language models.",
+    "borrowed": "固定样本、统一配置与可复现评测",
+    "checkedAt": "2026-10-10T03:08:00.799Z",
+    "source": "https://api.github.com/repos/EleutherAI/lm-evaluation-harness"
+  }
+]

@@ -1,0 +1,6 @@
+scikit-learn==1.6.1
+numpy==2.0.2
+scipy==1.13.1
+joblib==1.5.3
+threadpoolctl==3.7.0
+Pillow==11.3.0

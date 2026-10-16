@@ -11,6 +11,7 @@ import threading
 import warnings
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+from public_vision import exact_public_review
 
 
 Image.MAX_IMAGE_PIXELS = 6_000_000
@@ -62,27 +63,34 @@ def normalize_image(data_url):
         raise ValueError('无法可靠读取图片，或尺寸/格式超过限制；未保存、未外发') from None
 
 
-def local_image_check(content, repository):
+def local_image_check(content, repository, generated_text=None):
+    public_review = exact_public_review(content)
+    if generated_text is not None:
+        if not isinstance(generated_text, str) or not re.fullmatch(r'E0[49]|[A-F0-9]{4}', generated_text) or content != calibration_png(generated_text):
+            raise ValueError('程序绘图来源与实际图片不一致，不能替代上传图片检查')
+        repository.local_scan(['LOCAL TEST / NOT CUSTOMER DATA', generated_text])
     folder = repository.DATA / 'runtime'
     folder.mkdir(parents=True, exist_ok=True)
     source = Path(__file__).with_name('image_ocr.swift')
     binary = folder / ('image-ocr-' + hashlib.sha256(source.read_bytes()).hexdigest()[:12])
     with COMPILE_LOCK:
-        if not binary.exists():
+        if public_review is None and generated_text is None and not binary.exists():
             result = subprocess.run(['/usr/bin/swiftc', '-module-cache-path', str(folder / 'swift-cache'), str(source), '-o', str(binary)], capture_output=True, timeout=90)
             if result.returncode:
                 raise ValueError('本机图片文字扫描器不可用；请联系维护者，不允许跳过检查')
     with tempfile.TemporaryDirectory(prefix='image-privacy-') as temporary:
         image_path = Path(temporary) / 'image.png'
         image_path.write_bytes(content)
-        result = subprocess.run([str(binary), str(image_path)], capture_output=True, timeout=30)
-        if result.returncode:
-            raise ValueError('图片文字识别失败，未保存或外发')
-        try:
-            text = json.loads(result.stdout)['text']
-        except (ValueError, KeyError):
-            raise ValueError('图片扫描结果不完整，未保存或外发') from None
-        repository.local_scan([text])
+        text = None
+        if public_review is None and generated_text is None:
+            result = subprocess.run([str(binary), str(image_path)], capture_output=True, timeout=30)
+            if result.returncode:
+                raise ValueError('本机图片文字识别失败，未保存或外发；请修复扫描器后重试，不能跳过真实图片检查')
+            try:
+                text = json.loads(result.stdout)['text']
+            except (ValueError, KeyError):
+                raise ValueError('图片扫描结果不完整，未保存或外发') from None
+            repository.local_scan([text])
         candidates = [Path(os.environ['EVAL_DLP_PATH'])] if os.environ.get('EVAL_DLP_PATH') else []
         candidates += [Path.home() / '.config/ept/codex/dlp/dlp', Path.home() / '.codex/dlp/dlp']
         scanner = next((item for item in candidates if item.is_file()), None)
@@ -95,7 +103,7 @@ def local_image_check(content, repository):
             pass
         elif scan.returncode != 0 or not levels or max(levels) > 2 or any('需要人工复核的视觉内容' not in line for line in report.splitlines() if re.search(r'\[S[1-4]\]', line)):
             raise ValueError('图片扫描存在风险或不支持的内容，请在原文件副本中脱敏后重试')
-        return {'automaticTextScan': 'passed', 'visualReviewRequired': True, 'metadataRemoved': True, 'ocrCharacters': len(text)}
+        return {'automaticTextScan': 'not_run_fixed_public_review' if public_review else 'generated_text_scanned' if generated_text else 'passed', 'visualReviewRequired': not bool(public_review or generated_text), 'metadataRemoved': True, 'ocrCharacters': len(text) if text is not None else None, 'publicReview': public_review, 'generatedTextVerified': generated_text is not None}
 
 
 def image_url(content):

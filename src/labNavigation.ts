@@ -24,7 +24,7 @@ export function comparableRuns(left: RunSummary, right: RunSummary) {
 }
 
 export function runUrl(page: string, runId = rememberedRun()) {
-  return `#${page}${runId ? `?run=${encodeURIComponent(runId)}` : ''}`;
+  return `#${page}${runId ? `?run=${encodeURIComponent(runId)}${page === 'compare' ? '&panel=results' : ''}` : ''}`;
 }
 
 export function runFromHash() {

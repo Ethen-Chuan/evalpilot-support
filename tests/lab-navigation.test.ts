@@ -44,3 +44,9 @@ test('trace return recognizes image batches and rejects invalid identifiers', ()
     assert.equal(runFromHash(), expected);
   }
 });
+
+test('comparison links explicitly open historical results without changing other destinations', () => {
+  assert.equal(runUrl('compare', original.id), '#compare?run=EVAL-ORIGINAL&panel=results');
+  assert.equal(runUrl('compare', ''), '#compare');
+  assert.equal(runUrl('benchmark', original.id), '#benchmark?run=EVAL-ORIGINAL');
+});

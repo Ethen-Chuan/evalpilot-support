@@ -1,13 +1,17 @@
-# EvalPilot Support
+# EvalPilot · 模型评测平台
 
-本机运行的售后客服评测平台：完整对话阅读、Agent Trace、图文模型对比、转人工拦截指标、人工复核与同批重跑。
+本机运行的模型评测平台，当前以售后客服场景为基础：完整对话阅读、Agent Trace、图文模型对比、转人工拦截指标、人工复核与同批重跑。
+
+「项目集」是平台级入口，每张卡片对应一个实际导入的业务项目，售后客服不是平台名称。现有行为基线和转人工拦截指标面向售后场景；其他业务需另行准备数据、规则与评测标准，不能直接套用售后结论。
 
 **这是不含客户数据的源码发布版。** 首次启动没有真实售后项目、已训练版本或外部模型成绩；不包含原工作区的数据库、客户图片、训练模型、密钥和历史分数。自建校验图文需在页面主动创建，不冒充客户数据。
 
 ## 能做什么
 
+- 文本页直接选择模型A/B、添加连接并弹窗输入Key；新建同批对比与查看已有结果分开。
 - 使用同一图片、问题和政策，对比不同厂商，或同厂商两个不同模型版本。
-- 支持 OpenAI / Anthropic 官方接口，密钥在弹窗输入，只存本机服务内存；视觉模型必须先通过真实图像读取测试。
+- 结果大盘提供质检复核环图、动态模型曲线、意图树与DSAT证据归因；实验支持搜索、收藏、归档与恢复。
+- 支持 OpenAI / Anthropic / DeepSeek 官方接口，密钥在弹窗输入，只存本机服务内存；视觉模型必须先通过真实图像读取测试。
 - 记录图片指纹、模型调用、路由建议、裁判证据和人工修订，支持 Trace 追溯。
 - 展示有效拦截率、错误拦截、必要转人工召回、视觉正确率、评审覆盖、失败和未执行数量。
 - 按数量或手动选择案例重跑，原批次不覆盖；比较只接受相同案例与评测条件。
@@ -40,7 +44,7 @@ EVAL_DLP_PATH=/absolute/path/to/dlp npm start
 ## 五步体验图文评测
 
 1. 在「模型对比」切换到「图文与转人工拦截」。
-2. 添加已脱敏真实图片与业务标注，或明确选择「4 个自建校验案例」。真实来源与校验来源不混跑。
+2. 添加获授权的脱敏真实图片，或主动准备24张已审核公开板卡照片及改编题目；也可选择4个自建校验案例。三种来源不混跑，公开素材保留署名与许可。
 3. 点击「添加模型 / 输入 Key」，创建两个不同模型 ID 的连接。分别授权并通过「测试图像读取」。此步骤和之后的模型运行可能收费。
 4. 选择同一个裁判，或保持人工复核；选案例数量，核对发送范围并授权运行。
 5. 看拦截大盘与逐例回复，打开 Trace，人工复核，再按数量重跑或比较。
@@ -61,13 +65,16 @@ EVAL_DLP_PATH=/absolute/path/to/dlp npm start
 - [本地行为训练与比较](docs/AGENT_LAB.md)
 - [Agent Trace SDK](docs/TRACE_INTEGRATION.md)
 - [完整对话与知识沉淀](docs/CONVERSATION_KNOWLEDGE.md)
+- [体验大盘与RCA接口](docs/EXPERIENCE_INTEGRATION.md)
+- [模型选择与同批对比验证](docs/MODEL_SELECTION_20261015_VERIFICATION.md)
+- [公开图片署名](backend/public_vision/ATTRIBUTION.md)
 - [源码发布检查](docs/RELEASE_CHECKS.md)
 
 ## 检查
 
 ```sh
 npm run build
-node --test tests/lab-navigation.test.ts
+node --test tests/lab-navigation.test.ts tests/comparison-selection.test.ts
 .venv/bin/python -m unittest discover -s tests -p test_multimodal.py -v
 .venv/bin/python -m unittest discover -s tests -v
 ```

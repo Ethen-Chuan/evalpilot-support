@@ -1,0 +1,69 @@
+.experiment-current { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.experiment-current-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px; background: var(--accent-soft); color: var(--accent-text); }
+.experiment-current-info { min-width: 0; flex: 1; }
+.experiment-current-info > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.experiment-eyebrow { color: var(--muted); font-size: 12px; }
+.experiment-current h3 { margin: 9px 0 6px; font-size: 17px; font-weight: 600; line-height: 1.6; overflow-wrap: anywhere; }
+.experiment-current p { margin: 0; font-size: 12px; line-height: 1.8; color: var(--secondary); }
+.experiment-current .experiment-current-note { margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.experiment-current-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.experiment-current-actions > span { font-size: 11px; color: var(--muted); }
+.experiment-manager { display: grid; gap: 16px; font-size: 13px; }
+.experiment-scopes { display: flex; gap: 8px; border-bottom: 1px solid var(--line); }
+.experiment-scopes button { display: flex; align-items: center; gap: 8px; padding: 12px 13px; border-bottom: 2px solid transparent; color: var(--secondary); font-size: 13px; }
+.experiment-scopes button[aria-pressed="true"] { color: var(--accent-text); border-bottom-color: var(--accent); font-weight: 600; }
+.experiment-scopes span { border-radius: 5px; padding: 2px 6px; background: var(--subtle); font-size: 11px; font-variant-numeric: tabular-nums; }
+.experiment-filters { display: flex; gap: 10px; padding: 0; margin: 0; border: 0; min-width: 0; }
+.experiment-filters .search-input { flex: 1; min-width: 160px; }
+.experiment-filters input { width: 100%; min-width: 0; }
+.experiment-filters select { max-width: 150px; padding: 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 12px; }
+.experiment-list-toolbar { min-height: 32px; display: flex; align-items: center; gap: 16px; color: var(--muted); font-size: 12px; }
+.experiment-list-toolbar label { display: flex; gap: 8px; align-items: center; }
+.experiment-list-toolbar > .button { margin-left: auto; }
+.experiment-refresh { margin-left: auto; }
+.experiment-list { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-height: 420px; overflow-y: auto; min-height: 120px; }
+.experiment-row { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
+.experiment-row:last-child { border-bottom: 0; }
+.experiment-row:hover { background: var(--subtle); }
+.experiment-row.is-current { box-shadow: inset 3px 0 var(--accent); background: var(--accent-soft); }
+.experiment-row > input { margin-top: 7px; }
+.experiment-row-body { flex: 1; min-width: 0; }
+.experiment-row-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.experiment-open { text-align: left; font-size: 14px; font-weight: 600; line-height: 1.7; color: var(--ink); padding: 0; overflow-wrap: anywhere; }
+.experiment-open:hover { color: var(--accent-text); text-decoration: underline; text-underline-offset: 4px; }
+.experiment-row p { margin: 6px 0; color: var(--secondary); font-size: 12px; line-height: 1.8; }
+.experiment-row p > span { display: block; }
+.experiment-row code { font-size: 10px; color: var(--muted); }
+.experiment-row .experiment-row-note { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+.experiment-row-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.experiment-row-actions .icon-button { width: 32px; height: 32px; }
+.experiment-row-actions [aria-pressed="true"] { color: var(--warning); }
+.experiment-manager input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; }
+.experiment-manager button:focus-visible, .experiment-manager input:focus-visible, .experiment-manager textarea:focus-visible, .experiment-manager select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.experiment-manager button:disabled { cursor: not-allowed; opacity: .5; }
+.experiment-editor, .experiment-confirm { padding: 18px; border: 1px solid var(--accent-line); background: var(--subtle); border-radius: 8px; }
+.experiment-editor h3, .experiment-confirm h3 { font-size: 15px; margin: 0 0 8px; }
+.experiment-editor p, .experiment-confirm p { color: var(--secondary); font-size: 12px; line-height: 1.8; margin: 0 0 14px; }
+.experiment-editor label { display: grid; gap: 8px; margin: 12px 0; }
+.experiment-editor input, .experiment-editor textarea { width: 100%; min-width: 0; padding: 10px 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 6px; font: inherit; line-height: 1.8; }
+.experiment-editor textarea { resize: vertical; }
+.experiment-editor-actions { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; }
+.experiment-editor-actions > span { margin-right: auto; font-size: 11px; color: var(--muted); }
+.experiment-notice { padding: 10px 14px; margin: 0; color: var(--accent-text); background: var(--accent-soft); border-radius: 6px; line-height: 1.8; }
+.experiment-pagination { display: flex; align-items: center; gap: 12px; color: var(--secondary); font-size: 12px; font-variant-numeric: tabular-nums; }
+.experiment-pagination > span:first-child { margin-right: auto; }
+.experiment-loading { padding: 24px; text-align: center; color: var(--muted); }
+.experiment-history-date { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+@media (max-width: 760px) {
+  .experiment-current { align-items: flex-start; flex-wrap: wrap; }
+  .experiment-current-actions { width: 100%; justify-content: space-between; }
+  .experiment-filters { flex-wrap: wrap; }
+  .experiment-filters .search-input { flex-basis: 100%; }
+  .experiment-filters select { flex: 1; max-width: none; }
+  .experiment-row { gap: 8px; padding: 12px; }
+  .experiment-row-actions { flex-direction: column; }
+  .experiment-scopes { gap: 0; }
+  .experiment-scopes button { padding: 10px 8px; }
+  .experiment-pagination { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .experiment-pagination > span:first-child { flex-basis: 100%; }
+}

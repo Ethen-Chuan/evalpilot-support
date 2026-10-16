@@ -101,3 +101,8 @@ python -m sdk.example_agent
 默认掩码凭证字段、常见凭证字符串、邮箱、长数字和本机用户名路径；没有能力可靠识别所有人名、地址、客户名称和语义敏感内容。分享导出物前仍需人工复核。扫描器缺失时拒绝新的自由文本持久化，不承诺绝对安全。
 
 当前没有自动采集任意 Agent、浏览器操作录屏、跨服务 `traceparent` 传播、OTLP、鉴权、权限隔离、审计签名、自动保留期或生产规模查询优化。仅保存在本机，适合验证，不可原样暴露到公网。Trace 记录可观察的执行证据，不记录模型隐藏推理过程。
+# 业务分类与耗时说明（2026-10-14）
+
+列表支持`category=training/text_eval/vision_eval/chat/quality/rca/external/other`，可与`q/status/source/minMs/page`组合。搜索同时支持批次编号。`categories`计数应用除分类本身外的当前条件；`stats`与列表应用全部筛选，`total`不是当前页条数。分类根据实际埋点来源映射，外部上报始终归入external，不因伪装source被认作本机执行。
+
+列表和详情提供category/categoryName/sourceName/batchId/durationScope。durationMs为埋点范围的墙钟起止差，不是原始业务会话总时长；父子span有包含关系，不能相加。训练任务可能包括回放，详情展示执行树。人工复核/归因Trace只记录提交中的局部处理，不含人类调查时间。未记录结束耗时为null，不把服务中断显示为仍在运行。外部耗时是上报方声明。

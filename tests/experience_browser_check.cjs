@@ -1,0 +1,124 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const { createRequire } = require('node:module');
+const runtime = process.env.PLAYWRIGHT_PACKAGE_ROOT ? createRequire(process.env.PLAYWRIGHT_PACKAGE_ROOT + '/package.json') : require;
+const { chromium } = runtime('playwright');
+
+async function check() {
+  const base = process.env.EVAL_BROWSER_BASE || 'http://127.0.0.1:4290';
+  const output = process.env.EVAL_BROWSER_OUTPUT || '/private/tmp/experience-browser-output';
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await context.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  try {
+    await page.goto(base + '/#overview');
+    await page.getByRole('heading', { name: '结果大盘', exact: true }).waitFor();
+    assert.equal(await page.locator('.learning-score > strong').count(), 3);
+    await page.getByLabel('真实回放数量').fill('5');
+    await page.getByRole('button', { name: '学习并回放', exact: true }).click();
+    await page.getByText('已完成独立测试 · 5/5 条', { exact: true }).waitFor();
+    assert.equal(await page.locator('.learning-results tbody tr').count(), 5);
+    await page.getByRole('button', { name: '质检复核' }).click();
+    assert.equal(await page.locator('.cx-review-table tbody tr').count(), 3);
+    await page.getByRole('button', { name: '查看沿用规则' }).click();
+    assert.equal(await page.locator('.cx-rules section').count(), 7);
+    await page.getByRole('button', { name: '关闭窗口' }).click();
+    await page.getByRole('button', { name: '查看与复核' }).first().click();
+    const dialog = page.getByRole('dialog');
+    assert.equal(await dialog.getByRole('button', { name: '保存人工复核' }).isDisabled(), true);
+    for (const select of await dialog.locator('.cx-verdicts select').all()) await select.selectOption('clear');
+    await dialog.getByLabel('服务闭环完整', { exact: true }).selectOption('violated');
+    await dialog.getByLabel('复核人（匿名代号）').fill('reviewer-test');
+    await dialog.getByLabel('可核查依据及核实范围').fill('隔离测试，已核实维度适用条件和证据。');
+    await dialog.getByRole('checkbox').check();
+    await dialog.getByRole('button', { name: '保存人工复核' }).click();
+    await dialog.waitFor({ state: 'hidden' });
+    await page.getByText('85分 · 已确认', { exact: true }).waitFor();
+    await page.getByRole('button', { name: '查看与复核' }).first().click();
+    await dialog.getByText('查看1次历史复核', { exact: true }).click();
+    await dialog.getByRole('button', { name: '复核Trace' }).click();
+    await page.getByRole('link', { name: '返回结果大盘' }).click();
+    await page.getByRole('button', { name: '全选当前3条' }).click();
+    await page.getByRole('button', { name: '裁判重跑 · 已选3条' }).click();
+    await dialog.getByRole('button', { name: '添加连接 / 输入API Key' }).click();
+    assert.equal(await page.getByRole('dialog').locator('input[type=password]').count(), 1);
+    await page.getByRole('dialog').getByRole('button', { name: '关闭', exact: true }).click();
+    await dialog.getByLabel('运行数量（已选3条）').fill('2');
+    await dialog.getByLabel('裁判模型连接').selectOption({ index: 1 });
+    assert.equal(await dialog.getByRole('button', { name: '开始裁判重跑' }).isDisabled(), true);
+    await dialog.getByRole('checkbox').check();
+    await dialog.getByRole('button', { name: '开始裁判重跑' }).click();
+    await dialog.waitFor({ state: 'hidden' });
+    await page.getByText('已结束 · 2/2', { exact: true }).waitFor({ timeout: 60000 });
+    await page.locator('.cx-run summary').first().click();
+    assert.equal(await page.getByText('证据不足，未给总分', { exact: true }).count(), 2);
+    await page.getByRole('button', { name: 'DSAT归因', exact: true }).click();
+    await page.getByRole('button', { name: '查看与归因' }).first().click();
+    await dialog.getByRole('button', { name: '2. 逐项排查' }).click();
+    await dialog.getByLabel('工具调用失败排查结论', { exact: true }).selectOption('supported');
+    await dialog.getByLabel('工具调用失败 · 证据依据', { exact: true }).fill('隔离测试日志支持工具失败。');
+    await dialog.getByRole('button', { name: '3. 归因与行动' }).click();
+    await dialog.getByLabel('主因（待归因阶段仅为候选）').selectOption('tool');
+    await dialog.getByLabel('定位证据与排除依据').fill('隔离测试接口错误证据，已排除策略问题。');
+    await dialog.getByLabel('反事实检查').fill('只修复接口后仍需验证问题是否解决。');
+    await dialog.getByLabel('改进动作与验收标准').fill('修复接口并回归异常路径。');
+    await dialog.getByLabel('处理状态').selectOption('fixing');
+    await dialog.getByLabel('归因复核人（匿名代号）').fill('reviewer-test');
+    await dialog.getByLabel('我已核实主因与促成因素的支持证据；这是人工结论，不是系统自动定责。').check();
+    await dialog.getByRole('button', { name: '保存归因与行动' }).click();
+    await dialog.waitFor({ state: 'hidden' });
+    await page.getByLabel('归因状态', { exact: true }).selectOption('fixing');
+    await page.getByRole('button', { name: '查看与归因' }).click();
+    await dialog.getByRole('button', { name: '3. 归因与行动' }).click();
+    await dialog.getByLabel('处理状态').selectOption('verified');
+    await dialog.getByLabel('实际回归证据').fill('隔离测试的实际UI操作结果已验证。');
+    await dialog.getByLabel('我已核实主因与促成因素的支持证据；这是人工结论，不是系统自动定责。').check();
+    await dialog.getByRole('button', { name: '保存归因与行动' }).click();
+    await dialog.waitFor({ state: 'hidden' });
+    await page.getByLabel('归因状态', { exact: true }).selectOption('verified');
+    await page.locator('.cx-rca-list').getByText('人工回归已验收', { exact: true }).waitFor();
+    await page.getByRole('button', { name: '意图树', exact: true }).click();
+    assert.equal(await page.locator('.intent-leaf').count(), 9);
+    await page.locator('.intent-message.user p').waitFor();
+    assert.equal(await page.locator('.intent-detail a[href*="intent=fault_repair"]').count(), 1);
+    await page.getByRole('button', { name: '业务指标', exact: true }).click();
+    await page.getByRole('button', { name: '线上业务结果' }).click();
+    await page.getByRole('button', { name: '接入业务结果', exact: true }).first().click();
+    await dialog.getByLabel('业务结果JSON').fill('{invalid');
+    await dialog.getByRole('checkbox').check();
+    await dialog.getByRole('button', { name: '校验并导入' }).click();
+    await dialog.getByRole('alert').waitFor();
+    const record = { id: 'ANON-UI-TEST', environment: 'sandbox', source: '隔离测试来源', evidence: '隔离测试构造结果，不是真实生产数据', startedAt: '2026-09-01T01:00:00Z', closedAt: '2026-09-01T02:00:00Z', observedUntil: '2026-09-04T02:00:00Z', resolved: true, recontact: false, handoff: false, mustHandoff: false, unsafe: false, answered: true, ticketResolved: true, rating: 1, tools: [], form: null, quality: null };
+    await dialog.getByLabel('业务结果JSON').fill(JSON.stringify({ records: [record] }));
+    await dialog.getByRole('button', { name: '校验并导入' }).click();
+    await dialog.waitFor({ state: 'hidden' });
+    await page.getByRole('button', { name: '线上业务结果' }).click();
+    await page.getByText(/沙箱 1 通/).waitFor();
+    assert.equal(await page.locator('.production-onboarding').count(), 1);
+    const state = await (await context.request.get(base + '/api/support/experience/state')).json();
+    assert.equal(state.qualityCounts.confirmed, 1);
+    assert.equal(state.qualityRuns[0].total, 2);
+    assert.equal(state.rcaAnalytics.dsat.total, 0);
+    assert.ok(state.rcaAnalytics.signals.total > 1);
+    assert.equal(state.metrics.sessions, 0);
+    await fs.mkdir(output, { recursive: true });
+    await page.screenshot({ path: output + '/isolated-business.png', fullPage: true });
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      for (const tab of ['业务指标', '质检复核', 'DSAT归因', '意图树']) {
+        await page.getByRole('button', { name: tab, exact: tab !== '质检复核' }).click();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `Overflow at ${width} on ${tab}`);
+      }
+    }
+    await page.screenshot({ path: output + '/isolated-mobile.png', fullPage: true });
+    assert.deepEqual(errors, []);
+    console.log(JSON.stringify({ passed: true, tested: ['tabs', 'rules', 'manual review', 'trace return', 'key dialog', 'counted judge stub', 'RCA verification', 'intent tree', 'invalid JSON', 'sandbox exclusion', 'desktop and mobile'], externalCalls: false }));
+  } finally {
+    await browser.close();
+  }
+}
+
+check().catch(error => { console.error(error); process.exitCode = 1; });

@@ -10,12 +10,31 @@
 .mm-workspace .form-field select { width:100%; max-width:100%; }
 .mm-workspace .lab-selection .form-field { max-width:340px; }
 .mm-workspace .lab-selection input[type=number] { width:100px; }
-.mm-case-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; max-height:340px; overflow:auto; }
-.mm-case { display:flex; align-items:flex-start; gap:12px; border:1px solid var(--line); border-radius:10px; padding:16px; cursor:pointer; }
+.mm-case-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(225px,1fr)); gap:16px; }
+.mm-case { display:flex; flex-direction:column; border:1px solid var(--line); border-radius:12px; overflow:hidden; min-width:0; background:var(--surface); }
 .mm-case.selected { border-color:var(--accent); background:var(--accent-soft); }
-.mm-case > span { flex:1; min-width:0; }
-.mm-case strong,.mm-case small { display:block; }
-.mm-case small { color:var(--secondary); margin:8px 0 12px; line-height:1.6; }
+.mm-photo-button { width:100%; padding:0; text-align:left; color:var(--ink); }
+.mm-photo-button > span { display:block; padding:9px 16px; font-size:12px; color:var(--accent-text); border-bottom:1px solid var(--line); }
+.mm-photo-frame { position:relative; display:grid; place-items:center; height:180px; background:var(--subtle); padding:14px; }
+.mm-photo-frame img { width:100%; height:152px; object-fit:contain; }
+.mm-photo-frame > span { display:flex; align-items:center; gap:8px; color:var(--secondary); font-size:12px; }
+.mm-photo-loading { position:absolute; inset:0; justify-content:center; background:var(--subtle); pointer-events:none; }
+.mm-case-copy { display:flex; flex-direction:column; gap:12px; padding:16px; flex:1; }
+.mm-case-copy label { display:flex; align-items:flex-start; gap:9px; cursor:pointer; font-size:13px; line-height:1.65; }
+.mm-case-copy input { margin-top:4px; flex-shrink:0; }
+.mm-case-copy p { color:var(--secondary); font-size:12px; line-height:1.8; margin:0; }
+.mm-case-copy > div { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; }
+.mm-case-copy small { color:var(--secondary); font-size:11px; }
+.mm-source-context { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; border:1px solid var(--line); border-radius:8px; background:var(--subtle); }
+.mm-source-context .badge { flex-shrink:0; margin-top:3px; }
+.mm-source-context p { font-size:13px; color:var(--secondary); line-height:1.75; margin:0; }
+.mm-inventory-note { font-size:12px; color:var(--secondary); line-height:1.9; margin-top:12px; }
+.mm-inventory-note summary { cursor:pointer; }
+.mm-inventory-note p { max-width:850px; margin:8px 0; }
+.mm-attribution { font-size:12px; color:var(--secondary); line-height:1.7; margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+.mm-attribution p { font-size:12px; margin:8px 0; }
+.mm-attribution a { display:inline-block; margin-right:14px; color:var(--accent-text); }
+.mm-attribution details { margin-top:12px; }
 .mm-connections { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px; }
 .mm-connections button { display:flex; gap:12px; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:10px 13px; cursor:pointer; color:var(--ink); }
 .mm-select-models { display:grid; grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr); gap:18px; align-items:center; }
@@ -46,3 +65,8 @@
 .mm-import-preview img { display:block; max-width:100%; max-height:260px; margin:15px auto; }
 .mm-workspace input[type=checkbox] { accent-color:var(--accent); }
 @media(max-width:850px) { .mm-case-grid,.mm-replies,.mm-material,.mm-select-models,.mm-review-fields { grid-template-columns:1fr; } .mm-select-models > svg { display:none; } .mm-workspace .lab-section-head { align-items:flex-start; flex-direction:column; } .mm-mode { width:100%; } .mm-mode button { flex:1; padding:10px; } }
+.mm-gallery-tools { margin: 18px 0; }
+.mm-gallery-tools nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.mm-gallery-tools nav button { font-size: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 7px; color: var(--secondary); }
+.mm-gallery-tools nav button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
+.mm-gallery-tools > p { font-size: 12px; line-height: 1.8; color: var(--secondary); margin: 12px 0; }

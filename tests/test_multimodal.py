@@ -18,6 +18,7 @@ from aftersales_provider import ProviderVault, ProviderError
 from multimodal_lab import aggregate, effective, validate_output, validate_review
 from tracing import TraceStore
 from vision_media import calibration_png, image_url, local_image_check, normalize_image
+from public_vision import exact_public_review, reviewed_examples
 
 
 def review(**changes):
@@ -76,6 +77,43 @@ class ContainmentTests(unittest.TestCase):
 
 
 class ImageTests(unittest.TestCase):
+    def test_program_rendering_checks_exact_bytes_and_text_without_faking_ocr(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repository = MagicMock()
+            repository.DATA = Path(directory)
+            passed = MagicMock(returncode=0, stdout='最高风险 S0', stderr='')
+            with patch('vision_media.subprocess.run', return_value=passed):
+                report = local_image_check(calibration_png('ABCD'), repository, generated_text='ABCD')
+                self.assertEqual(report['automaticTextScan'], 'generated_text_scanned')
+                self.assertIsNone(report['ocrCharacters'])
+                repository.local_scan.assert_called_with(['LOCAL TEST / NOT CUSTOMER DATA', 'ABCD'])
+                with self.assertRaises(ValueError):
+                    local_image_check(calibration_png('E04'), repository, generated_text='E09')
+                with self.assertRaises(ValueError):
+                    local_image_check(reviewed_examples()[0][1], repository, generated_text='ABCD')
+            repository.local_scan.side_effect = ValueError('test privacy rejection')
+            with self.assertRaises(ValueError):
+                local_image_check(calibration_png('ABCD'), repository, generated_text='ABCD')
+
+    def test_public_manual_review_is_exact_and_still_requires_dlp(self):
+        content = reviewed_examples()[0][1]
+        self.assertIsNotNone(exact_public_review(content))
+        self.assertIsNone(exact_public_review(content + b'changed'))
+        self.assertIsNone(exact_public_review(calibration_png()))
+        with tempfile.TemporaryDirectory() as directory:
+            repository = MagicMock()
+            repository.DATA = Path(directory)
+            passed = MagicMock(returncode=0, stdout='最高风险 S2\n- [S2] image.png｜需要人工复核的视觉内容', stderr='')
+            with patch('vision_media.subprocess.run', return_value=passed) as scanner:
+                report = local_image_check(content, repository)
+                self.assertEqual(report['automaticTextScan'], 'not_run_fixed_public_review')
+                self.assertIsNone(report['ocrCharacters'])
+                self.assertEqual(report['publicReview']['method'], 'pinned-public-manual-review')
+                self.assertEqual(scanner.call_count, 1)
+            blocked = MagicMock(returncode=0, stdout='最高风险 S3\n- [S3] 敏感内容', stderr='')
+            with patch('vision_media.subprocess.run', return_value=blocked), self.assertRaises(ValueError):
+                local_image_check(content, repository)
+
     def test_normalization_preserves_pixels_and_removes_metadata(self):
         image = Image.new('RGB', (64, 64), '#ffffff')
         metadata = PngImagePlugin.PngInfo()
@@ -158,6 +196,67 @@ class MultimodalServiceTests(unittest.TestCase):
             asset = support_api.get('mm_asset', case['assetId'])
             self.assertEqual(case['assetHash'], asset['sha256'])
         self.assertNotIn('dataUrl', json.dumps(self.mm.state()))
+
+    def test_public_photos_are_opt_in_idempotent_attributed_and_not_real_cases(self):
+        with self.assertRaises(ValueError):
+            self.mm.public_examples({})
+        with patch.object(ProviderVault, 'complete') as complete:
+            first = self.mm.public_examples({'confirmed': True})
+            second = self.mm.public_examples({'confirmed': True})
+            complete.assert_not_called()
+        self.assertEqual(first, second)
+        cases = [case for case in self.mm.state()['cases'] if case['suite'] == 'public']
+        self.assertEqual(len(cases), 24)
+        self.assertEqual(len({case['assetHash'] for case in cases}), 24)
+        self.assertEqual(len({case['topic'] for case in cases}), 6)
+        self.assertEqual(self.mm.state()['inventory']['real'], 0)
+        for case in cases:
+            self.assertTrue(case['imageAvailable'])
+            self.assertEqual(case['provenance']['license'], 'CC BY 4.0')
+            self.assertIn('非真实客户', case['origin'])
+            with Image.open(io.BytesIO(self.mm.image(case['assetId']))) as image:
+                self.assertEqual(image.info, {})
+                self.assertGreater(image.width, 200)
+
+    def test_public_import_scan_failure_is_atomic(self):
+        before_cases = copy.deepcopy(support_api.records('mm_case'))
+        before_assets = copy.deepcopy(support_api.records('mm_asset'))
+        with patch('multimodal_lab.local_image_check', side_effect=[{'visualReviewRequired': True}, ValueError('test privacy rejection')]):
+            with self.assertRaises(ValueError):
+                self.mm.public_examples({'confirmed': True})
+        self.assertEqual(before_cases, support_api.records('mm_case'))
+        self.assertEqual(before_assets, support_api.records('mm_asset'))
+
+    def test_public_cases_cannot_mix_with_customer_or_calibration(self):
+        public = self.mm.public_examples({'confirmed': True})
+        with self.assertRaises(ValueError):
+            self.start(caseIds=[public['caseIds'][0], self.ids[0]])
+
+    def test_inventory_and_binary_image_do_not_hide_missing_assets(self):
+        source = support_api.get('mm_case', self.ids[0])
+        image = self.mm.image(source['assetId'])
+        self.assertTrue(image.startswith(b'\x89PNG\r\n\x1a\n'))
+        with patch.object(support_api, 'LAB', self.lab):
+            payload, content_type, filename = support_api.dispatch_get('/api/support/lab/multimodal/images/' + source['assetId'], {})
+        self.assertEqual((payload, content_type, filename), (image, 'image/png', None))
+        support_api.save('corpus', 'INVENTORY-TEST', {'id': 'INVENTORY-TEST', 'totals': {'imagesWithheld': 9}})
+        with support_api.connection() as database:
+            database.execute('DELETE FROM documents WHERE kind=? AND id=?', ('mm_asset', source['assetId']))
+        state = self.mm.state()
+        self.assertEqual(state['inventory']['withheldImageMessages'], 9)
+        self.assertEqual(state['inventory']['calibration'], 3)
+        self.assertEqual(state['inventory']['missingImages'], 1)
+        self.assertFalse(next(case for case in state['cases'] if case['id'] == source['id'])['imageAvailable'])
+        with self.assertRaises(ValueError):
+            self.mm.image(source['assetId'])
+
+    def test_binary_image_rejects_tampered_bytes(self):
+        source = support_api.get('mm_case', self.ids[0])
+        asset = support_api.get('mm_asset', source['assetId'])
+        asset['dataUrl'] = image_url(calibration_png('tampered'))
+        support_api.save('mm_asset', asset['id'], asset)
+        with self.assertRaises(ValueError):
+            self.mm.image(asset['id'])
 
     def test_consent_vision_test_and_same_model_gate(self):
         with self.assertRaises(ValueError):

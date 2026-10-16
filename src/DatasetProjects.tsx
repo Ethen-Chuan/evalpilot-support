@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, CaretLeft, CaretRight, ChatsCircle, CheckCircle, CircleNotch, Code, FileText, FolderOpen, Headset, Info, ShieldCheck, SquaresFour, WarningCircle } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, BookOpen, CaretLeft, CaretRight, ChatsCircle, CheckCircle, CircleNotch, Code, FileText, FolderOpen, Info, ShieldCheck, SquaresFour, WarningCircle } from '@phosphor-icons/react';
 import { Badge, Button, Empty, Modal, Panel, SearchInput, number } from './ui';
 import { intentNames } from './CorpusLabels';
 import type { Corpus, LabelSummary } from './CorpusLabels';
@@ -56,32 +56,33 @@ export function DatasetProjects({ corpora, references, preview }: { corpora: Cor
   const project = corpora.find(corpus => corpus.id === route.project);
   if (route.project) return project
     ? <ProjectDetail key={project.id} project={project} route={route} />
-    : <div className="dataset-projects"><a className="project-back" href="#datasets"><ArrowLeft size={16} />所有项目</a><Empty title="未找到这个项目" description="项目链接可能已失效。返回项目列表，选择已导入的真实数据。" action={<a className="project-primary-link" href="#datasets">返回项目列表</a>} /></div>;
+    : <div className="dataset-projects"><a className="project-back" href="#datasets"><ArrowLeft size={16} />返回项目集</a><Empty title="未找到这个项目" description="项目链接可能已失效。返回项目集，选择已导入的真实数据。" action={<a className="project-primary-link" href="#datasets">返回项目集</a>} /></div>;
   const filtered = corpora.filter(corpus => `${corpus.name} ${corpus.id} ${corpus.nature}`.toLowerCase().includes(query.trim().toLowerCase())).sort((left, right) => sort === 'cases' ? right.totals.sessions - left.totals.sessions : sort === 'name' ? left.name.localeCompare(right.name, 'zh-CN') : right.importedAt.localeCompare(left.importedAt));
   return <div className="dataset-projects">
-    <div className="page-head project-page-head"><div><h1>售后项目</h1><p>进入项目，查看真实案例和完整对话。</p></div><span className="project-local-state"><ShieldCheck size={16} />本地数据工作区</span></div>
-    <div className="project-guide-entry"><div><strong>第一次使用？从图文校验开始，或导入授权对话。</strong><p>源码版不附带客户数据或训练模型；按说明配置后体验。</p></div><a className="text-link" href="#guide">跟着步骤体验<ArrowRight size={15} /></a></div>
+    <div className="page-head project-page-head"><div><h1>项目集</h1><p>按项目管理案例与对话，选择一个项目开始评测。</p></div><span className="project-local-state"><ShieldCheck size={16} />本地数据工作区</span></div>
+    <div className="project-guide-entry"><div><strong>第一次使用？先看对话，再跑 10 个案例。</strong><p>已有本地版本可用，不需要密钥或重新训练。</p></div><a className="text-link" href="#guide">跟着步骤体验<ArrowRight size={15} /></a></div>
     <div className="project-toolbar"><div className="project-view-label"><SquaresFour size={18} weight="fill" /><strong>全部项目</strong><span>{corpora.length}</span></div><div className="project-toolbar-controls"><SearchInput value={query} onChange={setQuery} placeholder="搜索项目名称或编号" /><select className="select" aria-label="项目排序" value={sort} onChange={event => setSort(event.target.value)}><option value="recent">最近导入</option><option value="cases">案例数量</option><option value="name">项目名称</option></select></div></div>
     <div className="project-list-caption"><span>{query.trim() ? `找到 ${filtered.length} 个项目` : `${corpora.length} 个真实数据项目`}</span><span>共 {number(corpora.reduce((total, corpus) => total + corpus.totals.sessions, 0))} 个案例 · 不含公开演示集</span></div>
-    {filtered.length ? <ul className="project-grid" aria-label="售后客服项目列表">{filtered.map(corpus => <li key={corpus.id}><article className="project-card">
-      <div className="project-card-top"><span className="project-symbol"><Headset size={23} /></span><Badge tone={corpus.scanStatus === 'passed' ? 'green' : 'amber'}>{corpus.scanStatus === 'passed' ? '已导入 · 已脱敏' : '需检查数据状态'}</Badge></div>
-      <h2><a href={projectUrl(corpus.id)}>{corpus.name}</a></h2><p className="project-card-description">客户、智能客服与人工客服的完整历史对话，保留原始业务标注。</p>
+    {filtered.length ? <ul className="project-grid" aria-label="项目列表">{filtered.map(corpus => <li key={corpus.id}><article className="project-card">
+      <div className="project-card-top"><span className="project-symbol"><FolderOpen size={23} /></span><Badge tone={corpus.scanStatus === 'passed' ? 'green' : 'amber'}>{corpus.scanStatus === 'passed' ? '已导入 · 已脱敏' : '需检查数据状态'}</Badge></div>
+      <h2><a href={projectUrl(corpus.id)}>{corpus.name}</a></h2><p className="project-card-description">{corpus.nature || '完整对话与原始业务标注，按项目查看和管理。'}</p>
       <dl className="project-card-counts"><div><dt>对话案例</dt><dd>{number(corpus.totals.sessions)}</dd></div><div><dt>消息总量</dt><dd>{number(corpus.totals.messages)}</dd></div></dl>
       <div className="project-card-labels"><span><FileText size={13} />真实业务数据</span><a href={projectUrl(corpus.id, { status: 'gap' })}>知识缺口 {number(corpus.totals.gapSessions)} <ArrowRight size={12} /></a></div>
       <footer className="project-card-footer"><time dateTime={corpus.importedAt}>{importedDate(corpus.importedAt)} 导入</time><a className="project-open" href={projectUrl(corpus.id)} aria-label={`进入项目：${corpus.name}`}>进入项目<ArrowRight size={15} /></a></footer>
-    </article></li>)}</ul> : <Empty title={query ? '没有匹配的项目' : '还没有导入真实数据项目'} description={query ? '试试项目名称中的关键词，或清空搜索。' : '完成真实售后语料的脱敏与导入后，项目会显示在这里。不会用演示数据代替。'} action={query ? <Button onClick={() => setQuery('')}>清空搜索</Button> : undefined} />}
+    </article></li>)}</ul> : <Empty title={query ? '没有匹配的项目' : '还没有导入真实数据项目'} description={query ? '试试项目名称中的关键词，或清空搜索。' : '完成真实业务对话的脱敏与导入后，项目会显示在这里。不会用演示数据代替。'} action={query ? <Button onClick={() => setQuery('')}>清空搜索</Button> : undefined} />}
     <div className="project-library-note"><Info size={15} /><p>卡片数量对应实际导入项目，不按意图或文件重复拆分。同一案例的完整消息保留在项目内。</p></div>
-    {references.length > 0 && <details className="lab-disclosure"><summary>公开方法参考（不用于本次售后评测）</summary><button className="text-link" onClick={() => setReferenceOpen(true)}>查看参考资料（{references.length}）<ArrowRight size={13} /></button></details>}
-    <Modal open={referenceOpen} onClose={() => setReferenceOpen(false)} title="公开参考资料" description="与真实售后项目分开管理，不用于冒充业务案例，也不纳入本页项目数量。"><div className="project-reference-list">{references.map(dataset => <section key={dataset.id}><div><h3>{dataset.name}</h3><Badge>{dataset.nature}</Badge></div><p>{dataset.provider} · {dataset.language} · {number(dataset.count)} 条</p><p>{dataset.id === 'bitext' ? '发布方标注为混合合成数据，不是真实生产客户对话。' : '公开英文意图分类集，仅供评测方法参考。'}</p><Button onClick={() => { setReferenceOpen(false); preview(dataset); }}>浏览参考样本</Button></section>)}</div></Modal>
+    {references.length > 0 && <details className="lab-disclosure"><summary>公开方法参考（不计入项目评测）</summary><button className="text-link" onClick={() => setReferenceOpen(true)}>查看参考资料（{references.length}）<ArrowRight size={13} /></button></details>}
+    <Modal open={referenceOpen} onClose={() => setReferenceOpen(false)} title="公开参考资料" description="与真实业务项目分开管理，不用于冒充业务案例，也不纳入本页项目数量。"><div className="project-reference-list">{references.map(dataset => <section key={dataset.id}><div><h3>{dataset.name}</h3><Badge>{dataset.nature}</Badge></div><p>{dataset.provider} · {dataset.language} · {number(dataset.count)} 条</p><p>{dataset.id === 'bitext' ? '发布方标注为混合合成数据，不是真实生产客户对话。' : '公开英文意图分类集，仅供评测方法参考。'}</p><Button onClick={() => { setReferenceOpen(false); preview(dataset); }}>浏览参考样本</Button></section>)}</div></Modal>
   </div>;
 }
 
 function ProjectDetail({ project, route }: { project: Corpus; route: ProjectLocation }) {
   const navigate = (next: Partial<ProjectLocation>) => { location.hash = projectUrl(project.id, { ...route, ...next }); };
   return <div className="dataset-projects project-detail">
-    <a className="project-back" href="#datasets"><ArrowLeft size={16} />所有项目</a>
-    <div className="page-head project-detail-head"><div className="project-detail-title"><span className="project-symbol"><Headset size={25} /></span><div><h1>{project.name}</h1><p>{project.nature}</p></div></div><a className="project-primary-link" href={`#benchmark?project=${encodeURIComponent(project.id)}`}>去运行评测<ArrowRight size={15} /></a></div>
+    <a className="project-back" href="#datasets"><ArrowLeft size={16} />返回项目集</a>
+    <div className="page-head project-detail-head"><div className="project-detail-title"><span className="project-symbol"><FolderOpen size={25} /></span><div><h1>{project.name}</h1><p>{project.nature}</p></div></div><a className="project-primary-link" href={`#benchmark?project=${encodeURIComponent(project.id)}`}>去运行评测<ArrowRight size={15} /></a></div>
     <div className="project-detail-meta"><Badge tone={project.scanStatus === 'passed' ? 'green' : 'amber'}>{project.scanStatus === 'passed' ? '已完成自动脱敏复核' : '需复核'}</Badge><span>{number(project.totals.sessions)} 个案例</span><span>{number(project.totals.messages)} 条消息</span><span>{importedDate(project.importedAt)} 导入</span></div>
+    <div className="lab-row-actions"><a className="text-link" href={`#overview?project=${encodeURIComponent(project.id)}`}>结果大盘<ArrowRight size={14} /></a><a className="text-link" href={`#overview?tab=quality&project=${encodeURIComponent(project.id)}`}>质检复核<ArrowRight size={14} /></a></div>
     <nav className="project-tabs" aria-label="项目内容">{([['cases', '案例列表', ChatsCircle], ['overview', '项目概况', FolderOpen], ['api', '数据接口', Code]] as const).map(([tab, name, Icon]) => <a key={tab} href={projectUrl(project.id, { ...route, tab })} aria-current={route.tab === tab ? 'page' : undefined}><Icon size={17} />{name}</a>)}</nav>
     {route.tab === 'cases' ? <ProjectCases key={project.id} project={project} route={route} navigate={navigate} /> : route.tab === 'overview' ? <ProjectOverview project={project} navigate={navigate} /> : <ProjectApi project={project} />}
   </div>;

@@ -1,10 +1,22 @@
 # 售后图文与转人工评测协议
 
-更新：2026-10-13。协议：`aftersales-vision-containment-v1`。
+更新：2026-10-14。协议：`aftersales-vision-containment-v1`。
 
 ## 范围与公平性
 
-单轮文字与单张 PNG/JPEG，不是闭环用户模拟或生产转接。没有模型密钥时不制造分数。自建校验为 calibration，用户声明真实数据为 real，不能混跑。旧文本记录保留。
+单轮文字与单张 PNG/JPEG，不是闭环用户模拟或生产转接。没有模型密钥时不制造分数。自建校验为 calibration，用户声明真实数据为 real，公开照片改编为 public；三类不能混跑。旧文本记录保留。
+
+## 图片案例入口
+
+首次打开时优先选择有可用图片的真实售后，其次公开照片，再次自建校验；不会固定停留在零条的真实来源。用户主动切换来源后，轮询不会覆盖其选择。每个来源显示可用条数，图片文件缺失或指纹信息不符的案例禁止选择。
+
+案例卡片直接读取本机PNG缩略图，点击打开图片、问题、政策、视觉事实、参考答复与来源。数量只从当前来源的可用案例中选择。开始评测仍须配置两个通过看图测试的模型并明确授权外发；查看图片和导入案例不调用模型。
+
+内置20张VisA官方完整板卡照片和4张已审核示例局部，CC BY 4.0，署名与变更说明在`backend/public_vision/ATTRIBUTION.md`及案例预览中。图片裁掉答案色框并去除元数据，没有补画；中文问题、参考和政策为演示改编，不是用户工单，也不是完整VisA独立基准。公开照片不会混入真实售后或线上业务KPI。它们只验证图文流程和证据边界，低分辨率不能作为通电安全、器件功能或保修的判断依据。
+
+`POST public-examples`须confirmed=true，逐图验证包指纹、本地DLP和文本；全部通过后事务保存，失败无部分入库。24张固定图片已逐张人工视觉核对，使用固定SHA-256审核清单，而不是伪装OCR通过；`automaticTextScan=not_run_fixed_public_review`、`ocrCharacters=null`及`publicReview`留存检查方式。一个字节变化即失去固定审核资格，且仍需本地DLP通过。已知公开素材不能再次声明为用户真实工单。重复准备幂等，不覆盖已有案例或制造结果。无网络下载动作：使用随源码提供的已审核公开照片包。原数据集的图片消息数仅为导入清单中的隔离计数，绝不冒充可评测图片数量；此功能不自动访问原客户图片链接。
+
+本机原生Vision OCR在本次运行环境对普通图片返回错误，任意用户上传仍失败关闭，没有扩大白名单。修复该环境扫描器前，不能声称新客户图片导入已验收。程序生成的E04/E09校验或随机看图连接测试另行校验原始绘图文本及精确PNG字节，DLP仍必须通过；结果标记generated_text_scanned，不假报OCR完成。随机验证码不会提供给候选模型，读错仍不允许用于图文评测。这两类确定内容审核不适用于任意客户图片。
 
 冻结问题、当前上下文、图片 SHA-256、政策、视觉事实、参考答复、标准路由与确认时间。候选只收到 question、policy 和同一 PNG，不收到参考答案、路由标注与后续信息。裁判收到同图、政策、参考和候选结果，不包含候选身份；两方使用同一个裁判和协议，依案例交替候选调用顺序。
 
@@ -36,11 +48,13 @@ OpenAI 使用 Chat Completions 的 image_url / Base64；Anthropic 使用 Message
 
 前缀 `/api/support/lab/multimodal/`：
 
-- GET state：案例与最近批次，不含图片 Base64。
+- GET state：案例与最近批次，不含图片 Base64。新增`inventory.real/public/calibration/missingImages/withheldImageMessages`与案例`imageAvailable`。
 - POST assets：authorized + dataUrl，返回本机检查后的图片和风险提示。
 - POST cases：assetId、title/question/reference/visualFacts/policy/expectedRoute，privacyConfirmed / annotationConfirmed 必须为 true。
 - POST calibration：confirmed，幂等创建 4 个明确标注为自建的校验案例。
+- POST public-examples：confirmed，幂等、事务补齐24个公开照片改编案例（20张官方原始板卡照片+4张已审核局部图），保留已有案例及批次；返回caseIds与suite=public，不调用模型。
 - GET assets/{id}：读取本机图片。
+- GET images/{id}：验证PNG内容及资产SHA-256后返回image/png，供浏览器缩略图使用；不存在或指纹错误时拒绝展示。不接收文件路径或外部URL。
 - POST runs：caseIds、两个 versionIds、可选 judgeId / parentRunId、consent。
 - GET runs/{id}：冻结案例、输出与指标。
 - POST cancel：runId，在途调用可完成，不再发起后续调用。

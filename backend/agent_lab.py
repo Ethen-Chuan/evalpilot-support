@@ -362,6 +362,13 @@ class AgentLab:
         if not isinstance(supplied, list) or not 1 <= len(supplied) <= 4 or any(not isinstance(value, str) for value in supplied) or len(set(supplied)) != len(supplied):
             raise ValueError('请选择 1–4 个不重复版本')
         versions = [self.require('lab_version', key) for key in supplied]
+        comparison_mode = body.get('comparisonMode')
+        if comparison_mode is not None:
+            if comparison_mode not in ('horizontal', 'vertical') or len(versions) != 2:
+                raise ValueError('同批对比需要两个不同模型，并指定有效对比方式')
+            same_family = versions[0]['provider'] == versions[1]['provider'] and versions[0]['family'] == versions[1]['family']
+            if (comparison_mode == 'vertical') != same_family:
+                raise ValueError('同厂商同系列请选择版本迭代对比，不同厂商或系列请选择跨模型对比')
         if any(version.get('protocol', PROTOCOL) != PROTOCOL or (version['kind'] == 'external' and version.get('promptHash') != digest(CANDIDATE_PROMPT)) for version in versions):
             raise ValueError('模型版本绑定的执行协议已变更，请创建新版本后再比较')
         if any(version['kind'] == 'local' and version['bundleId'] != bundle['id'] for version in versions):
@@ -381,6 +388,8 @@ class AgentLab:
                 raise ValueError('运行数量超出 1–200 或当前测试案例总数')
             cases = sorted(available, key=lambda case: digest(['sample-42', case['id']]))[:count]
         parent_id = body.get('parentRunId')
+        if comparison_mode and len(cases) < 2:
+            raise ValueError('同批对比至少选择两个测试案例；比较区间还需两个独立分组')
         if parent_id:
             parent = self.require('lab_run', parent_id)
             if parent['bundleId'] != bundle['id'] or not {case['id'] for case in cases}.issubset(parent['caseIds']):
@@ -400,6 +409,8 @@ class AgentLab:
             if self.training or any(run['status'] in ('running', 'cancelling') for kind in ('lab_run', 'mm_run') for run in self.repo.records(kind)):
                 raise ValueError('当前有任务运行，请等待或取消')
             run = {'id': identifier('EVAL'), 'bundleId': bundle['id'], 'datasetId': bundle['datasetId'], 'protocol': PROTOCOL, 'createdAt': self.repo.now(), 'status': 'running', 'caseIds': [case['id'] for case in cases], 'caseHash': digest(sorted((case['id'], case['sourceHash']) for case in cases)), 'versions': versions, 'judgeId': judge_id, 'judgeConnection': self.require('lab_connection', judge_id) if judge_id else None, 'judgeHash': digest([JUDGE_PROMPT, self.require('lab_connection', judge_id)['judgeModel'], self.require('lab_connection', judge_id)['provider']]) if judge_id else 'none', 'connectionRevisions': {key: value['revision'] for key, value in connections.items()}, 'candidatePrompt': CANDIDATE_PROMPT, 'judgePrompt': JUDGE_PROMPT if judge_id else None, 'parentRunId': parent_id, 'consent': bool(connections), 'scope': '固定历史前缀下的下一轮人工客服回合重放，不是完整交互解决率', 'results': [], 'completed': 0, 'total': len(cases) * len(versions)}
+            if comparison_mode:
+                run['comparisonMode'] = comparison_mode
             self.repo.save('lab_run', run['id'], run)
             threading.Thread(target=self.execute, args=(run['id'],), daemon=True).start()
         return self.run_summary(run)
@@ -518,7 +529,7 @@ class AgentLab:
         sums = np.array([sum(values) for values in cluster_values])
         sizes = np.array([len(values) for values in cluster_values])
         interval = np.percentile(sums[draws].sum(axis=1) / sizes[draws].sum(axis=1), [2.5, 97.5]).tolist()
-        return {'mode': 'vertical' if selected_versions[0]['family'] == selected_versions[1]['family'] else 'horizontal', 'versions': selected_versions, 'n': len(shared), 'groups': len(grouped), 'selected': len(runs[0]['caseIds']), 'excluded': len(runs[0]['caseIds']) - len(shared), 'delta': round(float(np.mean(differences)), 2), 'interval': [round(value, 2) for value in interval], 'wins': sum(value > 0 for value in differences), 'losses': sum(value < 0 for value in differences), 'ties': sum(value == 0 for value in differences), 'metrics': [metrics([index[key] for key in shared], len(shared)) for index in indexed], 'pairs': pairs, 'caseHash': runs[0]['caseHash'], 'method': '同例意图与弱行为同时匹配的配对差值；按匿名用户/重复问题连通分组 cluster bootstrap 1000 次 seed42，不代表业务解决率'}
+        return {'mode': 'vertical' if selected_versions[0]['provider'] == selected_versions[1]['provider'] and selected_versions[0]['family'] == selected_versions[1]['family'] else 'horizontal', 'versions': selected_versions, 'n': len(shared), 'groups': len(grouped), 'selected': len(runs[0]['caseIds']), 'excluded': len(runs[0]['caseIds']) - len(shared), 'delta': round(float(np.mean(differences)), 2), 'interval': [round(value, 2) for value in interval], 'wins': sum(value > 0 for value in differences), 'losses': sum(value < 0 for value in differences), 'ties': sum(value == 0 for value in differences), 'metrics': [metrics([index[key] for key in shared], len(shared)) for index in indexed], 'pairs': pairs, 'caseHash': runs[0]['caseHash'], 'method': '同例意图与弱行为同时匹配的配对差值；按匿名用户/重复问题连通分组 cluster bootstrap 1000 次 seed42，不代表业务解决率'}
 
     def chat(self, body):
         version = self.require('lab_version', body.get('versionId'))
@@ -575,7 +586,7 @@ class AgentLab:
         if route == 'connections/test-vision':
             if body.get('confirmed') is not True:
                 raise ValueError('请确认发送自建测试图片，最多两次调用，可能产生费用')
-            return self.connection(body.get('id')).test_vision(lambda content: local_image_check(content, self.repo))
+            return self.connection(body.get('id')).test_vision(lambda content, code: local_image_check(content, self.repo, generated_text=code))
         if route == 'train':
             return self.start_training(body)
         if route == 'connections':

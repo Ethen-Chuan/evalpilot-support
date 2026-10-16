@@ -19,6 +19,8 @@ from support_engine import ENGINE_VERSION, evaluate_public, predict_intent, rows
 from tracing import CURRENT_TRACE, Trace, TraceStore, redact, span
 from dialogues import DialogueService
 from agent_lab import AgentLab
+from experience import ExperienceService
+from trace_categories import describe as describe_trace, listing as trace_listing
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = Path(os.environ.get("EVAL_DATA_DIR", str(ROOT / "data")))
@@ -28,6 +30,7 @@ LOCK = threading.RLock()
 TRACE_STORE = TraceStore(DATA / "traces.sqlite3")
 DIALOGUES = DialogueService(sys.modules[__name__])
 LAB = AgentLab(sys.modules[__name__])
+EXPERIENCE = ExperienceService(sys.modules[__name__])
 
 
 class TracedRequestError(ValueError):
@@ -124,6 +127,7 @@ def initialize():
         database.execute("CREATE TABLE IF NOT EXISTS documents(kind TEXT,id TEXT,payload TEXT,PRIMARY KEY(kind,id))")
     DIALOGUES.initialize_index()
     LAB.initialize()
+    EXPERIENCE.initialize()
     for policy in POLICIES:
         if get("knowledge", policy["id"]) is None:
             save("knowledge", policy["id"], {**policy, "version": 1, "updatedAt": now(), "origin": "本项目自定义业务示例，非企业正式政策"})
@@ -151,6 +155,7 @@ def trace_summary(trace):
     summary = {key: value for key, value in trace.items() if key not in ("spans", "input", "output")}
     summary["preview"] = str(trace.get("input", {}).get("query", "输入已隐藏") if isinstance(trace.get("input"), dict) else trace.get("name", ""))[:130]
     summary["hasQualityIssue"] = any(issue["kind"] == "quality" for issue in trace["issues"]) or any(note["name"] == "user.feedback" and note["attributes"].get("feedback") == "negative" for note in trace.get("annotations", []))
+    summary.update(describe_trace(trace))
     return summary
 
 
@@ -352,6 +357,16 @@ def report_markdown(run):
 
 
 def dispatch_get(path, query):
+    if path.startswith('/api/support/lab/multimodal/images/'):
+        return LAB.multimodal.image(path.removeprefix('/api/support/lab/multimodal/images/')), 'image/png', None
+    if path == '/api/support/experience/examples':
+        return EXPERIENCE.learning.examples(query.get('project', [''])[0], query.get('intent', [''])[0], int(query.get('page', ['1'])[0])), None, None
+    if path == '/api/support/experience/state':
+        return EXPERIENCE.state(query), None, None
+    if path == '/api/support/experience/experiments':
+        return EXPERIENCE.learning.experiments.listing(query), None, None
+    if path == '/api/support/experience/rca-detail':
+        return EXPERIENCE.rca.detail(query.get('project', [''])[0], query.get('id', [''])[0]), None, None
     if path.startswith('/api/support/lab/'):
         return LAB.get(path, query), None, None
     if path == "/api/support/sessions":
@@ -381,15 +396,8 @@ def dispatch_get(path, query):
     if path == "/api/support/state":
         return state(), None, None
     if path == "/api/support/traces":
-        search = query.get("q", [""])[0].casefold()[:150]
-        status = query.get("status", ["all"])[0]
-        source = query.get("source", ["all"])[0]
-        page = max(1, int(query.get("page", ["1"])[0]))
-        minimum = float(query.get("minMs", ["0"])[0])
         summaries = [trace_summary(trace) for trace in TRACE_STORE.all()]
-        filtered = [item for item in summaries if (not search or search in json.dumps({key: item.get(key) for key in ("id", "name", "preview", "sessionId", "runId", "conversationId")}, ensure_ascii=False).casefold()) and (status == "all" or (status == "quality" and item["hasQualityIssue"]) or item["status"] == status) and (source == "all" or item["source"] == source) and (item["durationMs"] or 0) >= minimum]
-        filtered.sort(key=lambda trace: trace["startedAt"], reverse=True)
-        return {"traces": filtered[(page - 1) * 20:page * 20], "total": len(filtered), "page": page, "pageSize": 20, "stats": trace_stats(), "sources": sorted({item["source"] for item in summaries})}, None, None
+        return trace_listing(summaries, query), None, None
     if path.startswith("/api/support/traces/"):
         parts = path.split("/")
         trace = TRACE_STORE.get(parts[4])
@@ -397,7 +405,7 @@ def dispatch_get(path, query):
             raise ValueError("Trace 不存在")
         if path.endswith("/export.json"):
             return trace, None, f"trace-{trace['id']}-redacted.json"
-        return trace, None, None
+        return {**trace, **describe_trace(trace)}, None, None
     if path.startswith("/api/support/datasets/"):
         dataset_id = path.rsplit("/", 1)[-1]
         metadata, rows = rows_for(ROOT, dataset_id)
@@ -441,6 +449,8 @@ def dispatch_get(path, query):
 
 
 def dispatch_post(path, body):
+    if path.startswith('/api/support/experience/'):
+        return EXPERIENCE.post(path, body)
     if path.startswith('/api/support/lab/'):
         return LAB.post(path, body)
     if path == "/api/support/sessions/import":

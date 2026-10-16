@@ -139,6 +139,28 @@ class LabServiceTests(unittest.TestCase):
         self.assertEqual(rerun['parentRunId'], parent['id'])
         self.assertEqual(len(support_api.get('lab_run', parent['id'])['results']), 6)
 
+    def test_explicit_comparison_mode_guards_model_pair_and_count(self):
+        for changes in [{'comparisonMode': 'horizontal'}, {'comparisonMode': 'invalid'}, {'comparisonMode': 'vertical', 'versionIds': ['V-ONE']}, {'comparisonMode': 'vertical', 'count': 1}]:
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self.create(**changes)
+        self.assertEqual(support_api.records('lab_run'), [])
+        started = self.create(comparisonMode='vertical', count=2)
+        self.assertEqual(started['comparisonMode'], 'vertical')
+        self.assertEqual(started['total'], 4)
+        self.finish_fake(started['id'])
+        other = {**self.versions[1], 'id': 'V-OTHER', 'family': 'different-family'}
+        support_api.save('lab_version', other['id'], other)
+        horizontal = self.create(versionIds=['V-ONE', 'V-OTHER'], comparisonMode='horizontal')
+        self.assertEqual(horizontal['comparisonMode'], 'horizontal')
+
+    def test_provider_difference_is_not_hidden_by_equal_family_labels(self):
+        started = self.create()
+        completed = self.finish_fake(started['id'])
+        completed['versions'][1]['provider'] = 'different-provider'
+        support_api.save('lab_run', completed['id'], completed)
+        result = self.lab.compare({'sides': [{'runId': completed['id'], 'versionId': 'V-ONE'}, {'runId': completed['id'], 'versionId': 'V-TWO'}]})
+        self.assertEqual(result['mode'], 'horizontal')
+
     def test_pair_comparison_and_mismatch_rejected(self):
         first = self.create()
         parent = self.finish_fake(first['id'])

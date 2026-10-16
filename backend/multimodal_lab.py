@@ -8,6 +8,7 @@ import uuid
 
 from tracing import Trace, span
 from vision_media import calibration_png, image_url, local_image_check, normalize_image
+from public_vision import POLICY as PUBLIC_POLICY, provenance_for, reviewed_examples
 
 
 PROTOCOL = 'aftersales-vision-containment-v1'
@@ -85,11 +86,11 @@ class MultimodalLab:
     def require(self, kind, key):
         return self.lab.require(kind, key)
 
-    def asset(self, body):
+    def asset(self, body, generated_text=None):
         if body.get('authorized') is not True:
             raise ValueError('请先确认有权在本机处理图片；此步骤不会外发')
         content, width, height = normalize_image(body.get('dataUrl'))
-        scan = local_image_check(content, self.repo)
+        scan = local_image_check(content, self.repo, generated_text=generated_text) if generated_text is not None else local_image_check(content, self.repo)
         record = {'id': identifier('IMG'), 'sha256': hashlib.sha256(content).hexdigest(), 'dataUrl': image_url(content), 'width': width, 'height': height, 'privacy': scan, 'createdAt': self.repo.now()}
         self.repo.save('mm_asset', record['id'], record)
         return record
@@ -98,6 +99,8 @@ class MultimodalLab:
         if body.get('privacyConfirmed') is not True or body.get('annotationConfirmed') is not True:
             raise ValueError('请对照图片完成隐私复核并确认业务标注；自动 OCR 不保证绝对安全')
         asset = self.require('mm_asset', body.get('assetId'))
+        if asset.get('privacy', {}).get('publicReview'):
+            raise ValueError('已知公开素材不能标为您的真实客户工单，请使用公开照片案例入口')
         expected = body.get('expectedRoute')
         if expected not in ('self_service', 'must_handoff', 'unknown'):
             raise ValueError('请选择该案例是否必须转人工')
@@ -122,7 +125,7 @@ class MultimodalLab:
             if f'MMCAL-{index + 1}' in existing_ids:
                 continue
             content = calibration_png(code)
-            asset = self.asset({'authorized': True, 'dataUrl': image_url(content)})
+            asset = self.asset({'authorized': True, 'dataUrl': image_url(content)}, generated_text=code)
             case = {'id': f'MMCAL-{index + 1}', 'title': f'图文校验 {index + 1}（自建）', 'question': question, 'reference': reference, 'visualFacts': f'屏幕清晰显示 {code}。', 'policy': policy, 'assetId': asset['id'], 'assetHash': asset['sha256'], 'expectedRoute': route, 'suite': 'calibration', 'origin': '程序生成的校验图文，非真实客户', 'privacyConfirmedAt': self.repo.now(), 'annotationConfirmedAt': self.repo.now()}
             case['caseHash'] = fingerprint(case)
             self.repo.save('mm_case', case['id'], case)
@@ -133,10 +136,46 @@ class MultimodalLab:
         value['metrics'] = {version['id']: aggregate([row for row in run['results'] if row['versionId'] == version['id']], run['cases']) for version in run['versions']}
         return value
 
+    def public_examples(self, body):
+        if body.get('confirmed') is not True:
+            raise ValueError('请确认公开照片与改编题目不是您的真实客户工单，仅保存案例，不调用模型')
+        pending = []
+        case_ids = []
+        for definition, raw in reviewed_examples():
+            existing = self.repo.get('mm_case', definition['id'])
+            if existing:
+                if existing.get('suite') != 'public':
+                    raise ValueError('公开案例编号冲突，未覆盖现有记录')
+                self.check_asset(self.require('mm_asset', existing['assetId']), existing)
+                case_ids.append(existing['id'])
+                continue
+            content, width, height = normalize_image(image_url(raw))
+            scan = local_image_check(content, self.repo)
+            self.repo.local_scan([*definition.values(), PUBLIC_POLICY])
+            asset = {'id': identifier('IMG'), 'sha256': hashlib.sha256(content).hexdigest(), 'dataUrl': image_url(content), 'width': width, 'height': height, 'privacy': scan, 'createdAt': self.repo.now()}
+            case = {**definition, 'policy': PUBLIC_POLICY, 'assetId': asset['id'], 'assetHash': asset['sha256'], 'suite': 'public', 'origin': '公开物体照片 · 售后场景改编，非真实客户工单', 'provenance': copy.deepcopy(provenance_for(definition['id'])), 'privacyConfirmedAt': self.repo.now(), 'annotationConfirmedAt': self.repo.now()}
+            case['caseHash'] = fingerprint(case)
+            pending.extend([('mm_asset', asset['id'], json.dumps(asset, ensure_ascii=False)), ('mm_case', case['id'], json.dumps(case, ensure_ascii=False))])
+            case_ids.append(case['id'])
+        with self.repo.LOCK, self.repo.connection() as database:
+            database.executemany('INSERT INTO documents(kind,id,payload) VALUES (?,?,?)', pending)
+        return {'cases': len(case_ids), 'caseIds': case_ids, 'suite': 'public'}
+
+    def image(self, identifier):
+        asset = self.require('mm_asset', identifier)
+        content = base64.b64decode(asset['dataUrl'].split(',', 1)[1], validate=True)
+        if not content.startswith(b'\x89PNG\r\n\x1a\n') or hashlib.sha256(content).hexdigest() != asset['sha256']:
+            raise ValueError('图片内容与指纹不一致，不能展示')
+        return content
+
     def state(self):
-        cases = sorted(self.repo.records('mm_case'), key=lambda case: case['id'])
+        assets = {asset['id']: asset for asset in self.repo.records('mm_asset')}
+        cases = [{**case, 'imageAvailable': bool(assets.get(case['assetId'], {}).get('dataUrl')) and assets.get(case['assetId'], {}).get('sha256') == case['assetHash']} for case in sorted(self.repo.records('mm_case'), key=lambda case: case['id'])]
         runs = sorted(self.repo.records('mm_run'), key=lambda run: run['createdAt'], reverse=True)
-        return {'cases': cases, 'runs': [self.summary(run) for run in runs[:30]], 'protocol': PROTOCOL, 'liveContainment': None}
+        inventory = {suite: sum(case['suite'] == suite and case['imageAvailable'] for case in cases) for suite in ('real', 'public', 'calibration')}
+        inventory['missingImages'] = sum(not case['imageAvailable'] for case in cases)
+        inventory['withheldImageMessages'] = sum(corpus.get('totals', {}).get('imagesWithheld', 0) for corpus in self.repo.records('corpus'))
+        return {'cases': cases, 'runs': [self.summary(run) for run in runs[:30]], 'inventory': inventory, 'protocol': PROTOCOL, 'liveContainment': None}
 
     def start(self, body):
         case_ids = body.get('caseIds')
@@ -147,7 +186,7 @@ class MultimodalLab:
             raise ValueError('请选择两个不同的模型版本')
         cases = [copy.deepcopy(self.require('mm_case', key)) for key in sorted(case_ids)]
         if len({case['suite'] for case in cases}) != 1:
-            raise ValueError('自建校验与真实案例必须分开评测')
+            raise ValueError('真实工单、公开照片与自建校验必须分开评测')
         versions = [copy.deepcopy(self.require('lab_version', key)) for key in version_ids]
         if any(version['kind'] != 'external' for version in versions):
             raise ValueError('本地行为分类器不能看图，请选择两个外部视觉模型')
@@ -183,7 +222,8 @@ class MultimodalLab:
         content = base64.b64decode(asset['dataUrl'].split(',', 1)[1], validate=True)
         if hashlib.sha256(content).hexdigest() != case['assetHash'] or not case.get('privacyConfirmedAt'):
             raise ValueError('图片指纹或复核状态不一致')
-        local_image_check(content, self.repo)
+        code = next((value for value in ('E04', 'E09') if content == calibration_png(value)), None) if case.get('suite') == 'calibration' else None
+        local_image_check(content, self.repo, generated_text=code) if code is not None else local_image_check(content, self.repo)
 
     def cancelled(self, run_id):
         return self.require('mm_run', run_id)['status'] != 'running'
@@ -314,9 +354,9 @@ class MultimodalLab:
         raise ValueError('接口不存在')
 
     def post(self, route, body):
-        operations = {'assets': self.asset, 'cases': self.add_case, 'calibration': self.calibration, 'runs': self.start, 'review': self.review, 'compare': self.compare}
+        operations = {'assets': self.asset, 'cases': self.add_case, 'calibration': self.calibration, 'public-examples': self.public_examples, 'runs': self.start, 'review': self.review, 'compare': self.compare}
         if route in operations:
-            if route in ('calibration', 'cases'):
+            if route in ('calibration', 'cases', 'public-examples'):
                 with self.lab.lock:
                     return operations[route](body)
             return operations[route](body)

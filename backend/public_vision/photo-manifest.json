@@ -1,0 +1,282 @@
+[
+  {
+    "file": "board-1-1_redacted.png",
+    "sha256": "cfd9363e97af3e7934691d7b8fbff658a3fac4ac0a026ccf4ca7bdc30934b013",
+    "sourceFile": "pcb1/Data/Images/Normal/0805.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1000210432,
+      1000485589
+    ],
+    "sourceSha256": "7c2174b706a2aa452b1d8d1e0e0087003c4185b21d4fc58224c940a14abef6ab",
+    "category": "pcb1",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-1-2_redacted.png",
+    "sha256": "032f68233f39c00cda20032bb618b9b479d5b8b048441bf3c7c6090d17529dd5",
+    "sourceFile": "pcb1/Data/Images/Normal/0481.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1000486400,
+      1000757244
+    ],
+    "sourceSha256": "67140f9afbaad792c9d984c72af7bb7c7aebf1087cf7065392865776927cdcd0",
+    "category": "pcb1",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-1-3_redacted.png",
+    "sha256": "e3ad1bbe891a2b133fe368cf889c05ded07e9861339ee53f3fef78f2903e1ec0",
+    "sourceFile": "pcb1/Data/Images/Normal/0643.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1000757760,
+      1001029810
+    ],
+    "sourceSha256": "958e5d716231a72035a8df4dc1d69389a475f8cd9e48a0d5cc4ed75d3ab6d096",
+    "category": "pcb1",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-1-4_redacted.png",
+    "sha256": "21c8b3f3f0aa77e7b33477c3da988f791fdaeae83f22a9f34a154b46fdd3e1fe",
+    "sourceFile": "pcb1/Data/Images/Normal/0562.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1001030656,
+      1001294120
+    ],
+    "sourceSha256": "cce74250f5da30fc3277cd7809e4fc1a3733625d8d70c31165ecc678232107c1",
+    "category": "pcb1",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-1-5_redacted.png",
+    "sha256": "29a0dc8002b0fd777b72b8cf9b4139150945b721bbae2b20843295c1793a86fb",
+    "sourceFile": "pcb1/Data/Images/Normal/0724.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1001294848,
+      1001572087
+    ],
+    "sourceSha256": "bf1ad8dfd83281aa7a216d84b75d05c411d1daa54625585ded7d0dd0a96e013d",
+    "category": "pcb1",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-2-1_redacted.png",
+    "sha256": "02ae5c06bdedc97c6dfdd427a0f71877a1e95be9546c5ce97b3a485b8eac2f2d",
+    "sourceFile": "pcb2/Data/Images/Normal/0216.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1250227200,
+      1250480270
+    ],
+    "sourceSha256": "c86d63ffaecb28c6928b550856cb579e3447cad8fdc6c21129dc593ae82dd9e9",
+    "category": "pcb2",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-2-2_redacted.png",
+    "sha256": "16666e10fc29ca260a3885a8cd867a93c8d32541d26304d1ec4ecc26d7841629",
+    "sourceFile": "pcb2/Data/Images/Normal/0054.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1250481152,
+      1250746977
+    ],
+    "sourceSha256": "18c7c8cd0c2d9c3f79fb8126297a050e1920449ed23ebad9fa5fd4927ebfce20",
+    "category": "pcb2",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-2-3_redacted.png",
+    "sha256": "862ef407b944991621c2ad2902de97d85b0f0d9fec3932f3319b965cc43663f5",
+    "sourceFile": "pcb2/Data/Images/Normal/0531.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1250747904,
+      1251002595
+    ],
+    "sourceSha256": "1d24ffc7ddd9d4a32f73a0bb254427faa6b6363718671caef0f63f7fe3a76723",
+    "category": "pcb2",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-2-4_redacted.png",
+    "sha256": "b04c2832c16cb2f81d386ab1a12227d0ac93fc07fe0736bbb5e72aadc3d64d9d",
+    "sourceFile": "pcb2/Data/Images/Normal/0612.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1251003392,
+      1251236296
+    ],
+    "sourceSha256": "d9b007f48b63ee9b55cbd1683c7453305ca2d2f1f950968fbe79fb2efac74f41",
+    "category": "pcb2",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-2-5_redacted.png",
+    "sha256": "019e2f12376c3ed2a8b58b5253a6e8e5f914948d5df16c427e96207e9b471f17",
+    "sourceFile": "pcb2/Data/Images/Normal/0450.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1251236864,
+      1251457078
+    ],
+    "sourceSha256": "e221e80361e92cc251e73eaaa2b9f6aae70926d916941e975f5d3c999de320b5",
+    "category": "pcb2",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-3-1_redacted.png",
+    "sha256": "84821430a9b838936993a48f5c1284bbe17cb0a61cd77e9816b47c35e94d5320",
+    "sourceFile": "pcb3/Data/Images/Normal/0929.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1600025600,
+      1600165698
+    ],
+    "sourceSha256": "0854b5d03224538538131cb079d62d00e7f45bc3214a05ad48795109fbeba6cd",
+    "category": "pcb3",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-3-2_redacted.png",
+    "sha256": "5f1a6c6e5ab3a52ca693026d65e57f4a149c11453a1f50e6bcd62c9ae0417731",
+    "sourceFile": "pcb3/Data/Images/Normal/0211.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1600166400,
+      1600297822
+    ],
+    "sourceSha256": "9ccec7c034e2b549fcdbe95dfc3b575b64aeecea3c44a39016008e35a6447b0e",
+    "category": "pcb3",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-3-3_redacted.png",
+    "sha256": "77ef7853ecb6ceb82e5c20637ee5cf96e0817d504c2cd73bff03651fe67d2e12",
+    "sourceFile": "pcb3/Data/Images/Normal/0848.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1600298496,
+      1600437641
+    ],
+    "sourceSha256": "c1caa5fdb708488717b2db2097b3557fdaee5d7f49bdcbd9a5bf51bf4e1e9ac8",
+    "category": "pcb3",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-3-4_redacted.png",
+    "sha256": "49690eb0c1e604211a73f2618167542d82d2ed512bb6324f52228bb9012c8f6d",
+    "sourceFile": "pcb3/Data/Images/Normal/0130.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1600438272,
+      1600577197
+    ],
+    "sourceSha256": "bc16a18c45c0c918c0928f429880bca8ee2c66cb5752067fe8a4507b7cbd069c",
+    "category": "pcb3",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-3-5_redacted.png",
+    "sha256": "8093a023891fe7330e4a771c77348f44bc2f2c3528f42d239113fa9906bedd5e",
+    "sourceFile": "pcb3/Data/Images/Normal/0686.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1600578048,
+      1600721060
+    ],
+    "sourceSha256": "fb4f67d68ef5816aa974f8a36058d15a01b9a94494f2a99cb209d481afbed1a6",
+    "category": "pcb3",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-4-1_redacted.png",
+    "sha256": "3bf716cf67beb61608098bdbde8529f1d6dd8822501947c36bbf66daf7b79482",
+    "sourceFile": "pcb4/Data/Images/Normal/0224.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1850008064,
+      1850213868
+    ],
+    "sourceSha256": "68fb903b9b2ed5fb81d5655abe574eac5f115f68411c19157fa78ff1865c3e72",
+    "category": "pcb4",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-4-2_redacted.png",
+    "sha256": "af2a6fa785300aa75a74cd97e5bd21ee86a9b4df2364adadf7fac7e7934e715e",
+    "sourceFile": "pcb4/Data/Images/Normal/0701.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1850214400,
+      1850454342
+    ],
+    "sourceSha256": "61704dab4ff72cef060d50429516f3d746fa2eda124b02fbfffc4ca6e2a9ea5b",
+    "category": "pcb4",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-4-3_redacted.png",
+    "sha256": "fcde8a6855f8037e26f3eb6bfadb52c7cfb573f29360999d73eb8b3b08cc3dcb",
+    "sourceFile": "pcb4/Data/Images/Normal/0620.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1850455040,
+      1850682147
+    ],
+    "sourceSha256": "22e7e39c733f5d4c24fd194fb32257df4751ce2f21f9fd1b71b16c08954ed080",
+    "category": "pcb4",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-4-4_redacted.png",
+    "sha256": "e56b6a2869300eeb039c975c6d234624e37543e664496ff2dbeffde078f47758",
+    "sourceFile": "pcb4/Data/Images/Normal/0341.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1850682880,
+      1850883707
+    ],
+    "sourceSha256": "c82df97d1eeacce1d80ed866a0673d4d239cc61bed30161fa103555447715570",
+    "category": "pcb4",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  },
+  {
+    "file": "board-4-5_redacted.png",
+    "sha256": "9a4eddab05de955d7948aab46a8a21a2f43f35df9924abda7ff989ce73d9035e",
+    "sourceFile": "pcb4/Data/Images/Normal/0897.JPG",
+    "sourceUrl": "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
+    "sourceRange": [
+      1850884608,
+      1851110025
+    ],
+    "sourceSha256": "4522a1ef55b7c035f4f5bb6470b376e7b3fbe9e63c2a3634aae4cc187d079e8d",
+    "category": "pcb4",
+    "sourceLabel": "Normal",
+    "changes": "完整物体照片缩至最长边960像素，去除元数据；没有增加缺陷或标注边框。"
+  }
+]

@@ -6,7 +6,7 @@ import manual from '../docs/售后客服评测平台_操作说明.md?raw';
 import './quick-start.css';
 
 function localLink(target: string) {
-  if (!target.startsWith('http://127.0.0.1:4287/#')) return '#guide';
+  if (!/^http:\/\/127\.0\.0\.1:\d+\/#/.test(target)) return '#guide';
   const hash = target.slice(target.indexOf('#'));
   return ['#benchmark', '#overview', '#compare'].includes(hash) ? runUrl(hash.slice(1)) : hash;
 }
@@ -44,7 +44,7 @@ export function QuickStart({ compact = false, onNavigate }: { compact?: boolean;
     const target = URL.createObjectURL(new Blob([manual], { type: 'text/markdown;charset=utf-8' }));
     const anchor = document.createElement('a');
     anchor.href = target;
-    anchor.download = '售后客服评测平台_操作说明.md';
+    anchor.download = 'EvalPilot_操作说明.md';
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(target), 1000);
   };

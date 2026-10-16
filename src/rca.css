@@ -1,0 +1,86 @@
+.rca-workbench { display: grid; gap: 20px; }
+.rca-workbench .cx-section-head { margin: 0; }
+.rca-scope { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.rca-scope > div { display: flex; background: var(--subtle); border: 1px solid var(--line); border-radius: 10px; padding: 4px; gap: 4px; }
+.rca-scope button { padding: 11px 16px; border-radius: 7px; font-size: 13px; color: var(--secondary); }
+.rca-scope button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 5px #26375415; }
+.rca-scope button b { margin-left: 10px; font-variant-numeric: tabular-nums; }
+.rca-scope > span, .rca-scope-note { color: var(--secondary); font-size: 12px; line-height: 1.8; }
+.rca-scope-note { margin: -8px 0 0; }
+.rca-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border: 1px solid var(--line); border-radius: 12px; padding: 24px 0; background: var(--surface); }
+.rca-metrics section { padding: 0 24px; min-width: 0; }
+.rca-metrics section + section { border-left: 1px solid var(--line); }
+.rca-metrics span, .rca-metrics p { font-size: 12px; color: var(--secondary); }
+.rca-metrics strong { display: block; font-size: 30px; letter-spacing: -.6px; margin: 12px 0 8px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.rca-metrics strong small { font-size: 12px; font-weight: 400; margin-left: 6px; color: var(--secondary); }
+.rca-metrics p { line-height: 1.7; margin: 0; }
+.rca-summary-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; }
+.rca-summary-grid .panel { min-width: 0; }
+.rca-workbench .panel-head { padding: 22px 24px 12px; }
+.rca-progress-body { display: grid; grid-template-columns: 180px minmax(0,1fr); padding: 0 20px 20px; gap: 12px; align-items: center; }
+.rca-progress .cx-chart-legend button { padding: 11px 6px; }
+.rca-evidence-coverage > div:not(.panel-head) { padding: 8px 24px 0; }
+.rca-evidence-coverage section { margin-bottom: 18px; }
+.rca-evidence-coverage section > div:first-child { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; color: var(--secondary); margin-bottom: 10px; }
+.rca-evidence-coverage section b { font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); }
+.rca-meter { height: 5px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.rca-meter span { display: block; background: var(--chart-blue); height: 100%; }
+.rca-evidence-coverage > p { padding: 0 24px 20px; font-size: 12px; color: var(--secondary); line-height: 1.8; }
+.rca-evidence-coverage > p button { display: flex; margin-top: 8px; }
+.rca-cause-counts { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 8px; padding: 10px 24px 24px; }
+.rca-cause-counts button { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; text-align: left; font-size: 12px; }
+.rca-cause-counts button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.rca-cause-counts strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.rca-cause-counts small { color: var(--secondary); }
+.rca-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 24px 20px; border-bottom: 1px solid var(--line); }
+.rca-filters .search-input { flex: 1; min-width: 200px; }
+.rca-filters select { max-width: 100%; }
+.rca-workbench .cx-rca-list article { padding: 22px 24px; gap: 28px; }
+.rca-row-main { min-width: 0; flex: 1; }
+.rca-row-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.rca-workbench .cx-rca-list h3 { font-size: 14px; margin: 11px 0 8px; }
+.rca-row-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+.rca-row-foot { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 12px; color: var(--secondary); margin-top: 12px; }
+.rca-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 18px 24px; font-size: 12px; }
+.rca-case-title { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 0 0 20px; }
+.rca-case-title h3 { font-size: 15px; }
+.rca-case-title small { width: 100%; color: var(--secondary); font-size: 11px; }
+.rca-steps { display: flex; gap: 6px; padding: 5px; margin-bottom: 20px; background: var(--subtle); border-radius: 9px; }
+.rca-steps button { display: flex; align-items: center; justify-content: center; flex: 1; gap: 8px; padding: 13px 10px; font-size: 13px; border-radius: 6px; color: var(--secondary); }
+.rca-steps button[aria-pressed="true"] { background: var(--surface); color: var(--accent-text); box-shadow: 0 1px 4px #26375413; }
+.rca-source-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 0 18px; font-size: 12px; }
+.rca-source-links > span { color: var(--secondary); }
+.rca-source-evidence { display: grid; gap: 12px; }
+.rca-source-evidence section { background: var(--subtle); border: 1px solid var(--line); border-radius: 9px; padding: 16px 18px; }
+.rca-source-evidence header, .rca-checks header, .rca-history header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.rca-source-evidence h4, .rca-checks h4 { font-size: 13px; }
+.rca-source-evidence p, .rca-history p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.85; margin-top: 10px; }
+.rca-chat-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 24px 0 12px; font-size: 13px; }
+.rca-chat-heading span { font-size: 12px; color: var(--secondary); }
+.rca-chat { max-height: 520px; overflow-y: auto; background: var(--subtle); border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+.rca-message { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 24px; }
+.rca-message:last-child { margin-bottom: 0; }
+.rca-message > span { font-size: 11px; color: var(--secondary); margin-bottom: 7px; }
+.rca-message p { max-width: 88%; background: var(--surface); border: 1px solid var(--line); border-radius: 10px 10px 10px 2px; padding: 12px 16px; font-size: 13px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rca-message.user { align-items: flex-end; }
+.rca-message.user p { border-radius: 10px 10px 2px 10px; background: var(--success-soft); }
+.rca-message button { font-size: 11px; margin-top: 7px; }
+.rca-helper { font-size: 12px; color: var(--secondary); line-height: 1.85; margin: 12px 0 18px; }
+.rca-checks { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.rca-checks > section { padding: 18px; border: 1px solid var(--line); border-radius: 10px; }
+.rca-checks p { font-size: 12px; line-height: 1.8; margin: 12px 0 8px; }
+.rca-checks small { display: block; font-size: 12px; color: var(--secondary); line-height: 1.8; margin-bottom: 14px; }
+.rca-checks .form-field { font-size: 12px; }
+.rca-checks textarea { min-height: 90px; }
+.rca-step-next { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 22px 0 12px; }
+.rca-step-next > span { color: var(--secondary); font-size: 12px; line-height: 1.75; }
+.rca-contributors { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 16px 0 24px; }
+.rca-contributors > span { width: 100%; font-size: 13px; }
+.rca-contributors .checkbox-label { font-size: 12px; }
+.rca-history { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 18px; font-size: 12px; }
+.rca-history summary { cursor: pointer; color: var(--accent-text); }
+.rca-history section { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.rca-editor-actions { border-top: 1px solid var(--line); padding-top: 18px; }
+.rca-loading { padding: 32px 12px; color: var(--secondary); }
+@media(max-width:1200px) { .rca-summary-grid { grid-template-columns: minmax(0,1fr); } .rca-cause-counts { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width:700px) { .rca-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 0; } .rca-metrics section:nth-child(3) { border-left: 0; } .rca-progress-body { grid-template-columns: minmax(0,1fr); } .rca-checks { grid-template-columns: minmax(0,1fr); } .rca-step-next { flex-direction: column; align-items: flex-start; } .rca-steps button { font-size: 12px; padding: 12px 5px; gap: 4px; } .rca-message p { max-width: 94%; } .rca-chat { padding: 16px; } .rca-cause-counts { grid-template-columns: repeat(2,minmax(0,1fr)); } .rca-metrics section { padding: 0 18px; } }

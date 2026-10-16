@@ -168,7 +168,7 @@ class ProviderVault:
         expected = secrets.token_hex(2).upper()
         content = calibration_png(expected)
         if check_image:
-            check_image(content)
+            check_image(content, expected)
         messages = [{'role': 'system', 'content': 'Read the large code in the image. Return exactly a JSON object with one field code. Do not include other text.'}, {'role': 'user', 'content': [{'type': 'text', 'text': 'Read the large code. This is a locally generated connection test, not customer data.'}, {'type': 'image_url', 'image_url': {'url': image_url(content)}}]}]
         roles = ['candidate'] if self.snapshot()['candidateModel'] == self.snapshot()['judgeModel'] else ['candidate', 'judge']
         for role in roles:

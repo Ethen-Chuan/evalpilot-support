@@ -40,19 +40,16 @@ async function run() {
     assert.equal(document.querySelector('[aria-label="案例来源"]').value, 'public');
     if (!readonly) {
       assert.equal(document.querySelectorAll('.mm-case').length, 0);
-      await click('准备24个公开照片案例');
+      await click('准备公开照片案例');
       assert.ok(dialog().textContent.includes('并非您提供的真实工单'));
       await click('确认准备公开照片', dialog());
       await wait(() => !dialog());
     }
-    await wait(() => document.querySelectorAll('.mm-case img').length === 12);
+    await wait(() => document.querySelectorAll('.mm-case img').length === 4);
     assert.ok(document.querySelector('.mm-source-context').textContent.includes('非真实客户工单'));
-    assert.ok(document.querySelector('.mm-gallery-tools').textContent.includes('24个案例 · 24张不同图片'));
-    const firstIds = [...document.querySelectorAll('.mm-photo-button')].map(element => element.getAttribute('aria-label'));
-    await click('下一页图片');
-    await wait(() => document.querySelectorAll('.mm-case').length === 12 && document.querySelector('.mm-photo-button')?.getAttribute('aria-label') !== firstIds[0]);
-    assert.ok([...document.querySelectorAll('.mm-photo-button')].every(element => !firstIds.includes(element.getAttribute('aria-label'))));
-    await click('上一页图片');
+    assert.ok(document.querySelector('.mm-gallery-tools').textContent.includes('24 个案例 · 4 个图片组'));
+    assert.equal(new Set([...document.querySelectorAll('.mm-case')].map(element => element.dataset.imageGroup)).size, 4);
+    assert.equal(button('下一页图片'), undefined);
     for (const image of document.querySelectorAll('.mm-case img')) {
       const response = await fetch(new URL(image.getAttribute('src'), base));
       assert.equal(response.status, 200);
@@ -66,24 +63,29 @@ async function run() {
     await click(document.querySelector('.mm-photo-button').getAttribute('aria-label'));
     await wait(() => dialog()?.querySelector('.mm-material img'));
     assert.ok(dialog().textContent.includes('CC BY 4.0'));
-    assert.ok(dialog().textContent.includes('低分辨率局部'));
+    assert.ok(dialog().textContent.includes('官方数据集独立照片'));
     assert.equal(dialog().querySelectorAll('a[target="_blank"]').length, 2);
+    assert.equal(dialog().querySelector('[aria-label="同类案例"]').options.length, 7);
+    fill(dialog().querySelector('[aria-label="同类案例"]'), 'MMPUBLIC-2');
+    await wait(() => dialog()?.textContent.includes('低分辨率局部'));
+    dialog().querySelector('[aria-label="选择当前预览案例"]').click();
     await click('关闭窗口', dialog());
-    fill(document.querySelector('[aria-label="选择数量"]'), '2');
-    await click('按数量选择');
+    assert.ok(document.querySelector('.mm-case-copy').textContent.includes('已选 1 例'));
+    fill(document.querySelector('[aria-label="选择图片组数"]'), '2');
+    await click('每组选择一例');
     await wait(() => document.querySelectorAll('.mm-case input:checked').length === 2);
-    fill(document.querySelector('[aria-label="选择数量"]'), '999');
-    assert.equal(button('按数量选择').disabled, true);
-    fill(document.querySelector('[aria-label="选择数量"]'), '2');
+    fill(document.querySelector('[aria-label="选择图片组数"]'), '999');
+    assert.equal(button('每组选择一例').disabled, true);
+    fill(document.querySelector('[aria-label="选择图片组数"]'), '2');
     fill(document.querySelector('[aria-label="案例来源"]'), 'real');
     await wait(() => document.querySelectorAll('.mm-case').length === 0);
     assert.ok(document.body.textContent.includes('真实工单图片尚未导入'));
-    assert.equal(button('按数量选择').disabled, true);
+    assert.equal(button('每组选择一例').disabled, true);
     await click('查看已有公开照片');
-    await wait(() => document.querySelectorAll('.mm-case').length === 12);
+    await wait(() => document.querySelectorAll('.mm-case').length === 4);
     assert.equal(document.querySelectorAll('.mm-case input:checked').length, 0);
-    fill(document.querySelector('[aria-label="选择数量"]'), '2');
-    await click('按数量选择');
+    fill(document.querySelector('[aria-label="选择图片组数"]'), '2');
+    await click('每组选择一例');
     if (readonly) {
       assert.equal(button('开始同批图文评测').disabled, true);
     } else {

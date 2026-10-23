@@ -1,0 +1,60 @@
+.public-workspace { min-height: 100dvh; display: grid; grid-template-columns: 226px minmax(0,1fr); color: var(--ink); background: var(--page); }
+.public-sidebar { padding: 30px 20px; border-right: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; position: sticky; top: 0; height: 100dvh; }
+.public-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 21px; letter-spacing: -.5px; color: var(--ink); text-decoration: none; }
+.public-brand > span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 21px; }
+.public-brand small { display: block; color: var(--secondary); font-size: 10px; font-weight: 400; margin-top: 6px; letter-spacing: .5px; }
+.public-edition { margin-top: 28px; font-size: 11px; color: var(--secondary); line-height: 1.8; }
+.public-sidebar nav { display: grid; gap: 8px; margin-top: 20px; }
+.public-sidebar nav a { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 7px; color: var(--secondary); font-size: 13px; text-decoration: none; }
+.public-sidebar nav a[aria-current=page] { background: var(--accent-soft); color: var(--accent-text); font-weight: 550; }
+.public-sidebar footer { margin-top: auto; padding-top: 20px; }
+.public-sidebar footer a { display: flex; align-items: center; gap: 8px; color: var(--accent-text); font-size: 12px; }
+.public-sidebar footer p { font-size: 11px; line-height: 1.9; color: var(--secondary); }
+.public-content { min-width: 0; }
+.public-topbar { height: 64px; padding: 0 36px; display: flex; justify-content: space-between; align-items: center; background: var(--surface); border-bottom: 1px solid var(--line); font-size: 12px; color: var(--secondary); }
+.public-topbar button { display: grid; place-items: center; padding: 8px; border-radius: 6px; }
+.public-page { max-width: 1280px; padding: 28px 36px 24px; margin: auto; }
+.public-safety { display: flex; align-items: flex-start; gap: 10px; background: var(--subtle); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; }
+.public-safety svg { flex-shrink: 0; color: var(--accent-text); margin-top: 3px; }
+.public-safety p { font-size: 12px; line-height: 1.9; color: var(--secondary); margin: 0; }
+.public-safety strong { color: var(--ink); font-weight: 550; }
+.public-heading { margin: 32px 0 24px; }
+.public-heading h1 { font-size: clamp(23px,2.5vw,32px); font-weight: 650; line-height: 1.5; letter-spacing: -.7px; margin: 0 0 12px; }
+.public-heading p { font-size: 13px; line-height: 1.9; color: var(--secondary); margin: 0; }
+.public-case-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.public-case-options button { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border: 1px solid var(--line); border-radius: 7px; color: var(--secondary); font-size: 12px; }
+.public-case-options button span { font-size: 10px; opacity: .8; }
+.public-case-options button[aria-pressed=true] { color: var(--accent-text); border-color: var(--accent); background: var(--accent-soft); }
+.public-question { margin: 22px 0; }
+.public-question > span { font-size: 11px; color: var(--secondary); }
+.public-question .conversation-playback { margin-top: 8px; }
+.public-reply-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.public-reply-pair > article { display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.public-reply-pair header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.public-reply-pair h2, .public-checklist h2 { font-size: 14px; margin: 0; font-weight: 600; }
+.public-answer { font-size: 14px; line-height: 2; margin: 0; padding: 20px; flex: 1; white-space: pre-wrap; }
+.public-review-state { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 20px 18px; padding: 12px; background: var(--subtle); border-radius: 6px; font-size: 11px; color: var(--secondary); }
+.public-review-state strong { font-size: 12px; font-weight: 500; }
+.public-review-state small { flex-basis: 100%; font-size: 11px; }
+.public-diagnostic { padding: 14px 20px; border-top: 1px solid var(--line); color: var(--secondary); font-size: 12px; }
+.public-diagnostic summary { cursor: pointer; line-height: 1.8; }
+.public-diagnostic p { line-height: 1.9; font-size: 11px; }
+.public-diagnostic dl > div { display: flex; gap: 12px; justify-content: space-between; margin-top: 12px; }
+.public-diagnostic dd { margin: 0; color: var(--ink); }
+.public-checklist { margin-top: 24px; padding: 22px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.public-checklist p { color: var(--secondary); font-size: 12px; line-height: 1.8; }
+.public-checklist > div + div { display: grid; gap: 12px; margin: 18px 0; }
+.public-checklist label { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; line-height: 1.8; }
+.public-checklist input { margin-top: 5px; accent-color: var(--accent); }
+.public-checklist small { color: var(--secondary); font-size: 11px; }
+.public-next { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 24px; font-size: 13px; color: var(--secondary); }
+.public-next a, .public-primary { display: inline-flex; align-items: center; gap: 8px; color: var(--accent-text); }
+.public-guide { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 26px; }
+.public-guide h2 { font-size: 16px; margin: 26px 0 14px; }
+.public-guide h2:first-child { margin-top: 0; }
+.public-guide p, .public-guide li { color: var(--secondary); font-size: 13px; line-height: 2; }
+.public-guide pre { background: var(--subtle); border-radius: 7px; padding: 18px; overflow: auto; font-size: 12px; line-height: 1.8; }
+.public-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--secondary); font-size: 11px; }
+.public-workspace a:focus-visible, .public-workspace button:focus-visible, .public-workspace summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media(max-width:900px) { .public-workspace { grid-template-columns: 180px minmax(0,1fr); } .public-sidebar { padding: 24px 12px; } .public-page { padding: 24px; } .public-topbar { padding: 0 24px; } .public-reply-pair { grid-template-columns: 1fr; } }
+@media(max-width:600px) { .public-workspace { display: block; } .public-sidebar { position: static; height: auto; padding: 18px 16px 12px; border-right: 0; border-bottom: 1px solid var(--line); } .public-sidebar nav { display: flex; margin-top: 14px; gap: 6px; } .public-sidebar nav a { padding: 10px 9px; font-size: 12px; gap: 6px; } .public-sidebar footer, .public-edition { display: none; } .public-topbar { height: 46px; padding: 0 16px; } .public-page { padding: 18px 16px; } .public-heading { margin-top: 24px; } .public-guide { padding: 18px; } .public-guide pre { font-size: 10px; } .public-case-options button { padding: 9px; gap: 7px; } }

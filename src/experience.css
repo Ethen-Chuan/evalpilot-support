@@ -99,12 +99,15 @@
 .learning-mode > button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }
 .learning-mode button span { margin-left: 9px; font-size: 10px; opacity: .8; }
 .learning-mode > p { margin-left: auto; font-size: 11px; color: var(--secondary); line-height: 1.7; }
-.learning-hero { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 24px; display: flex; justify-content: space-between; gap: 24px; align-items: center; }
+.learning-hero { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: center; }
+.learning-hero > div:first-child { flex: 1 1 420px; min-width: 0; }
 .learning-hero h2 { font-size: 21px; font-weight: 600; margin: 13px 0 9px; letter-spacing: -.3px; }
 .learning-hero p { font-size: 12px; color: var(--secondary); line-height: 1.8; max-width: 610px; }
-.learning-run-controls { display: grid; grid-template-columns: 95px auto; gap: 8px 12px; align-items: end; flex-shrink: 0; }
-.learning-run-controls label { display: grid; gap: 6px; font-size: 11px; color: var(--secondary); }
-.learning-run-controls input { width: 95px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 8px 10px; }
+.learning-run-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 110px); gap: 12px; align-items: end; flex: 0 1 340px; width: 340px; min-width: 0; max-width: 100%; }
+.learning-run-controls label { display: grid; gap: 6px; min-width: 0; font-size: 11px; color: var(--secondary); }
+.learning-run-controls :is(input, select) { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; height: 38px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 8px 10px; font-size: 12px; }
+.learning-run-controls :is(input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.learning-run-controls > .button { grid-column: 1 / -1; width: 100%; justify-content: center; }
 .learning-run-controls small { grid-column: 1 / -1; color: var(--muted); font-size: 10px; }
 .learning-run-context { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--secondary); }
 .learning-run-context label { display: flex; align-items: center; gap: 10px; }
@@ -208,7 +211,7 @@ a.learning-score-foot { color: var(--accent-text); }
 @media(max-width:540px) { .intent-map { padding: 16px; } .intent-leaves { grid-template-columns: minmax(0,1fr); } .intent-chat { padding: 18px; } .intent-message p { max-width: 95%; } .learning-hero { padding: 18px; } .learning-hero h2 { font-size: 19px; } .learning-run-context label { flex-wrap: wrap; } .learning-run-context select { max-width: 100%; } .learning-mode > button { flex: 1; padding: 10px; } .learning-mode button span { display: block; margin: 5px 0 0; } }
 @media(max-width:1100px) { .cx-small-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); } .cx-chart-grid { grid-template-columns: minmax(0,1fr); } }
 @media(max-width:700px) { .cx-kpis, .cx-tree, .cx-evidence-grid, .cx-verdicts { grid-template-columns: minmax(0,1fr); } .cx-kpis { gap: 12px; } .cx-metric { padding: 18px; } .cx-journey ol { grid-template-columns: repeat(2,minmax(0,1fr)); } .cx-rca-list article { align-items: flex-start; flex-direction: column; } .cx-context label { max-width: 100%; } .cx-context select { width: 100%; } .cx-tabs { gap: 20px; } .cx-small-kpis { grid-template-columns: minmax(0,1fr); } .cx-chart { padding-right: 8px; } }
-.learning-run-controls select { padding: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; color: var(--ink); font-size: 12px; max-width: 100%; }
+@media(max-width:540px) { .learning-run-controls { grid-template-columns: minmax(0, 1fr); flex-basis: 100%; width: 100%; } }
 .learning-history-chart { height: 230px; padding: 8px 20px; }
 .learning-experiment-history .learning-boundary { margin: 0 24px 24px; }
 .production-onboarding > div:not(.panel-head):not(.modal-actions) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; padding: 8px 24px; }

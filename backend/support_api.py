@@ -20,6 +20,7 @@ from tracing import CURRENT_TRACE, Trace, TraceStore, redact, span
 from dialogues import DialogueService
 from agent_lab import AgentLab
 from experience import ExperienceService
+from modelops import ModelOpsService
 from trace_categories import describe as describe_trace, listing as trace_listing
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +32,7 @@ TRACE_STORE = TraceStore(DATA / "traces.sqlite3")
 DIALOGUES = DialogueService(sys.modules[__name__])
 LAB = AgentLab(sys.modules[__name__])
 EXPERIENCE = ExperienceService(sys.modules[__name__])
+MODELOPS = ModelOpsService(sys.modules[__name__])
 
 
 class TracedRequestError(ValueError):
@@ -357,6 +359,8 @@ def report_markdown(run):
 
 
 def dispatch_get(path, query):
+    if path == '/api/support/modelops/state':
+        return MODELOPS.state(), None, None
     if path.startswith('/api/support/lab/multimodal/images/'):
         return LAB.multimodal.image(path.removeprefix('/api/support/lab/multimodal/images/')), 'image/png', None
     if path == '/api/support/experience/examples':
@@ -449,6 +453,8 @@ def dispatch_get(path, query):
 
 
 def dispatch_post(path, body):
+    if path.startswith('/api/support/modelops/'):
+        return MODELOPS.post(path, body)
     if path.startswith('/api/support/experience/'):
         return EXPERIENCE.post(path, body)
     if path.startswith('/api/support/lab/'):

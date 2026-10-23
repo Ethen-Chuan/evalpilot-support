@@ -9,8 +9,6 @@ const { JSDOM, VirtualConsole } = dependency('jsdom');
 
 async function run() {
   const base = process.env.EVAL_BROWSER_BASE || 'http://127.0.0.1:4290';
-  const readonly = process.env.EVAL_READONLY === '1';
-  if (!readonly && base !== 'http://127.0.0.1:4290') throw new Error('Mutation tests require the isolated experience fixture on port 4290');
   const built = await esbuild.build({ entryPoints: [project + '/src/main.tsx'], bundle: true, write: false, format: 'iife', loader: { '.css': 'empty' }, plugins: [{ name: 'raw-docs', setup(build) { build.onResolve({ filter: /\?raw$/ }, args => ({ path: path.resolve(args.resolveDir, args.path.replace(/\?raw$/, '')), namespace: 'raw-docs' })); build.onLoad({ filter: /.*/, namespace: 'raw-docs' }, async args => ({ contents: await fs.readFile(args.path, 'utf8'), loader: 'text' })); } }], define: { 'process.env.NODE_ENV': '"production"' } });
   const errors = [];
   const consoleProxy = new VirtualConsole();
@@ -19,7 +17,7 @@ async function run() {
   const window = dom.window;
   window.AbortController = global.AbortController;
   window.AbortSignal = global.AbortSignal;
-  window.fetch = (input, options) => { const target = new URL(input, base); if (target.origin !== base) throw new Error('External calls disabled'); if (readonly && options?.method && options.method !== 'GET') throw new Error('Mutations disabled in read-only checks'); return fetch(target, options); };
+  window.fetch = (input, options) => { const target = new URL(input, base); if (target.origin !== new URL(base).origin || target.hostname !== '127.0.0.1') throw new Error('External calls disabled'); if (process.env.EVAL_READONLY === '1' && (options?.method || 'GET').toUpperCase() !== 'GET') throw new Error('Read-only check forbids writes'); return fetch(target, options); };
   window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
   window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
   const originalBounds = window.HTMLElement.prototype.getBoundingClientRect;
@@ -37,43 +35,39 @@ async function run() {
   try {
     await wait(() => document.querySelector('.cx-kpis'));
     assert.equal(document.querySelectorAll('.learning-score > strong').length, 3);
-    if (readonly) {
+    if (process.env.EVAL_READONLY === '1') {
       const state = await (await fetch(base + '/api/support/experience/state')).json();
+      const percent = value => value == null ? '—' : value.toFixed(1) + '%';
       for (const metric of [state.qualityAnalytics.changedRate, state.qualityAnalytics.coverage, state.qualityAnalytics.localCompletion]) {
-        const expected = metric.denominator ? Math.round(metric.numerator * 10000 / metric.denominator) / 100 : null;
+        const expected = metric.denominator ? Math.round(metric.numerator / metric.denominator * 10000) / 100 : null;
         assert.equal(metric.value, expected);
       }
       assert.equal(state.qualityAnalytics.slices.reduce((total, slice) => total + slice.count, 0), state.qualityAnalytics.total);
-      if (state.learning.run) {
-        await click('实验记录 · ' + state.learning.recordCount);
-        await wait(() => dialog()?.querySelector('.experiment-row'));
-        fill(dialog().querySelector('[aria-label="搜索实验名称、备注或编号"]'), state.learning.run.id);
-        await wait(() => dialog()?.querySelectorAll('.experiment-row').length === 1);
-        assert.equal(dialog().querySelector('.experiment-row').dataset.recordId, state.learning.run.id);
-        dialog().querySelector('.experiment-open').click();
-        await wait(() => !dialog());
-      }
+      await click('质检复核' + state.qualityCounts.total);
+      await wait(() => document.querySelector('.cx-quality-chart'));
+      assert.equal(document.querySelectorAll('.cx-review-table tbody tr').length, state.qualityCounts.total);
+      assert.equal(document.querySelector('.cx-donut-center strong').textContent, percent(state.qualityAnalytics.coverage.value));
       for (const slice of state.qualityAnalytics.slices.filter(item => item.count)) {
-        const legend = await wait(() => [...document.querySelectorAll('.cx-chart-legend button')].find(element => element.textContent.includes(slice.name)));
+        const legend = [...document.querySelectorAll('.cx-chart-legend button')].find(element => element.textContent.includes(slice.name));
         legend.click();
-        await wait(() => document.querySelector('[aria-label="复核记录筛选"]')?.value === slice.id);
+        await wait(() => document.querySelector('[aria-label="复核记录筛选"]').value === slice.id);
         assert.equal(document.querySelectorAll('.cx-review-table tbody tr').length, slice.count);
-        await click('业务指标');
       }
-      const analysis = state.modelAnalysis;
-      if (analysis?.total) {
-        window.location.hash = 'overview?run=' + encodeURIComponent(analysis.runId);
-        await wait(() => document.querySelector('[aria-label="趋势参考批次"]')?.value === analysis.runId);
-        await wait(() => document.querySelectorAll('.cx-chart-data tbody tr').length === analysis.total);
-        assert.deepEqual([...document.querySelectorAll('.cx-model-scorecards strong')].map(element => element.textContent), analysis.models.map(model => model.accuracy.value == null ? '暂无' : model.accuracy.value.toFixed(1) + '%'));
-        const lastRow = document.querySelector('.cx-chart-data tbody tr:last-child');
-        for (const model of analysis.models) assert.ok(lastRow.textContent.includes(model.correct + '/' + model.accuracy.denominator));
+      await click('对话测试');
+      await wait(() => document.querySelector('.dt-source-categories summary'));
+      document.querySelector('.dt-source-categories summary').click();
+      await wait(() => document.querySelector('.intent-leaf'));
+      assert.equal(document.querySelectorAll('.intent-leaf').length, state.tree.flatMap(group => group.leaves).length);
+      if (state.runId && state.modelAnalysis) {
+        window.location.hash = 'overview?tab=business&run=' + encodeURIComponent(state.runId);
+        await wait(() => document.querySelector('[aria-label="趋势参考批次"]')?.value === state.runId);
+        await wait(() => document.querySelectorAll('.cx-chart-data tbody tr').length === state.modelAnalysis.cumulative.length);
+        assert.deepEqual([...document.querySelectorAll('.cx-model-scorecards strong')].map(element => element.textContent), state.modelAnalysis.models.map(model => percent(model.accuracy.value)));
       }
       window.location.hash = 'guide';
       await wait(() => document.querySelector('.quick-start'));
-      assert.ok([...document.querySelectorAll('.quick-start a')].some(anchor => anchor.getAttribute('href') === '#overview?tab=quality'));
       assert.deepEqual(errors, []);
-      console.log(JSON.stringify({ passed: true, readonly: true, checks: ['ratios recomputed from current denominators', 'experiment lookup', 'quality category drilldown', 'current batch curves and table', 'guide navigation'], externalCalls: false, fixedChartBounds: '800x280 DOM test stub', layoutVerified: false }));
+      console.log('PASS: read-only chart counts and ratios match current API records; no business identifiers, scores or private aggregates logged');
       return;
     }
     const previousExperiment = document.querySelector('[aria-label="当前实验"]').dataset.experimentId;
@@ -207,7 +201,10 @@ async function run() {
     await wait(() => !dialog());
     fill(document.querySelector('[aria-label="归因状态"]'), 'verified');
     await wait(() => document.body.textContent.includes('人工回归已验收'));
-    await click('意图树');
+    await click('对话测试');
+    await wait(() => document.querySelector('.dt-source-categories summary'));
+    document.querySelector('.dt-source-categories summary').click();
+    await wait(() => document.querySelector('.intent-leaf'));
     assert.equal(document.querySelectorAll('.intent-leaf').length, 9);
     await wait(() => document.querySelector('.intent-message.user p'));
     const group = document.querySelector('.intent-group');

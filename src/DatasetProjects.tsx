@@ -4,12 +4,14 @@ import { Badge, Button, Empty, Modal, Panel, SearchInput, number } from './ui';
 import { intentNames } from './CorpusLabels';
 import type { Corpus, LabelSummary } from './CorpusLabels';
 import type { Dataset } from './supportTypes';
+import { DatasetLabels, readLabelFilters } from './DatasetLabels';
+import type { LabelFacets, LabelFilters } from './DatasetLabels';
 import './dataset-projects.css';
 
 type ProjectTab = 'cases' | 'overview' | 'api';
-type ProjectLocation = { project: string; tab: ProjectTab; query: string; status: string; intent: string; page: number };
+type ProjectLocation = { project: string; tab: ProjectTab; query: string; status: string; intent: string; scope: string; labels: LabelFilters; page: number };
 type CaseRow = { id: string; title: string; datasetId: string; messageCount: number; customerTurns: number; labelSummary?: LabelSummary; archives: { id: string; version: number }[] };
-type CaseListing = { sessions: CaseRow[]; total: number; page: number; pageSize: number };
+type CaseListing = { sessions: CaseRow[]; total: number; page: number; pageSize: number; facets: LabelFacets };
 const statuses = [['all', '全部案例'], ['gap', '知识缺口'], ['invalid', '标注无效'], ['label_conflict', '标注分歧'], ['archived', '已存档']];
 
 function readLocation(): ProjectLocation {
@@ -17,7 +19,9 @@ function readLocation(): ProjectLocation {
   const tab = params.get('tab');
   const page = Number(params.get('page'));
   const status = params.get('status') || 'all';
-  return { project: params.get('project') || '', tab: tab === 'overview' || tab === 'api' ? tab : 'cases', query: params.get('q') || '', status: statuses.some(([value]) => value === status) ? status : 'all', intent: params.get('intent') || '', page: Number.isInteger(page) && page > 0 ? page : 1 };
+  const labels = readLabelFilters(params);
+  const scope = params.get('scope') || 'all';
+  return { project: params.get('project') || '', tab: tab === 'overview' || tab === 'api' ? tab : 'cases', query: params.get('q') || '', status: statuses.some(([value]) => value === status) ? status : 'all', intent: typeof labels.intent === 'string' ? labels.intent : '', labels, scope: ['all', 'regular', 'invalid', 'handoff', 'unclassified'].includes(scope) ? scope : 'all', page: Number.isInteger(page) && page > 0 ? page : 1 };
 }
 
 function projectUrl(project: string, options: Partial<ProjectLocation> = {}) {
@@ -25,7 +29,9 @@ function projectUrl(project: string, options: Partial<ProjectLocation> = {}) {
   if (options.tab && options.tab !== 'cases') params.set('tab', options.tab);
   if (options.query) params.set('q', options.query);
   if (options.status && options.status !== 'all') params.set('status', options.status);
-  if (options.intent) params.set('intent', options.intent);
+  const labels = options.labels || (options.intent ? { intent: options.intent } : {});
+  if (Object.keys(labels).length) params.set('labels', JSON.stringify(labels));
+  if (options.scope && options.scope !== 'all') params.set('scope', options.scope);
   if (options.page && options.page > 1) params.set('page', String(options.page));
   return `#datasets?${params}`;
 }
@@ -77,7 +83,11 @@ export function DatasetProjects({ corpora, references, preview }: { corpora: Cor
 }
 
 function ProjectDetail({ project, route }: { project: Corpus; route: ProjectLocation }) {
-  const navigate = (next: Partial<ProjectLocation>) => { location.hash = projectUrl(project.id, { ...route, ...next }); };
+  const navigate = (next: Partial<ProjectLocation>) => {
+    const labels = { ...(next.labels || route.labels) };
+    if (next.intent !== undefined) { if (next.intent) labels.intent = next.intent; else delete labels.intent; }
+    location.hash = projectUrl(project.id, { ...route, ...next, labels });
+  };
   return <div className="dataset-projects project-detail">
     <a className="project-back" href="#datasets"><ArrowLeft size={16} />返回项目集</a>
     <div className="page-head project-detail-head"><div className="project-detail-title"><span className="project-symbol"><FolderOpen size={25} /></span><div><h1>{project.name}</h1><p>{project.nature}</p></div></div><a className="project-primary-link" href={`#benchmark?project=${encodeURIComponent(project.id)}`}>去运行评测<ArrowRight size={15} /></a></div>
@@ -95,7 +105,7 @@ function ProjectCases({ project, route, navigate }: { project: Corpus; route: Pr
   const [finishedQuery, setFinishedQuery] = useState('');
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
-  const requestQuery = new URLSearchParams({ dataset: project.id, q: route.query, status: route.status, intent: route.intent, page: String(route.page) }).toString();
+  const requestQuery = new URLSearchParams({ dataset: project.id, q: route.query, status: route.status, scope: route.scope, labels: JSON.stringify(route.labels), facets: '1', page: String(route.page) }).toString();
   const pending = loading || finishedQuery !== requestQuery;
   useEffect(() => { setQuery(route.query); }, [route.query]);
   useEffect(() => {
@@ -109,13 +119,15 @@ function ProjectCases({ project, route, navigate }: { project: Corpus; route: Pr
     fetch(`/api/support/sessions?${requestQuery}`, { signal: controller.signal }).then(async response => {
       const value = await response.json();
       if (!response.ok) throw new Error(value.error || '案例列表读取失败');
+      if (!value.facets) throw new Error('当前服务尚未加载分类统计，请重新启动新版服务后刷新。');
       if (!controller.signal.aborted) setListing(value);
     }).catch(problem => { if (!controller.signal.aborted) setError(problem instanceof Error ? problem.message : '案例列表读取失败'); }).finally(() => { if (!controller.signal.aborted) { setFinishedQuery(requestQuery); setLoading(false); } });
     return () => controller.abort();
   }, [requestQuery, revision]);
   const pages = Math.max(1, Math.ceil((listing?.total || 0) / (listing?.pageSize || 20)));
-  const clear = () => { setQuery(''); navigate({ query: '', status: 'all', intent: '', page: 1 }); };
-  return <Panel className="project-cases">
+  const clear = () => { setQuery(''); navigate({ query: '', status: 'all', labels: {}, scope: 'all', page: 1 }); };
+  const removeLabel = (field: string) => { const labels = { ...route.labels }; delete labels[field]; navigate({ labels, page: 1 }); };
+  return <><DatasetLabels facets={pending ? null : listing?.facets || null} pending={pending} error={error} scope={route.scope} filters={route.labels} chooseScope={scope => navigate({ scope, labels: {}, page: 1 })} choose={(field, value) => navigate({ labels: { ...route.labels, [field]: value }, page: 1 })} remove={removeLabel} clear={() => navigate({ labels: {}, page: 1 })} refresh={() => setRevision(value => value + 1)} /><Panel className="project-cases">
     <div className="project-case-toolbar"><SearchInput value={query} onChange={setQuery} placeholder="搜索案例编号或完整对话内容" /><div><select className="select" aria-label="筛选案例状态" value={route.status} onChange={event => navigate({ status: event.target.value, page: 1 })}>{statuses.map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select><select className="select" aria-label="筛选客户意图" value={route.intent} onChange={event => navigate({ intent: event.target.value, page: 1 })}><option value="">全部意图</option>{Object.keys(project.intentDistribution).map(intent => <option value={intent} key={intent}>{intentNames[intent] || intent}</option>)}</select></div></div>
     <div className="project-case-caption" data-query={finishedQuery}><span aria-live="polite">{pending ? '正在读取案例…' : error ? '读取未完成' : `当前 ${number(listing?.total || 0)} 个案例 · 每页 ${listing?.pageSize || 20} 个`}</span><span>一行即一段完整对话，不拆成单条问答</span></div>
     {pending ? <div className="project-loading" role="status"><CircleNotch size={20} className="spin" />正在加载真实对话索引</div> : error ? <div className="project-load-error" role="alert"><WarningCircle size={22} /><p>{error}</p><Button onClick={() => setRevision(value => value + 1)}>重新读取</Button></div> : listing?.sessions.length ? <>
@@ -126,17 +138,17 @@ function ProjectCases({ project, route, navigate }: { project: Corpus; route: Pr
     </> : <Empty title="没有匹配的案例" description="当前筛选范围内没有数据。可以清空条件，或返回第一页。" action={<Button onClick={clear}>清空筛选，返回第一页</Button>} />}
     {!pending && !error && <div className="pagination"><span>第 {route.page} / {pages} 页{route.page > pages ? ' · 当前页超出范围' : ''}</span><div><button className="icon-button" aria-label="上一页案例" disabled={route.page <= 1} onClick={() => navigate({ page: Math.min(pages, route.page - 1) })}><CaretLeft size={17} /></button><button className="icon-button" aria-label="下一页案例" disabled={route.page >= pages} onClick={() => navigate({ page: route.page + 1 })}><CaretRight size={17} /></button></div></div>}
     <div className="project-evidence-note"><ShieldCheck size={15} /><p>这里展示历史数据和人工标注，不是模型评分。完整对话采用左右气泡展示；被隔离的内容保留占位，图片与视频不外链加载。</p></div>
-  </Panel>;
+  </Panel></>;
 }
 
 function ProjectOverview({ project, navigate }: { project: Corpus; navigate: (next: Partial<ProjectLocation>) => void }) {
-  return <div className="project-overview-grid"><Panel className="project-overview-section"><h2>数据概况</h2><dl className="project-facts"><div><dt>项目编号</dt><dd><code>{project.id}</code></dd></div><div><dt>真实历史会话</dt><dd>{number(project.totals.sessions)} 个</dd></div><div><dt>完整消息序列</dt><dd>{number(project.totals.messages)} 条</dd></div><div><dt>导入时间</dt><dd><time dateTime={project.importedAt}>{importedDate(project.importedAt)}</time></dd></div><div><dt>模型评审</dt><dd><a href="#models" className="text-link">查看训练版本与裁判连接</a></dd></div></dl><h3>需人工关注的标注</h3><div className="project-quality-links">{([['gap', '知识缺口', project.totals.gapSessions], ['invalid', '无效对话', project.totals.invalidSessions], ['label_conflict', '标注分歧', project.totals.conflictSessions]] as const).map(([status, name, count]) => <button key={status} onClick={() => navigate({ tab: 'cases', status, intent: '', query: '', page: 1 })}><span>{name}</span><strong>{number(count)}</strong><ArrowRight size={15} /></button>)}</div><p className="project-detail-note">这些分类可能重叠，不能直接相加推导可评测案例数。</p></Panel>
-    <Panel className="project-overview-section"><h2>原始客户意图</h2><p className="project-detail-note">沿用来源标注，不作为模型预测或通过率。点击可筛选案例。</p><div className="project-intent-list">{Object.entries(project.intentDistribution).sort((left, right) => right[1] - left[1]).map(([intent, count]) => <button key={intent} onClick={() => navigate({ tab: 'cases', intent, status: 'all', query: '', page: 1 })}><span>{intentNames[intent] || intent}</span><strong>{number(count)}</strong><ArrowRight size={14} /></button>)}</div></Panel>
+  return <div className="project-overview-grid"><Panel className="project-overview-section"><h2>数据概况</h2><dl className="project-facts"><div><dt>项目编号</dt><dd><code>{project.id}</code></dd></div><div><dt>真实历史会话</dt><dd>{number(project.totals.sessions)} 个</dd></div><div><dt>完整消息序列</dt><dd>{number(project.totals.messages)} 条</dd></div><div><dt>导入时间</dt><dd><time dateTime={project.importedAt}>{importedDate(project.importedAt)}</time></dd></div><div><dt>模型评审</dt><dd><a href="#models" className="text-link">查看训练版本与裁判连接</a></dd></div></dl><h3>需人工关注的标注</h3><div className="project-quality-links">{([['gap', '知识缺口', project.totals.gapSessions], ['invalid', '无效对话', project.totals.invalidSessions], ['label_conflict', '标注分歧', project.totals.conflictSessions]] as const).map(([status, name, count]) => <button key={status} onClick={() => navigate({ tab: 'cases', status, labels: {}, scope: 'all', query: '', page: 1 })}><span>{name}</span><strong>{number(count)}</strong><ArrowRight size={15} /></button>)}</div><p className="project-detail-note">这些分类可能重叠，不能直接相加推导可评测案例数。</p></Panel>
+    <Panel className="project-overview-section"><h2>原始客户意图</h2><p className="project-detail-note">沿用来源标注，不作为模型预测或通过率。点击可筛选案例。</p><div className="project-intent-list">{Object.entries(project.intentDistribution).sort((left, right) => right[1] - left[1]).map(([intent, count]) => <button key={intent} onClick={() => navigate({ tab: 'cases', labels: { intent }, scope: 'all', status: 'all', query: '', page: 1 })}><span>{intentNames[intent] || intent}</span><strong>{number(count)}</strong><ArrowRight size={14} /></button>)}</div></Panel>
     <Panel className="project-overview-section project-boundaries"><h2><ShieldCheck size={18} />数据与使用边界</h2><ul><li><CheckCircle size={16} /><span>保留客户、智能客服和人工客服的完整消息顺序、原始标注与可追溯资料版本。</span></li><li><Info size={16} /><span>图片 {number(project.totals.imagesWithheld)} 张、视频 {number(project.totals.videosWithheld)} 段未导入。缺失内容不由模型或页面补造。</span></li><li><Info size={16} /><span>自动规则未发现明确敏感项不代表绝对安全。对外展示前仍需复核业务信息、元数据与授权范围。</span></li><li><Info size={16} /><span>导入不等于训练，也不等于已发布答复知识。历史对话没有可补造的 Agent Trace；外部模型仅在单次任务明确确认后调用。</span></li></ul></Panel>
   </div>;
 }
 
 function ProjectApi({ project }: { project: Corpus }) {
   const list = `/api/support/sessions?dataset=${encodeURIComponent(project.id)}&page=1`;
-  return <Panel className="project-api"><h2><Code size={19} />真实对话读取接口</h2><p>仅提供本机已导入的脱敏记录；此处不是模型调用或重跑接口。</p><section><Badge>GET</Badge><h3>项目案例列表</h3><code>{list}</code><p>返回案例编号、消息数、原始标签和资料版本。固定分页，每页 20 个；可用 q、status、intent 继续筛选。</p><a className="text-link" href={list} target="_blank" rel="noreferrer">查看本机接口返回<ArrowRight size={14} /></a></section><section><Badge>GET</Badge><h3>一段完整对话</h3><code>/api/support/sessions/&#123;案例编号&#125;</code><p>用列表里的 id 获取 messages，保留 role、content、sequence、原始标注、资料版本与来源定位。消息不会按卡片长度截断。</p></section><div className="notice"><ShieldCheck size={18} /><span>接口仅监听本机，尚无多用户鉴权。不要直接暴露到公网，也不要把访问地址当作生产服务。</span></div></Panel>;
+  return <Panel className="project-api"><h2><Code size={19} />真实对话读取接口</h2><p>仅提供本机已导入的脱敏记录；此处不是模型调用或重跑接口。</p><section><Badge>GET</Badge><h3>项目案例列表</h3><code>{list}</code><p>返回案例编号、消息数、原始标签和资料版本。固定分页，每页 20 个；可用 q、status、intent 继续筛选。增加 facets=1 同时返回分类统计；scope 选择会话范围，labels 传入字段与标签的 JSON 对象（null 表示未标注）。统计与列表采用同一筛选和数据快照。</p><a className="text-link" href={list} target="_blank" rel="noreferrer">查看本机接口返回<ArrowRight size={14} /></a></section><section><Badge>GET</Badge><h3>一段完整对话</h3><code>/api/support/sessions/&#123;案例编号&#125;</code><p>用列表里的 id 获取 messages，保留 role、content、sequence、原始标注、资料版本与来源定位。消息不会按卡片长度截断。</p></section><div className="notice"><ShieldCheck size={18} /><span>接口仅监听本机，尚无多用户鉴权。不要直接暴露到公网，也不要把访问地址当作生产服务。</span></div></Panel>;
 }

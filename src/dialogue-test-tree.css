@@ -1,0 +1,109 @@
+.dialogue-test-workbench { margin-top: 24px; }
+.dt-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.dt-heading h2 { font-size: 20px; font-weight: 650; margin: 0 0 8px; }
+.dt-heading p { font-size: 12px; color: var(--secondary); line-height: 1.8; margin: 0; }
+.dt-scenario { display: flex; gap: 16px; align-items: flex-end; margin-top: 22px; }
+.dt-scenario .form-field { flex: 1; margin: 0; }
+.dt-scenario .form-field input { width: 100%; }
+.dt-source-note { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--secondary); font-size: 11px; line-height: 1.8; margin: 12px 0 20px; }
+.dt-allocation { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 0 20px; }
+.dt-allocation > summary { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; color: var(--ink); font-size: 13px; font-weight: 550; cursor: pointer; }
+.dt-allocation > summary > span > span { display: block; color: var(--secondary); font-size: 11px; margin-top: 5px; font-weight: 400; }
+.dt-allocation-body { padding: 4px 0 18px; }
+.dt-allocation-body > .form-field { max-width: 200px; }
+.dt-ratio-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.dt-ratio-grid > section { padding: 14px 16px; border-left: 3px solid var(--flow-color); background: var(--surface); }
+.dt-flow-normal { --flow-color: var(--success); }
+.dt-flow-exception { --flow-color: var(--danger); }
+.dt-flow-stress { --flow-color: var(--warning); }
+.dt-ratio-grid label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--ink); }
+.dt-ratio-grid input { width: 64px; min-width: 0; }
+.dt-ratio-grid p { margin: 12px 0 6px; font-size: 12px; }
+.dt-ratio-grid small { font-size: 11px; color: var(--secondary); line-height: 1.6; }
+.dt-note { font-size: 11px; line-height: 1.8; color: var(--secondary); margin: 14px 0 0; }
+.dt-workspace { display: grid; grid-template-columns: 245px minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.dt-path-library { padding: 20px 16px; background: var(--subtle); border-right: 1px solid var(--line); min-width: 0; }
+.dt-path-library > header h3, .dt-path-preview > header h3 { margin: 0 0 5px; font-size: 14px; font-weight: 600; }
+.dt-path-library > header span, .dt-path-preview > header p { color: var(--secondary); font-size: 11px; margin: 0; line-height: 1.7; }
+.dt-path-group { margin-top: 22px; }
+.dt-path-group h4 { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 550; color: var(--flow-color); margin: 0 0 10px; }
+.dt-path-group h4 span { color: var(--secondary); font-size: 11px; }
+.dt-path-group > button { display: block; width: 100%; text-align: left; padding: 11px 12px; border: 1px solid transparent; border-radius: 7px; margin-top: 5px; }
+.dt-path-group > button[aria-pressed=true] { border-color: var(--line-strong); background: var(--surface); }
+.dt-path-group > button:hover { background: var(--surface); }
+.dt-path-group strong { display: block; color: var(--ink); font-size: 12px; font-weight: 550; line-height: 1.7; }
+.dt-path-group > button > span, .dt-path-group > button > small { display: block; color: var(--secondary); font-size: 10px; line-height: 1.8; margin-top: 4px; }
+.dt-path-group > p { font-size: 11px; color: var(--secondary); margin: 8px 0; }
+.dt-path-preview { min-width: 0; }
+.dt-path-preview > header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; gap: 16px; border-bottom: 1px solid var(--line); }
+.dt-turns { padding: 0 22px; max-height: 660px; overflow-y: auto; }
+.dt-turn { padding: 22px 0; border-bottom: 1px solid var(--line); }
+.dt-turn:last-child { border-bottom: 0; }
+.dt-turn > header { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; font-size: 12px; }
+.dt-turn > header strong { color: var(--ink); font-weight: 550; }
+.dt-turn > header > span { color: var(--secondary); font-size: 11px; }
+.dt-turn > header > button { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; color: var(--accent-text); font-size: 11px; }
+.dt-user-message { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.dt-user-message > span { font-size: 11px; color: var(--secondary); }
+.dt-user-message p { margin: 0; padding: 12px 14px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); line-height: 1.8; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dt-agent-slot { display: flex; align-items: baseline; gap: 12px; margin: 12px 0; }
+.dt-agent-slot > span { color: var(--secondary); font-size: 11px; white-space: nowrap; }
+.dt-agent-slot p { margin: 0; font-size: 12px; color: var(--secondary); line-height: 1.8; }
+.dt-checkpoint { padding: 10px 14px; background: var(--subtle); border-radius: 7px; }
+.dt-checkpoint strong { display: block; font-size: 11px; font-weight: 550; color: var(--secondary); }
+.dt-checkpoint p { margin: 4px 0 0; color: var(--ink); font-size: 12px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dt-branch-options { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.dt-branch-options > span { flex-basis: 100%; font-size: 11px; color: var(--secondary); margin-bottom: 2px; }
+.dt-branch-options > button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font-size: 11px; color: var(--secondary); }
+.dt-branch-options > button[aria-pressed=true] { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+.dt-branch-options > .dt-add-branch { border-style: dashed; }
+.dt-branch-options > button:disabled { opacity: .5; cursor: not-allowed; }
+.dt-save-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 0 12px; }
+.dt-save-bar strong { font-size: 12px; font-weight: 550; }
+.dt-save-bar label { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: var(--secondary); line-height: 1.8; margin-top: 8px; }
+.dt-save-bar input { margin-top: 4px; flex-shrink: 0; }
+.dt-boundary { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; border-top: 1px solid var(--line); padding: 14px 0; margin-top: 6px; }
+.dt-boundary > svg { color: var(--secondary); flex-shrink: 0; margin-top: 3px; }
+.dt-boundary p { flex: 1 1 400px; font-size: 11px; color: var(--secondary); line-height: 1.8; margin: 0; }
+.dt-boundary a { font-size: 11px; margin-top: 2px; }
+.dt-source-categories { margin-top: 10px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.dt-source-categories > summary { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 16px 0; font-size: 12px; cursor: pointer; }
+.dt-source-categories > summary small { color: var(--secondary); font-size: 11px; }
+.dt-source-categories > summary svg { margin-left: auto; }
+.dt-reset { margin-top: 15px; color: var(--secondary); font-size: 11px; }
+.dt-reset summary { cursor: pointer; }
+.dt-reset p { line-height: 1.8; }
+.dt-reset .button + .button { margin-left: 8px; }
+.dt-node-form .form-field { margin-bottom: 16px; }
+.dt-node-form input, .dt-node-form select, .dt-node-form textarea { width: 100%; }
+.dt-node-form textarea { resize: vertical; }
+.dt-node-form .notice { flex-wrap: wrap; }
+.dt-source-list { display: grid; gap: 5px; max-height: 300px; overflow-y: auto; margin-top: 16px; }
+.dt-source-list > button { text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: 7px; }
+.dt-source-list > button[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); }
+.dt-source-list strong { display: block; font-size: 12px; font-weight: 550; line-height: 1.6; }
+.dt-source-list span { display: block; font-size: 11px; line-height: 1.7; margin-top: 5px; color: var(--secondary); overflow-wrap: anywhere; }
+.dt-source-confirm { padding-top: 16px; border-top: 1px solid var(--line); }
+.dt-source-confirm strong { font-size: 12px; }
+.dt-source-confirm p { font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+.dt-source-confirm small { display: block; font-size: 11px; color: var(--secondary); line-height: 1.8; margin-bottom: 14px; }
+.dialogue-test-workbench button:focus-visible, .dialogue-test-workbench summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 900px) {
+  .dt-workspace { grid-template-columns: 1fr; }
+  .dt-path-library { border-right: 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .dt-path-library > header, .dt-path-library > .dt-note { grid-column: 1 / -1; }
+  .dt-path-group { margin-top: 2px; }
+  .dt-ratio-grid { gap: 8px; }
+  .dt-ratio-grid > section { padding: 12px; }
+}
+@media (max-width: 600px) {
+  .dt-heading, .dt-scenario, .dt-save-bar { flex-direction: column; align-items: stretch; }
+  .dt-heading > .badge { align-self: flex-start; }
+  .dt-ratio-grid { grid-template-columns: 1fr; }
+  .dt-path-library { grid-template-columns: 1fr; }
+  .dt-path-group > button { padding: 8px 10px; }
+  .dt-turns { padding: 0 16px; max-height: 600px; }
+  .dt-turn { padding: 18px 0; }
+  .dt-user-message { grid-template-columns: 28px minmax(0, 1fr); gap: 7px; }
+  .dt-allocation > summary > span > span { line-height: 1.8; }
+}

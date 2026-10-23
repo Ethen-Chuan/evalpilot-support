@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
+    "build:public": "tsc -b && node scripts/build_public_site.mjs",
+    "prepare:pages": "tsc -b && node scripts/build_public_site.mjs --publish",
     "start": "bash start.sh",
     "test": "python3 -m unittest discover -s tests -v"
   },

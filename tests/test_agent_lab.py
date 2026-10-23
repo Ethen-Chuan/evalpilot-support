@@ -139,19 +139,161 @@ class LabServiceTests(unittest.TestCase):
         self.assertEqual(rerun['parentRunId'], parent['id'])
         self.assertEqual(len(support_api.get('lab_run', parent['id'])['results']), 6)
 
-    def test_explicit_comparison_mode_guards_model_pair_and_count(self):
-        for changes in [{'comparisonMode': 'horizontal'}, {'comparisonMode': 'invalid'}, {'comparisonMode': 'vertical', 'versionIds': ['V-ONE']}, {'comparisonMode': 'vertical', 'count': 1}]:
+    def test_unified_comparison_guards_model_pair_and_count(self):
+        for changes in [{'comparisonMode': 'invalid'}, {'comparisonMode': 'unified', 'versionIds': ['V-ONE']}, {'comparisonMode': 'unified', 'versionIds': ['V-ONE', 'V-ONE']}, {'comparisonMode': 'unified', 'count': 0}]:
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 self.create(**changes)
         self.assertEqual(support_api.records('lab_run'), [])
-        started = self.create(comparisonMode='vertical', count=2)
+        started = self.create(comparisonMode='unified', count=2)
         self.assertEqual(started['comparisonMode'], 'vertical')
         self.assertEqual(started['total'], 4)
         self.finish_fake(started['id'])
         other = {**self.versions[1], 'id': 'V-OTHER', 'family': 'different-family'}
         support_api.save('lab_version', other['id'], other)
-        horizontal = self.create(versionIds=['V-ONE', 'V-OTHER'], comparisonMode='horizontal')
+        horizontal = self.create(versionIds=['V-ONE', 'V-OTHER'], comparisonMode='unified')
         self.assertEqual(horizontal['comparisonMode'], 'horizontal')
+
+    def test_single_case_comparison_has_evidence_without_statistical_claim(self):
+        started = self.create(comparisonMode='unified', caseIds=['CASE-1'])
+        completed = self.finish_fake(started['id'])
+        sides = [{'runId': completed['id'], 'versionId': version['id']} for version in self.versions]
+        compared = self.lab.post('/api/support/lab/compare/cases', {'sides': sides})
+        self.assertEqual(started['total'], 2)
+        self.assertEqual(compared['selected']['id'], 'CASE-1')
+        self.assertEqual([row['caseId'] for row in compared['results']], ['CASE-1', 'CASE-1'])
+        self.assertEqual([message['id'] for message in compared['selected']['prefix']], ['question', 'greeting'])
+        self.assertEqual(compared['selected']['reference']['id'], 'answer')
+        self.assertNotIn('future', json.dumps(compared, ensure_ascii=False))
+        self.assertNotIn('interval', compared)
+        with self.assertRaisesRegex(ValueError, '独立分组'):
+            self.lab.compare({'sides': sides})
+
+    def test_case_comparison_retains_failed_pending_and_cancelled_sides(self):
+        started = self.create()
+        run = support_api.get('lab_run', started['id'])
+        run['results'] = [{'caseId': run['caseIds'][0], 'versionId': 'V-ONE', 'status': 'failed', 'error': '测试失败'}]
+        support_api.save('lab_run', run['id'], run)
+        sides = [{'runId': run['id'], 'versionId': version['id']} for version in self.versions]
+        result = self.lab.compare_cases({'sides': sides})
+        self.assertEqual(result['cases'][0]['statuses'], ['failed', 'pending'])
+        self.assertEqual(result['results'][0]['error'], '测试失败')
+        self.assertIsNone(result['results'][1])
+        self.assertEqual(len(result['cases']), 3)
+        run['status'] = 'cancelled'
+        support_api.save('lab_run', run['id'], run)
+        result = self.lab.compare_cases({'sides': sides})
+        self.assertEqual(result['cases'][0]['statuses'], ['failed', 'not_executed'])
+        self.assertFalse(result['cases'][0]['different'])
+
+    def test_case_comparison_rejects_wrong_case_version_and_duplicate_side(self):
+        started = self.create()
+        sides = [{'runId': started['id'], 'versionId': version['id']} for version in self.versions]
+        for changes in [{'caseId': 'UNKNOWN'}, {'sides': [sides[0], sides[0]]}, {'sides': [sides[0], {**sides[0], 'extra': 'ignored'}]}, {'sides': [sides[0], {**sides[1], 'versionId': 'UNKNOWN'}]}, {'sides': []}]:
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self.lab.compare_cases({'sides': sides, **changes})
+
+    def test_case_comparison_keeps_fairness_checks_for_incomplete_runs(self):
+        started = self.create()
+        parent = self.finish_fake(started['id'])
+        second = self.create()
+        sides = [{'runId': parent['id'], 'versionId': 'V-ONE'}, {'runId': second['id'], 'versionId': 'V-TWO'}]
+        for field in ('bundleId', 'protocol', 'caseHash', 'judgeHash'):
+            modified = copy.deepcopy(support_api.get('lab_run', second['id']))
+            original = copy.deepcopy(modified)
+            modified[field] = 'mismatch'
+            support_api.save('lab_run', second['id'], modified)
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.lab.compare_cases({'sides': sides})
+            support_api.save('lab_run', second['id'], original)
+
+    def test_case_comparison_rejects_mutated_snapshot_or_input(self):
+        started = self.create()
+        sides = [{'runId': started['id'], 'versionId': version['id']} for version in self.versions]
+        case = support_api.get('lab_case', 'CASE-0')
+        for field in ('prefix', 'sourceSnapshot', 'sourceHash', 'reference'):
+            changed = copy.deepcopy(case)
+            if field == 'prefix':
+                changed['prefix'][0]['content'] = '变更后的输入'
+            elif field == 'sourceSnapshot':
+                changed['sourceSnapshot']['messages'][0]['content'] = '变更后的原文'
+            elif field == 'sourceHash':
+                changed['sourceHash'] = 'changed'
+            else:
+                changed['reference']['content'] = '变更后的人工回复'
+            support_api.save('lab_case', case['id'], changed)
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.lab.compare_cases({'sides': sides, 'caseId': case['id']})
+            support_api.save('lab_case', case['id'], case)
+
+    def test_case_list_uses_actual_customer_question(self):
+        cases = self.lab.get('/api/support/lab/cases', {'bundle': [self.bundle['id']]})
+        self.assertEqual(cases[0]['question'], synthetic_session()['messages'][0]['content'])
+
+    def test_model_discovery_never_creates_records_or_runs(self):
+        before = self.lab.state()
+        self.assertEqual(len(self.lab.get('/api/support/lab/services', {})), 7)
+        with patch.object(ProviderVault, 'discover', return_value={'models': ['test-model'], 'inferenceTested': False}) as discover:
+            result = self.lab.post('/api/support/lab/connections/models', {'provider': 'openai', 'apiKey': 'unit-test-placeholder-only', 'confirmed': True})
+        discover.assert_called_once()
+        self.assertFalse(result['inferenceTested'])
+        self.assertEqual(before, self.lab.state())
+        self.assertFalse(self.lab.connections)
+
+    def test_metadata_cannot_contain_supplied_key(self):
+        for field in ['name', 'family', 'candidateModel', 'judgeModel']:
+            with patch.object(support_api, 'local_scan') as scan, self.assertRaises(ValueError):
+                self.lab.configure({'name': 'Synthetic connection', 'family': 'Synthetic family', 'provider': 'openai', 'candidateModel': 'test-model', 'judgeModel': 'test-model', 'apiKey': 'unit-test-placeholder-only', 'confirmed': True, field: 'prefix-unit-test-placeholder-only'})
+            scan.assert_not_called()
+        self.assertFalse(support_api.records('lab_connection'))
+
+    def test_private_connection_persists_identity_not_readiness_or_credentials(self):
+        body = {'name': 'VL2 test', 'family': 'DeepSeek', 'provider': 'deepseek_vl2', 'endpoint': 'http://127.0.0.1:8000/v1', 'candidateModel': 'deepseek-ai/deepseek-vl2-tiny', 'judgeModel': 'deepseek-ai/deepseek-vl2-tiny', 'confirmed': True, 'apiKey': ''}
+        record = self.lab.configure(body)
+        self.assertEqual(record['endpoint'], body['endpoint'])
+        self.assertNotIn('apiKey', record)
+        self.assertFalse(self.lab.connection(record['id']).status()['visionTested'])
+        with self.assertRaisesRegex(ValueError, '地址'):
+            self.lab.configure({**body, 'connectionId': record['id'], 'endpoint': 'http://127.0.0.1:8001/v1'})
+        self.assertEqual(self.lab.connection(record['id']).status()['endpoint'], body['endpoint'])
+        self.lab.configure({**body, 'connectionId': record['id']})
+        self.assertEqual(len(support_api.records('lab_connection')), 1)
+        restored = AgentLab(support_api).state()['connections'][0]
+        self.assertFalse(restored['configured'])
+        self.assertFalse(restored['visionTested'])
+
+    def test_external_failure_never_uses_local_template(self):
+        connection = self.lab.configure({'name': 'Synthetic connection', 'provider': 'openai', 'candidateModel': 'test-model', 'judgeModel': 'test-model', 'apiKey': 'unit-test-placeholder-only', 'confirmed': True})
+        vault = self.lab.connection(connection['id'])
+        with patch.object(vault, 'complete', return_value={'content': '{"ok":true}'}):
+            vault.test()
+        version = next(value for value in self.lab.state()['versions'] if value.get('connectionId') == connection['id'])
+        run = self.create(versionIds=[version['id']], count=1, consent=True)
+        with patch.object(vault, 'complete', side_effect=ProviderError('isolated provider failure')), patch.object(self.lab, 'local_infer') as local:
+            self.lab.execute(run['id'])
+        local.assert_not_called()
+        result = self.lab.get('/api/support/lab/runs/' + run['id'], {})
+        self.assertEqual(result['results'][0]['status'], 'failed')
+        self.assertNotIn('output', result['results'][0])
+        self.assertIsNone(result['metrics'][version['id']]['jointAccuracy'])
+
+    def test_case_detail_accepts_encoded_legacy_identifiers(self):
+        case = support_api.get('lab_case', 'CASE-0')
+        case['id'] = 'CASE:LEGACY-TEST'
+        support_api.save('lab_case', case['id'], case)
+        self.assertEqual(self.lab.get('/api/support/lab/case/CASE%3ALEGACY-TEST', {})['id'], case['id'])
+        self.assertEqual(self.lab.get('/api/support/lab/case/CASE:LEGACY-TEST', {})['id'], case['id'])
+        with self.assertRaises(ValueError):
+            self.lab.get('/api/support/lab/case/CASE%253ALEGACY-TEST', {})
+
+    def test_legacy_modes_do_not_block_valid_pairs(self):
+        for mode in ['horizontal', 'vertical']:
+            started = self.create(comparisonMode=mode, count=2)
+            self.assertEqual(started['comparisonMode'], 'vertical')
+            self.finish_fake(started['id'])
+        other = {**self.versions[1], 'id': 'V-OTHER', 'family': 'different-family'}
+        support_api.save('lab_version', other['id'], other)
+        started = self.create(versionIds=['V-ONE', 'V-OTHER'], comparisonMode='vertical')
+        self.assertEqual(started['comparisonMode'], 'horizontal')
 
     def test_provider_difference_is_not_hidden_by_equal_family_labels(self):
         started = self.create()

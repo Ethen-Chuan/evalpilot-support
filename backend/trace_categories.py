@@ -1,4 +1,6 @@
 SOURCES = {
+    'modelops.replay': ('modelops', 'ModelOps 本机规则回放'),
+    'modelops.management': ('modelops', 'ModelOps 管理操作'),
     'experience.learning': ('training', '对话字段模型训练'),
     'aftersales.train': ('training', '客服行为模型训练'),
     'experience.replay': ('text_eval', '填单与转人工评测'),
@@ -12,7 +14,7 @@ SOURCES = {
     'support.chat': ('chat', '客服会话'),
     'aftersales.chat': ('chat', '客服模型试聊'),
 }
-CATEGORIES = {'training': '模型训练', 'text_eval': '文本评测', 'vision_eval': '图文评测', 'chat': '客服对话', 'quality': '质检复核', 'rca': 'DSAT归因', 'external': '外部Agent', 'other': '其他执行'}
+CATEGORIES = {'training': '模型训练', 'text_eval': '文本评测', 'vision_eval': '图文评测', 'chat': '客服对话', 'quality': '质检复核', 'rca': 'DSAT归因', 'modelops': '模型运营沙盒', 'external': '外部Agent', 'other': '其他执行'}
 
 
 def describe(trace):
@@ -24,6 +26,8 @@ def describe(trace):
     batch = trace.get('runId') or attributes.get('runId') or attributes.get('learningRunId')
     if category == 'external':
         duration_scope = '上报方声明的起止耗时，非本机独立计时。'
+    elif category == 'modelops':
+        duration_scope = '本机沙盒操作与埋点实际耗时；规则回放不是云端大模型延迟，管理操作不是车辆部署耗时。'
     elif source in ('quality.review', 'experience.rca.review'):
         duration_scope = '本次提交的归因/复核记录与Trace处理耗时，不是人工阅读、思考或处理工单的时长。'
     elif category == 'training':

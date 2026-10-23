@@ -1,0 +1,196 @@
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { createRequire } = require('node:module');
+const project = path.resolve(__dirname, '..');
+const dependencies = createRequire(path.resolve(process.env.JSDOM_PACKAGE_ROOT, 'package.json'));
+const { JSDOM, VirtualConsole } = dependencies('jsdom');
+const esbuild = require(project + '/node_modules/esbuild');
+
+async function check() {
+  const built = await esbuild.build({ stdin: { contents: "import React from 'react'; import {createRoot} from 'react-dom/client'; import {MultimodalLab} from './src/MultimodalLab'; createRoot(document.getElementById('root')).render(React.createElement(MultimodalLab));", resolveDir: project }, bundle: true, write: false, format: 'iife', loader: { '.css': 'empty' }, define: { 'process.env.NODE_ENV': '"production"' } });
+  const errors = [];
+  const requests = [];
+  const consoleProxy = new VirtualConsole();
+  consoleProxy.on('jsdomError', error => errors.push(error.message));
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://127.0.0.1:4296/#compare?mode=vision&project=fixture-project', runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: consoleProxy });
+  const window = dom.window;
+  const document = window.document;
+  const connection = { id: 'fixture-connection-a', name: '测试模型甲', model: 'fixture-model-a', judgeModel: 'fixture-model-a', provider: 'openai', endpoint: 'https://example.invalid', configured: true, tested: true, visionTested: false };
+  let connections = [connection, { ...connection, id: 'fixture-connection-b', name: '测试模型乙', model: 'fixture-model-b', judgeModel: 'fixture-model-b' }];
+  let versions = connections.map((item, index) => ({ id: `fixture-version-${index}`, name: item.name, model: item.model, provider: item.provider, connectionId: item.id, kind: 'external' }));
+  const fixtureCase = { id: 'fixture-case', title: '自建测试图片', question: '构造问题，仅用于隔离测试', suite: 'calibration', assetId: 'fixture-asset', assetHash: 'fixture-hash', expectedRoute: 'self_service', imageAvailable: true };
+  let refresh;
+  let readFailure = false;
+  let failVision = false;
+  let missingVisionFlag = false;
+  let releaseTest;
+  let delayTest = false;
+  window.setInterval = callback => { refresh = callback; return 1; };
+  window.clearInterval = () => {};
+  window.fetch = async (input, options) => {
+    const target = new URL(input, window.location.href);
+    assert.equal(target.origin, window.location.origin);
+    const body = options?.body ? JSON.parse(options.body) : null;
+    requests.push({ path: target.pathname, method: options?.method || 'GET', body: body?.apiKey ? { masked: true } : body });
+    if (target.pathname.endsWith('/multimodal/state')) return new Response(JSON.stringify({ cases: [fixtureCase], runs: [], inventory: { calibration: 1 } }));
+    if (target.pathname.endsWith('/lab/state')) return new Response(JSON.stringify(readFailure ? { error: '隔离测试读取失败' } : { versions, connections }), { status: readFailure ? 503 : 200 });
+    if (target.pathname.endsWith('/services')) return new Response(JSON.stringify([{ id: 'openai', name: '隔离测试服务', endpoint: 'https://example.invalid', discovery: false, note: '' }]));
+    if (target.pathname.endsWith('/test') || target.pathname.endsWith('/test-vision')) {
+      assert.equal(body.confirmed, true);
+      const vision = target.pathname.endsWith('/test-vision');
+      const profile = connections.find(item => item.id === body.id);
+      assert.ok(profile);
+      if (!vision) { profile.tested = true; profile.visionTested = false; }
+      else { profile.visionTested = !failVision && !missingVisionFlag; if (profile.visionTested) profile.tested = true; }
+      const response = new Response(JSON.stringify(vision && failVision ? { error: '隔离测试：看图验证失败' } : { configured: true, tested: profile.tested, ...(missingVisionFlag ? {} : { visionTested: profile.visionTested }) }), { status: vision && failVision ? 400 : 200 });
+      return delayTest ? new Promise(resolve => { releaseTest = () => resolve(response); }) : response;
+    }
+    if (target.pathname.endsWith('/connections')) {
+      const profile = { ...connection, id: 'fixture-connection-new', name: body.name, model: body.candidateModel, judgeModel: body.judgeModel, configured: true, tested: false, visionTested: false };
+      connections.push(profile);
+      versions.push({ ...versions[0], id: 'fixture-version-new', connectionId: profile.id, name: profile.name, model: profile.model });
+      return new Response(JSON.stringify({ id: profile.id }));
+    }
+    if (target.pathname.endsWith('/multimodal/runs')) return new Response(JSON.stringify({ error: '隔离提交已拦截，不创建真实评测' }), { status: 409 });
+    throw new Error(`Unexpected fixture request: ${target.pathname}`);
+  };
+  window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+  window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+  window.scrollTo = () => {};
+  window.HTMLElement.prototype.scrollIntoView = () => {};
+  window.eval(built.outputFiles[0].text);
+  const wait = async predicate => { const deadline = Date.now() + 7000; while (Date.now() < deadline) { if (predicate()) return; await new Promise(resolve => setTimeout(resolve, 20)); } throw new Error(`Timed out: ${predicate}`); };
+  const tick = () => new Promise(resolve => setTimeout(resolve, 40));
+  const field = label => document.querySelector(`[aria-label="${label}"]`);
+  const dialog = () => document.querySelector('[role=dialog]');
+  const button = (name, root = document) => [...root.querySelectorAll('button')].find(element => element.textContent.trim() === name || element.getAttribute('aria-label') === name);
+  const click = async element => { assert.ok(element); assert.equal(element.matches(':disabled'), false); element.click(); await tick(); };
+  const fill = async (element, value) => { const prototype = element.tagName === 'SELECT' ? window.HTMLSelectElement.prototype : window.HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(prototype, 'value').set.call(element, value); element.dispatchEvent(new window.Event(element.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); await tick(); };
+  const consent = () => document.querySelector('.mm-consent input');
+  const testConsent = () => dialog().querySelector('.lab-connection-test input');
+  const posts = () => requests.filter(item => item.method === 'POST');
+  try {
+    await wait(() => field('基线模型')?.options.length === 3);
+    assert.equal(field('基线模型').disabled, false);
+    assert.ok(document.querySelector('.mm-model-readiness').textContent.includes('0 个模型通过看图测试'));
+    assert.ok(field('候选模型').options[1].textContent.includes('仅文字测试通过'));
+    assert.equal(document.querySelector('.mm-model-readiness a').hash, '#compare?mode=text&panel=setup&project=fixture-project');
+    await fill(field('基线模型'), versions[0].id);
+    await fill(field('候选模型'), versions[1].id);
+    assert.equal(field('候选模型').options[1].disabled, true);
+    assert.equal(field('基线模型').value, versions[0].id);
+    assert.equal(field('候选模型').value, versions[1].id);
+    await click(button('每组选择一例'));
+    await click(consent());
+    assert.equal(button('开始同批图文评测').disabled, true);
+    assert.equal(posts().length, 0);
+
+    await click(button('基线模型：验证看图'));
+    await wait(() => dialog()?.textContent.includes('连接已保存在本机服务内存中'));
+    assert.equal(field('API Key').value, '');
+    assert.equal(button('测试图像读取').disabled, true);
+    assert.equal(button('完成并选用此模型').disabled, true);
+    assert.equal(posts().length, 0);
+    await click(testConsent());
+    await click(button('测试文字连接'));
+    assert.ok(dialog().textContent.includes('但还不能看作图文可用'));
+    assert.equal(button('完成并选用此模型').disabled, true);
+    assert.equal(testConsent().checked, false);
+    failVision = true;
+    await click(testConsent());
+    await click(button('测试图像读取'));
+    assert.ok(dialog().textContent.includes('看图验证失败'));
+    assert.ok(dialog().textContent.includes('文字已通过'));
+    assert.equal(button('完成并选用此模型').disabled, true);
+    failVision = false; missingVisionFlag = true;
+    await click(testConsent());
+    await click(button('测试图像读取'));
+    assert.equal(button('完成并选用此模型').disabled, true);
+    missingVisionFlag = false; delayTest = true;
+    await click(testConsent());
+    await click(button('测试图像读取'));
+    assert.equal(button('完成并选用此模型').disabled, true);
+    assert.equal(button('测试图像读取').disabled, true);
+    releaseTest(); delayTest = false;
+    await wait(() => !button('完成并选用此模型').disabled);
+    await click(button('完成并选用此模型'));
+    await wait(() => !dialog());
+    assert.equal(field('基线模型').value, versions[0].id);
+    assert.equal(consent().checked, false);
+    assert.ok(button('基线模型：管理连接'));
+    assert.equal(button('开始同批图文评测').disabled, true);
+
+    await click(button('候选模型：验证看图'));
+    await click(testConsent());
+    await click(button('测试图像读取'));
+    await wait(() => !button('完成并选用此模型').disabled);
+    await click(button('完成并选用此模型'));
+    await wait(() => !dialog());
+    await click(consent());
+    assert.equal(button('开始同批图文评测').disabled, false);
+    const stable = [field('基线模型').value, field('候选模型').value];
+    refresh(); await tick();
+    assert.deepEqual([field('基线模型').value, field('候选模型').value], stable);
+    assert.equal(consent().checked, true);
+
+    await click(button('添加模型 / 输入 Key'));
+    await wait(() => dialog()?.textContent.includes('接入真实模型'));
+    await fill(field('API Key'), 'fixture-input-not-a-credential');
+    await fill(field('候选模型名称'), 'fixture-new-model');
+    await click(dialog().querySelector('.model-connection-form input[type=checkbox]'));
+    await click(button('保存内存配置'));
+    await wait(() => testConsent());
+    assert.equal(field('API Key').value, '');
+    assert.equal(button('完成并选用此模型').disabled, true);
+    await click(testConsent());
+    await click(button('测试图像读取'));
+    await click(button('完成并选用此模型'));
+    await wait(() => !dialog());
+    assert.equal(field('候选模型').value, 'fixture-version-new');
+    assert.equal(field('基线模型').value, stable[0]);
+
+    connections.push({ ...connection, id: 'fixture-judge', name: '未验证裁判', visionTested: false });
+    versions.push({ ...versions[0], id: 'fixture-alias', name: '同模型别名', connectionId: connections[0].id });
+    refresh(); await tick();
+    assert.equal([...field('候选模型').options].find(item => item.value === 'fixture-alias').disabled, true);
+    await fill(field('同一裁判（两个模型共用）'), 'fixture-judge');
+    await click(consent());
+    assert.equal(button('开始同批图文评测').disabled, true);
+    assert.ok(button('裁判：验证看图'));
+    await fill(field('同一裁判（两个模型共用）'), '');
+    await click(consent());
+    assert.equal(button('开始同批图文评测').disabled, false);
+    await click(button('开始同批图文评测'));
+    const submitted = requests.find(item => item.path.endsWith('/multimodal/runs'));
+    assert.deepEqual(submitted.body.versionIds, [stable[0], 'fixture-version-new']);
+    assert.deepEqual(submitted.body.caseIds, ['fixture-case']);
+    assert.equal(submitted.body.judgeId, null);
+    assert.equal(submitted.body.consent, true);
+
+    connections[0].configured = false;
+    refresh(); await tick();
+    assert.equal(consent().checked, false);
+    assert.equal(button('开始同批图文评测').disabled, true);
+    assert.ok(button('基线模型：输入 Key'));
+    connections[0].configured = true;
+    refresh(); await tick();
+    await fill(field('基线模型'), 'fixture-version-new');
+    assert.equal(field('候选模型').value, '');
+    await fill(field('候选模型'), stable[0]);
+    readFailure = true;
+    refresh(); await tick();
+    assert.equal(field('基线模型').disabled, true);
+    assert.equal(button('开始同批图文评测').disabled, true);
+    readFailure = false; refresh(); await tick();
+    assert.equal(field('基线模型').disabled, false);
+    versions = [];
+    refresh(); await tick();
+    assert.equal(field('基线模型').disabled, true);
+    assert.ok(document.querySelector('.mm-model-readiness').textContent.includes('还没有接入模型'));
+    assert.equal(requests.filter(item => item.path.endsWith('/multimodal/runs')).length, 1);
+    assert.deepEqual(errors, []);
+    console.log('PASS: untested models selectable, explicit reason/actions, text≠vision, failed/missing vision status blocked, Key reuse, paid-test consent, auto-select verified/new connection, alias/expiry/read-error gates, exact frozen run payload; isolated requests only');
+  } finally { window.close(); }
+}
+
+check().catch(error => { console.error(error); process.exitCode = 1; });

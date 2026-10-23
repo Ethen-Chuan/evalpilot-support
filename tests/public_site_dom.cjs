@@ -1,0 +1,76 @@
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { createRequire } = require('node:module');
+const project = path.resolve(__dirname, '..');
+const dependencies = createRequire(path.resolve(process.env.JSDOM_PACKAGE_ROOT, 'package.json'));
+const { JSDOM, VirtualConsole } = dependencies('jsdom');
+const esbuild = require(project + '/node_modules/esbuild');
+
+async function check() {
+  const built = await esbuild.build({ entryPoints: [project + '/src/publicMain.tsx'], bundle: true, write: false, format: 'iife', loader: { '.css': 'empty' }, define: { 'process.env.NODE_ENV': '"production"' } });
+  const errors = [];
+  const requests = [];
+  const proxy = new VirtualConsole();
+  proxy.on('jsdomError', error => errors.push(error.message));
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'https://example.test/evalpilot-support/#cases', runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: proxy });
+  const { window } = dom;
+  const { document } = window;
+  window.crypto.randomUUID = require('node:crypto').randomUUID;
+  window.fetch = async input => { requests.push(String(input)); throw new Error('Public entry must not make API requests'); };
+  window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+  window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+  window.eval(built.outputFiles[0].text);
+  const wait = async predicate => { const deadline = Date.now() + 10000; while (Date.now() < deadline) { if (predicate()) return; await new Promise(resolve => setTimeout(resolve, 30)); } throw new Error('Timed out: ' + predicate.toString()); };
+  const button = name => [...document.querySelectorAll('button')].find(element => element.textContent.trim() === name || element.getAttribute('aria-label') === name);
+  const navigate = name => { document.querySelector(`nav a[href="#${name}"]`).click(); };
+  try {
+    await wait(() => document.querySelectorAll('.public-reply-pair article').length === 2);
+    assert.ok(document.querySelector('.public-safety').textContent.includes('不是云端评测服务'));
+    assert.ok(document.querySelector('.public-safety').textContent.includes('人工编写'));
+    assert.equal(document.querySelectorAll('.public-case-options button').length, 3);
+    assert.ok([...document.querySelectorAll('.public-review-state strong')].every(element => element.textContent === '未评审'));
+    document.querySelector('.public-checklist input').click();
+    await wait(() => document.querySelector('.public-checklist small').textContent.includes('1 / 3'));
+    document.querySelectorAll('.public-case-options button')[2].click();
+    await wait(() => document.querySelector('.public-answer').textContent.includes('人工坐席'));
+    assert.ok(document.querySelector('.public-checklist small').textContent.includes('0 / 3'));
+    document.querySelector('.public-diagnostic summary').click();
+    assert.equal(document.querySelector('.public-diagnostic').open, true);
+    button('切换明暗主题').click();
+    await wait(() => document.documentElement.dataset.mode === 'dark');
+    navigate('tree');
+    await wait(() => document.querySelectorAll('.dt-turn').length === 3);
+    assert.equal(button('从真实对话起步'), undefined);
+    assert.equal(document.querySelector('.dt-source-categories'), null);
+    assert.equal(document.querySelector('a[href*="#benchmark"]'), null);
+    document.querySelector('.dt-path-group.dt-flow-stress > button').click();
+    await wait(() => document.querySelectorAll('.dt-turn').length === 9);
+    assert.ok([...document.querySelectorAll('.dt-agent-slot')].every(element => element.textContent.includes('待真实运行')));
+    assert.equal(button('保存测试设计').disabled, true);
+    document.querySelector('.dt-save-bar input').click();
+    await wait(() => !button('保存测试设计').disabled);
+    button('保存测试设计').click();
+    const storageKey = 'evalpilot.dialogue-test-draft.v1.public-authored-examples';
+    await wait(() => window.localStorage.getItem(storageKey));
+    assert.equal(JSON.parse(window.localStorage.getItem(storageKey)).revision, 1);
+    navigate('guide');
+    await wait(() => document.querySelector('.public-guide'));
+    assert.ok(document.querySelector('.public-guide').textContent.includes('npm ci'));
+    assert.ok(document.querySelector('.public-guide').textContent.includes('登录权限'));
+    navigate('tree');
+    await wait(() => document.querySelector('[role=status]')?.textContent.includes('已恢复'));
+    navigate('cases');
+    await wait(() => document.querySelector('.public-case-options'));
+    window.localStorage.setItem(storageKey, '{invalid');
+    navigate('tree');
+    await wait(() => document.querySelector('[role=alert]')?.textContent.includes('草稿无法安全读取'));
+    assert.equal(document.querySelectorAll('.dt-turn').length, 3);
+    assert.equal(button('保存测试设计').disabled, true);
+    assert.equal(document.querySelectorAll('input[type=password], input[type=file]').length, 0);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(errors, []);
+    console.log('PASS: public examples, no invented reviews, case switching, checklist reset, theme, offline tree, save/restore/corrupt storage, installation guide; zero API calls');
+  } finally { window.close(); }
+}
+
+check().catch(error => { console.error(error); process.exitCode = 1; });

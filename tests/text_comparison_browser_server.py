@@ -21,7 +21,7 @@ def fixture_completion(self, revision, role, messages, **options):
     if configuration['candidateModel'] == 'unavailable-fixture':
         raise ProviderError('隔离测试：连接失败，不调用外网')
     if any('Connection test' in str(message['content']) for message in messages):
-        content = {'ok': True} if role == 'judge' else 'OK'
+        content = {'ok': True}
     elif role == 'judge':
         material = json.loads(messages[1]['content'])
         content = {'dimensions': {'relevance': 3, 'next_step': 3, 'boundary': 4}, 'reason': '隔离测试裁判替身，不是供应商实测', 'evidenceIds': [material['candidate']['id']]}
@@ -34,12 +34,23 @@ def fixture_completion(self, revision, role, messages, **options):
 
 
 def fixture_local(version, prefix):
-    return {'intent': 'fault_repair', 'action': 'clarify', 'answer': '隔离本地测试替身答复，不是训练效果。'}, []
+    if version['id'] == 'VER-LOCAL-1' and '第6个' in prefix[0]['content']:
+        raise ValueError('隔离测试：候选本例执行失败')
+    if version['id'] == 'VER-LOCAL-1':
+        return {'intent': 'fault_repair', 'action': 'handoff', 'answer': '隔离测试答复 B：建议由人工售后继续核实。我只整理升级建议，没有接通真实坐席。'}, []
+    return {'intent': 'fault_repair', 'action': 'clarify', 'answer': '隔离测试答复 A：请补充设备型号及指示灯状态；我会先确认故障现象再判断下一步。'}, []
+
+
+def fixture_discovery(body):
+    if body.get('confirmed') is not True:
+        raise ProviderError('需要确认读取模型列表')
+    return {'provider': body['provider'], 'models': ['candidate-fixture-one', 'candidate-fixture-two', 'candidate-fixture-three'], 'partial': False, 'inferenceTested': False}
 
 
 server.initialize()
 support_api.initialize()
 ProviderVault.complete = fixture_completion
+ProviderVault.discover = staticmethod(fixture_discovery)
 support_api.LAB.local_infer = fixture_local
 project_id = 'TEXT-BROWSER-PROJECT'
 bundle_id = 'TEXT-BROWSER-BUNDLE'
@@ -52,10 +63,11 @@ for index in range(2):
 support_api.save('lab_bundle', bundle_id, {'id': bundle_id, 'datasetId': project_id, 'createdAt': support_api.now(), 'sourceSessions': 6, 'eligible': 6, 'splits': {'train': 0, 'validation': 0, 'test': 6}, 'excluded': {}, 'groupCount': 6, 'versionIds': [version['id'] for version in versions], 'protocol': PROTOCOL})
 for index in range(6):
     source = synthetic_session(f'TEXT-SESSION-{index}', f'TEXT-GROUP-{index}')
+    source['messages'][0]['content'] = f'第{index + 1}个测试问题：设备开机后持续黑屏，已检查电源，接下来怎么办？'
     source['datasetId'] = project_id
     support_api.save('imported_dialogue', source['id'], source)
     case, reason = extract_case(source)
-    case.update(id=f'TEXT-CASE-{index}', bundleId=bundle_id, split='test', group=f'TEXT-GROUP-{index}')
+    case.update(id=f'TEXT-CASE:{index}', bundleId=bundle_id, split='test', group=f'TEXT-GROUP-{index}')
     support_api.save('lab_case', case['id'], case)
 print('Isolated text comparison fixture ready; all model calls are local test doubles', flush=True)
 ThreadingHTTPServer(('127.0.0.1', server.PORT), server.Handler).serve_forever()

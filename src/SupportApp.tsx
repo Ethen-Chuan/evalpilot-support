@@ -5,12 +5,15 @@ import { Badge, Button, DateText, Empty, ExternalLink, Modal, Panel, PanelHead, 
 import { palettes, useAppearance } from './appearance';
 import type { Action, Conversation, Dataset, DatasetPreview, Knowledge, Page, Run, Sample, State, Uat } from './supportTypes';
 import { TraceView } from './TraceView';
+import { traceConversationUrl } from './tracePresentation';
 import { DialogueKnowledge } from './DialogueKnowledge';
 import { DatasetProjects } from './DatasetProjects';
 import { AgentLab } from './AgentLab';
 import { EvaluationWorkspace } from './EvaluationWorkspace';
 import { ExperienceDashboard } from './ExperienceDashboard';
 import { QuickStart } from './QuickStart';
+import { ModelOps } from './ModelOps';
+import { ConnectionModal } from './ModelConnection';
 import { rememberedRun, runFromHash, runUrl } from './labNavigation';
 import { ChatsCircle } from '@phosphor-icons/react';
 import './traces.css';
@@ -20,6 +23,7 @@ const routes: { id: Page; name: string; icon: typeof SquaresFour; advanced?: boo
   { id: 'benchmark', name: '运行评测', icon: Flask },
   { id: 'overview', name: '结果大盘', icon: SquaresFour },
   { id: 'compare', name: '模型对比', icon: ArrowsLeftRight },
+  { id: 'modelops', name: '模型运营', icon: ShieldCheck },
   { id: 'guide', name: '使用说明', icon: BookOpen },
   { id: 'playground', name: '客服试聊', icon: Headset, advanced: true },
   { id: 'models', name: '模型连接', icon: GearSix, advanced: true },
@@ -52,6 +56,7 @@ export default function SupportApp() {
   const [mobile, setMobile] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [connectionOpen, setConnectionOpen] = useState(false);
   const [newRun, setNewRun] = useState(false);
   const [runDataset, setRunDataset] = useState('bitext');
   const [selectedRunId, setSelectedRunId] = useState('');
@@ -65,6 +70,19 @@ export default function SupportApp() {
   const [uatOpen, setUatOpen] = useState(false);
   const [traceId, setTraceId] = useState<string | null>(() => new URLSearchParams(location.hash.split('?')[1] || '').get('trace'));
   const refresh = useCallback(async () => { try { const value = await api<State>('/state'); setState(value); setError(''); } catch (problem) { setError(problem instanceof Error ? problem.message : '无法连接本地服务'); } }, []);
+  useEffect(() => {
+    const openConnection = () => {
+      const [route, query = ''] = location.hash.slice(1).split('?');
+      const params = new URLSearchParams(query);
+      if (params.get('connect') !== '1') return;
+      setConnectionOpen(true);
+      params.delete('connect');
+      history.replaceState(history.state, '', `${location.pathname}${location.search}#${route}${params.size ? `?${params}` : ''}`);
+    };
+    openConnection();
+    window.addEventListener('hashchange', openConnection);
+    return () => window.removeEventListener('hashchange', openConnection);
+  }, []);
   const notify = (message: string) => setToast(message);
   const go = useCallback((next: Page) => { const params = new URLSearchParams(location.hash.split('?')[1]); const vision = params.get('mode') === 'vision' || !!params.get('mmrun'); location.hash = ['overview', 'benchmark', 'compare'].includes(next) ? vision ? `${next}?mode=vision${params.get('mmrun') ? `&mmrun=${encodeURIComponent(params.get('mmrun')!)}` : ''}` : runUrl(next) : next; setPage(next); setMobile(false); window.scrollTo(0, 0); }, []);
   useEffect(() => { void refresh(); const timer = setInterval(() => void refresh(), 2500); return () => clearInterval(timer); }, [refresh]);
@@ -82,6 +100,7 @@ export default function SupportApp() {
   if (!state) return <div className="loading-screen"><span className="brand-symbol"><SquaresFour size={28} weight="bold" /></span><h1>EvalPilot</h1><p>{error || '正在读取本地评测工作区…'}</p>{error ? <Button primary onClick={() => void refresh()}>重新连接</Button> : <div className="loading-track" />}</div>;
   const active = state.runs.find(run => run.status === 'running');
   const content: Record<Page, ReactNode> = {
+    modelops: <ModelOps corpora={state.corpora} />,
     guide: <QuickStart />,
     overview: <ExperienceDashboard />,
     datasets: <Datasets state={state} preview={setPreview} />,
@@ -94,21 +113,22 @@ export default function SupportApp() {
     actions: <Actions state={state} busy={busy} update={(action, verify) => void act(() => api(`/actions/${action.id}${verify ? '/verify' : ''}`, verify ? {} : { status: action.status === 'todo' ? 'progress' : 'todo' }), verify ? '已执行样本回归；请查看实际验收结果。' : '任务状态已保存。')} />,
     sources: <Sources state={state} />,
     settings: <Settings state={state} />,
-    traces: <TraceView traceId={traceId} choose={identifier => { setTraceId(identifier); setPage('traces'); location.hash = identifier ? `traces?trace=${identifier}` : 'traces'; window.scrollTo(0,0); }} run={identifier => { if (identifier.startsWith('MMRUN-')) { location.hash = `compare?mode=vision&mmrun=${encodeURIComponent(identifier)}`; setPage('compare'); } else if (identifier.startsWith('EVAL-')) { location.hash = `benchmark?run=${encodeURIComponent(identifier)}`; setPage('benchmark'); } else { setSelectedRunId(identifier); go('benchmark'); } }} conversation={identifier => { setPage('knowledge'); location.hash = `knowledge?session=${identifier}`; window.scrollTo(0,0); }} notify={notify} changed={refresh} />,
+    traces: <TraceView traceId={traceId} choose={identifier => { setTraceId(identifier); setPage('traces'); const params = new URLSearchParams(location.hash.split('?')[1] || ''); if (identifier) params.set('trace', identifier); else params.delete('trace'); location.hash = `traces${params.size ? `?${params}` : ''}`; window.scrollTo(0,0); }} run={identifier => { if (identifier.startsWith('MMRUN-')) { location.hash = `compare?mode=vision&mmrun=${encodeURIComponent(identifier)}`; setPage('compare'); } else if (identifier.startsWith('EVAL-')) { location.hash = `benchmark?run=${encodeURIComponent(identifier)}`; setPage('benchmark'); } else { setSelectedRunId(identifier); go('benchmark'); } }} conversation={identifier => { setPage('knowledge'); location.hash = traceConversationUrl(identifier, location.hash); window.scrollTo(0,0); }} notify={notify} changed={refresh} />,
   };
   return <div className="app-shell">
     {mobile && <div className="nav-scrim" onClick={() => setMobile(false)} />}
     <aside className={`sidebar ${mobile ? 'open' : ''}`}>
-      <a className="brand" href="#datasets" onClick={() => go('datasets')}><span className="brand-symbol"><SquaresFour size={23} weight="bold" /></span><span>EvalPilot<small>模型评测平台</small></span></a>
-      <button className="workspace" onClick={() => go('settings')}><span className="workspace-icon">E</span><span>评测工作区<small>项目管理 · 本机评测</small></span><CaretDown size={13} /></button>
+      <a className="brand" href="#datasets" onClick={() => go('datasets')}><span className="brand-symbol"><SquaresFour size={23} weight="bold" /></span><span>EvalPilot<small>模型评测与运营</small></span></a>
+      <button className="workspace" onClick={() => go('settings')}><span className="workspace-icon">E</span><span>评测工作区<small>项目管理 · 评测与运营</small></span><CaretDown size={13} /></button>
       <nav aria-label="主导航">{routes.filter(route => !route.advanced).map(route => <button key={route.id} className={`nav-item ${page === route.id ? 'active' : ''}`} aria-current={page === route.id ? 'page' : undefined} onClick={() => go(route.id)}><route.icon size={19} /><span>{route.name}</span></button>)}</nav>
       <details className="secondary-navigation" key={routes.find(route => route.id === page)?.advanced ? 'advanced' : 'main'} open={routes.find(route => route.id === page)?.advanced || undefined}><summary>更多工具<CaretDown size={14} /></summary><nav aria-label="更多工具">{routes.filter(route => route.advanced).map(route => <button key={route.id} className={`nav-item ${page === route.id ? 'active' : ''}`} aria-current={page === route.id ? 'page' : undefined} onClick={() => go(route.id)}><route.icon size={18} /><span>{route.name}</span></button>)}</nav></details>
       <div className="sidebar-bottom"><div className="workspace-health"><span className="health-dot" /><strong>本地引擎已就绪</strong><p>本地训练 · 外部调用须确认</p><button onClick={() => go('guide')}>如何开始使用 <ArrowUpRight size={13} /></button></div><div className="profile"><span>评</span><div>评测团队<small>Local workspace</small></div><ShieldCheck size={18} /></div></div>
     </aside>
-    <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="icon-button menu-toggle" aria-label="打开导航" onClick={() => setMobile(true)}><List size={21} /></button><span>模型评测</span><CaretRight size={13} /><strong>{routes.find(route => route.id === page)?.name}</strong></div><div className="topbar-actions"><button className="appearance-shortcut" onClick={() => setGuideOpen(true)} aria-label="打开使用说明"><BookOpen size={18} /><span>使用说明</span></button><button className="appearance-shortcut" onClick={() => setAppearanceOpen(true)} aria-label="修改配色"><Palette size={18} /><span>外观</span></button><span className="top-avatar">评</span></div></header>
-      <main className="main-content">{error && <div className="notice error" role="alert"><WarningCircle size={18} /><span>{error}。当前显示上次读取的数据。</span><button onClick={() => void refresh()}>重试</button></div>}{active && page !== 'benchmark' && <button className="active-run-bar" onClick={() => inspect(active)}><CircleNotch size={17} className="spin" /><span>{datasetShort(active.datasetId)} · {active.stage}</span><strong>查看进度 <ArrowRight size={14} /></strong></button>}{page === 'traces' && returnOverview && <div className="workflow-return"><a className="text-link" href={`#${returnOverview}`}><CaretLeft size={15} />返回结果大盘</a></div>}{['knowledge', 'traces'].includes(page) && !returnOverview && runFromHash() && <div className="workflow-return"><a className="text-link" href={runFromHash().startsWith('MMRUN-') ? `#compare?mode=vision&mmrun=${encodeURIComponent(runFromHash())}` : runUrl('benchmark', runFromHash())}><CaretLeft size={15} />返回本批评测</a></div>}{content[page]}<footer className="page-footer"><span><ShieldCheck size={13} />外部模型仅确认后调用 · 业务动作仅沙箱</span><button onClick={() => go('guide')}>使用说明与能力边界 <ArrowUpRight size={13} /></button></footer></main>
+    <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="icon-button menu-toggle" aria-label="打开导航" onClick={() => setMobile(true)}><List size={21} /></button><span>模型评测</span><CaretRight size={13} /><strong>{routes.find(route => route.id === page)?.name}</strong></div><div className="topbar-actions"><button className="appearance-shortcut" onClick={() => setConnectionOpen(true)} aria-label="连接模型 / API Key"><Plus size={18} /><span>连接模型</span></button><button className="appearance-shortcut" onClick={() => setGuideOpen(true)} aria-label="打开使用说明"><BookOpen size={18} /><span>使用说明</span></button><button className="appearance-shortcut" onClick={() => setAppearanceOpen(true)} aria-label="修改配色"><Palette size={18} /><span>外观</span></button><span className="top-avatar">评</span></div></header>
+      <main className="main-content">{error && <div className="notice error" role="alert"><WarningCircle size={18} /><span>{error}。当前显示上次读取的数据。</span><button onClick={() => void refresh()}>重试</button></div>}{active && page !== 'benchmark' && <button className="active-run-bar" onClick={() => inspect(active)}><CircleNotch size={17} className="spin" /><span>{datasetShort(active.datasetId)} · {active.stage}</span><strong>查看进度 <ArrowRight size={14} /></strong></button>}{page === 'knowledge' && /^traces(?:\?|$)/.test(returnTo) && <div className="workflow-return"><a className="text-link" href={`#${returnTo}`}><CaretLeft size={15} />返回执行记录</a></div>}{page === 'knowledge' && !returnOverview && !/^traces(?:\?|$)/.test(returnTo) && runFromHash() && <div className="workflow-return"><a className="text-link" href={runFromHash().startsWith('MMRUN-') ? `#compare?mode=vision&mmrun=${encodeURIComponent(runFromHash())}` : runUrl('benchmark', runFromHash())}><CaretLeft size={15} />返回本批评测</a></div>}{content[page]}<footer className="page-footer"><span><ShieldCheck size={13} />外部模型仅确认后调用 · 业务动作仅沙箱</span><button onClick={() => go('guide')}>使用说明与能力边界 <ArrowUpRight size={13} /></button></footer></main>
     </div>
     {toast && <div className="toast" role="status"><Info size={18} /><span>{toast}</span><button onClick={() => setToast('')} aria-label="关闭提示"><X size={16} /></button></div>}
+    <ConnectionModal open={connectionOpen} connection={null} close={() => setConnectionOpen(false)} changed={refresh} />
     <Modal open={guideOpen} onClose={() => setGuideOpen(false)} title="使用说明" description="按步骤体验，关闭后继续当前操作。" wide><QuickStart compact onNavigate={() => setGuideOpen(false)} /></Modal>
     <Modal open={appearanceOpen} onClose={() => setAppearanceOpen(false)} title="把工作区调成你喜欢的样子" description="主题色与明暗模式立即生效，刷新后也会保留。"><AppearanceControls /></Modal>
     <NewExperiment open={newRun} close={() => setNewRun(false)} datasetId={runDataset} state={state} submit={async datasetId => { const run = await api<Run>('/runs', { datasetId }); await refresh(); setNewRun(false); inspect(run); notify('已启动实际训练 / 推理，结果来自独立测试集。'); }} />

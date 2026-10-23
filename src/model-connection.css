@@ -1,0 +1,25 @@
+.connection-section { border: 0; padding: 0; margin: 0 0 22px; min-width: 0; }
+.connection-section legend, .connection-section h3 { display: flex; align-items: center; gap: 8px; padding: 0; margin: 0 0 14px; font-size: 14px; font-weight: 600; }
+.connection-section legend > span, .connection-section h3 > span:first-child { display: inline-grid; place-items: center; width: 22px; height: 22px; font-size: 11px; border-radius: 50%; color: var(--accent-text); background: var(--accent-soft); }
+.connection-section .form-field { margin-top: 12px; }
+.connection-section select, .connection-section input:not([type=checkbox]) { width: 100%; min-width: 0; }
+.connection-destination { color: var(--secondary); font-size: 11px; line-height: 1.7; margin: 8px 0 14px; }
+.connection-destination code { display: block; overflow-wrap: anywhere; color: var(--ink); }
+.connection-hint, .connection-discover small { font-size: 12px; color: var(--secondary); line-height: 1.7; }
+.connection-discover { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.connection-options { font-size: 12px; margin-top: 14px; color: var(--secondary); }
+.connection-options summary { cursor: pointer; padding: 4px 0; }
+.model-connection-form + .lab-connection-test { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.connection-section .lab-check { line-height: 1.7; align-items: flex-start; }
+.connection-section .lab-check input { margin-top: 4px; flex-shrink: 0; }
+.connection-section .lab-row-actions { margin-top: 14px; }
+.connection-section button:focus-visible, .connection-section summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.connection-presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 22px; }
+.connection-presets button { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.connection-presets button[aria-pressed=true] { border-color: var(--accent); background: var(--accent-soft); }
+.connection-presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.connection-presets button:disabled { opacity: .5; cursor: not-allowed; }
+.connection-presets strong { font-size: 14px; }
+.connection-presets span { color: var(--secondary); font-size: 12px; line-height: 1.5; }
+.connection-options ol { padding-left: 20px; line-height: 1.8; }
+@media (max-width: 420px) { .connection-presets { grid-template-columns: 1fr; } }

@@ -7,7 +7,7 @@ import type { Connection } from './AgentLab';
 import { visionSources } from './visionSources';
 import { ConversationLearning } from './ConversationLearning';
 import type { LearningState } from './ConversationLearning';
-import { IntentExplorer } from './IntentExplorer';
+import { DialogueTestWorkbench } from './DialogueTestWorkbench';
 import { ModelPerformance, QualityOverview } from './ExperienceCharts';
 import type { ModelAnalysis, QualityAnalytics } from './ExperienceCharts';
 import { RootCauses } from './RcaWorkbench';
@@ -36,7 +36,7 @@ export type ExperienceState = {
   learning: LearningState;
 };
 type Tab = 'business' | 'quality' | 'rca' | 'intents';
-const tabs: [Tab, string][] = [['business', '业务指标'], ['quality', '质检复核'], ['rca', 'DSAT归因'], ['intents', '意图树']];
+const tabs: [Tab, string][] = [['business', '业务指标'], ['quality', '质检复核'], ['rca', 'DSAT归因'], ['intents', '对话测试']];
 const states: Record<string, string> = { triage: '待归因', confirmed: '归因已确认', fixing: '修复中', verified: '人工回归已验收', running: '运行中', completed: '已结束', cancelled: '已取消', interrupted: '已中断' };
 const display = (value: number | null | undefined) => value == null ? '待接入' : `${value.toFixed(1)}%`;
 const trace = (id: string) => { location.hash = `traces?trace=${encodeURIComponent(id)}&return=${encodeURIComponent(location.hash.slice(1))}`; };
@@ -69,7 +69,7 @@ export function ExperienceDashboard() {
     {route.tab === 'business' && <Business state={state} connect={() => setImportOpen(true)} changed={id => id ? navigate({ replay: id }) : refresh()} />}
     {route.tab === 'quality' && <Quality key={`${state.projectId}:${route.qc}`} state={state} refresh={refresh} />}
     {route.tab === 'rca' && <RootCauses key={state.projectId} state={state} refresh={refresh} connect={() => setImportOpen(true)} />}
-    {route.tab === 'intents' && <IntentExplorer key={state.projectId} state={state} />}
+    {route.tab === 'intents' && <DialogueTestWorkbench key={state.projectId} state={state} />}
     <OutcomeImport open={importOpen} close={() => setImportOpen(false)} projectId={state.projectId} ruleVersion={state.rules.version} done={() => { setImportOpen(false); refresh(); }} />
   </div>;
 }

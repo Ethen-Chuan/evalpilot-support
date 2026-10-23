@@ -5,6 +5,7 @@ import re
 import threading
 import time
 import uuid
+from urllib.parse import unquote
 from collections import Counter
 
 import joblib
@@ -14,7 +15,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import f1_score
 from sklearn.svm import LinearSVC
 
-from aftersales_provider import ProviderVault
+from aftersales_provider import ProviderVault, service_catalog
 from multimodal_lab import MultimodalLab
 from vision_media import local_image_check
 from tracing import Trace, span
@@ -196,14 +197,17 @@ class AgentLab:
     def configure(self, body):
         name = self.repo.text(body.get('name'), 60)
         family = self.repo.text(body.get('family', name), 60)
+        key = body.get('apiKey')
+        if isinstance(key, str) and key and any(key in str(value) for value in (name, family, body.get('candidateModel', ''), body.get('judgeModel', ''))):
+            raise ValueError('显示名称和模型 ID 不得包含密钥，请只在专用输入框填写')
         self.repo.local_scan([name, family, body.get('judgeModel', ''), body.get('candidateModel', '')])
         vault = ProviderVault()
         status = vault.configure(body)
         connection_id = body.get('connectionId')
         if connection_id:
             previous = self.require('lab_connection', connection_id)
-            if previous['provider'] != status['provider'] or previous['model'] != status['candidateModel'] or previous['judgeModel'] != status['judgeModel']:
-                raise ValueError('重新连接必须使用原服务和模型；新模型请创建新版本')
+            if previous['provider'] != status['provider'] or previous['model'] != status['candidateModel'] or previous['judgeModel'] != status['judgeModel'] or previous['endpoint'] != status['endpoint']:
+                raise ValueError('重新连接必须使用原服务、地址和模型；变更部署地址或模型请创建新连接')
             record = previous
         else:
             connection_id = identifier('CONN')
@@ -364,11 +368,10 @@ class AgentLab:
         versions = [self.require('lab_version', key) for key in supplied]
         comparison_mode = body.get('comparisonMode')
         if comparison_mode is not None:
-            if comparison_mode not in ('horizontal', 'vertical') or len(versions) != 2:
-                raise ValueError('同批对比需要两个不同模型，并指定有效对比方式')
+            if comparison_mode not in ('unified', 'horizontal', 'vertical') or len(versions) != 2:
+                raise ValueError('模型对比需要两个不同模型和有效的对比请求')
             same_family = versions[0]['provider'] == versions[1]['provider'] and versions[0]['family'] == versions[1]['family']
-            if (comparison_mode == 'vertical') != same_family:
-                raise ValueError('同厂商同系列请选择版本迭代对比，不同厂商或系列请选择跨模型对比')
+            comparison_mode = 'vertical' if same_family else 'horizontal'
         if any(version.get('protocol', PROTOCOL) != PROTOCOL or (version['kind'] == 'external' and version.get('promptHash') != digest(CANDIDATE_PROMPT)) for version in versions):
             raise ValueError('模型版本绑定的执行协议已变更，请创建新版本后再比较')
         if any(version['kind'] == 'local' and version['bundleId'] != bundle['id'] for version in versions):
@@ -388,8 +391,6 @@ class AgentLab:
                 raise ValueError('运行数量超出 1–200 或当前测试案例总数')
             cases = sorted(available, key=lambda case: digest(['sample-42', case['id']]))[:count]
         parent_id = body.get('parentRunId')
-        if comparison_mode and len(cases) < 2:
-            raise ValueError('同批对比至少选择两个测试案例；比较区间还需两个独立分组')
         if parent_id:
             parent = self.require('lab_run', parent_id)
             if parent['bundleId'] != bundle['id'] or not {case['id'] for case in cases}.issubset(parent['caseIds']):
@@ -490,25 +491,51 @@ class AgentLab:
             latest.update(status='failed', error='实验中断，已完成的逐例证据仍保留', finishedAt=self.repo.now())
             self.repo.save('lab_run', run_id, latest)
 
-    def compare(self, body):
+    def comparison_inputs(self, body, require_completed=True):
         sides = body.get('sides')
         if not isinstance(sides, list) or len(sides) != 2 or any(not isinstance(side, dict) for side in sides):
             raise ValueError('请选择两个运行版本')
+        if all(sides[0].get(field) == sides[1].get(field) for field in ('runId', 'versionId')):
+            raise ValueError('请选择不同版本或不同次运行')
         runs = [self.require('lab_run', side.get('runId')) for side in sides]
-        if any(run['status'] != 'completed' for run in runs):
+        if require_completed and any(run['status'] != 'completed' for run in runs):
             raise ValueError('仅比较已完成实验；中断或取消实验请重跑')
         if any(runs[0][key] != runs[1][key] for key in ('bundleId', 'protocol', 'caseHash', 'judgeHash')):
             raise ValueError('不可直接比较：测试案例、数据划分、协议或裁判不同，请使用相同批次重跑')
-        indexed = []
-        selected_versions = []
+        versions = []
         for run, side in zip(runs, sides):
             version = next((value for value in run['versions'] if value['id'] == side.get('versionId')), None)
             if not version:
                 raise ValueError('版本不属于实验')
-            selected_versions.append(version)
+            versions.append(version)
+        return runs, versions
+
+    def compare_cases(self, body):
+        runs, versions = self.comparison_inputs(body, require_completed=False)
+        cases = [self.require('lab_case', key) for key in runs[0]['caseIds']]
+        if set(runs[0]['caseIds']) != set(runs[1]['caseIds']) or digest(sorted((case['id'], case['sourceHash']) for case in cases)) != runs[0]['caseHash']:
+            raise ValueError('案例快照与运行指纹不一致，不能混用对话')
+        selected = next((case for case in cases if case['id'] == body.get('caseId')), None) if body.get('caseId') else next(iter(cases), None)
+        if not selected:
+            raise ValueError('所选案例不属于这两份结果')
+        messages = selected['sourceSnapshot']['messages']
+        reference_index = len(selected['prefix'])
+        if selected['sourceHash'] != digest(messages) or selected['prefix'] != messages[:reference_index] or reference_index >= len(messages) or selected['reference'] != messages[reference_index]:
+            raise ValueError('对话快照已变化，无法展示为本次模型输入')
+        indexed = [{row['caseId']: row for row in run['results'] if row['versionId'] == version['id']} for run, version in zip(runs, versions)]
+        items = []
+        for case in cases:
+            rows = [index.get(case['id']) for index in indexed]
+            question = next((message['content'] for message in reversed(case['prefix']) if message['role'] == 'user'), '')
+            complete = all(row and row['status'] == 'completed' for row in rows)
+            items.append({'id': case['id'], 'sessionId': case['sessionId'], 'title': case['title'], 'question': question, 'statuses': [row['status'] if row else 'pending' if run['status'] in ('running', 'cancelling') else 'not_executed' for row, run in zip(rows, runs)], 'different': complete and any((rows[0].get('output') or {}).get(field) != (rows[1].get('output') or {}).get(field) for field in ('answer', 'action'))})
+        return {'models': versions, 'runIds': [run['id'] for run in runs], 'runStatuses': [run['status'] for run in runs], 'cases': items, 'selected': {key: selected[key] for key in ('id', 'sessionId', 'title', 'prefix', 'reference', 'contextLimited')}, 'results': [index.get(selected['id']) for index in indexed], 'caseHash': runs[0]['caseHash']}
+
+    def compare(self, body):
+        runs, selected_versions = self.comparison_inputs(body)
+        indexed = []
+        for run, version in zip(runs, selected_versions):
             indexed.append({row['caseId']: row for row in run['results'] if row['versionId'] == version['id'] and row['status'] == 'completed'})
-        if sides[0] == sides[1]:
-            raise ValueError('请选择不同版本或不同次运行')
         shared = sorted(set(indexed[0]) & set(indexed[1]))
         if not shared:
             raise ValueError('没有共同完成的案例，不能比较')
@@ -561,11 +588,13 @@ class AgentLab:
             return self.multimodal.get(route.removeprefix('multimodal/'))
         if route == 'state':
             return self.state()
+        if route == 'services':
+            return service_catalog()
         if route == 'cases':
             cases = self.cases(query.get('bundle', [''])[0])
-            return [{'id': case['id'], 'sessionId': case['sessionId'], 'title': case['title'], 'intent': case['intent'], 'action': case['action'], 'contextLimited': case['contextLimited']} for case in cases]
+            return [{'id': case['id'], 'sessionId': case['sessionId'], 'title': case['title'], 'question': next((message['content'] for message in reversed(case['prefix']) if message['role'] == 'user'), ''), 'intent': case['intent'], 'action': case['action'], 'contextLimited': case['contextLimited']} for case in cases]
         if route.startswith('case/'):
-            return self.require('lab_case', route[5:])
+            return self.require('lab_case', unquote(route[5:]))
         if route.startswith('runs/'):
             run_id = route[5:]
             if run_id.endswith('/export'):
@@ -591,6 +620,8 @@ class AgentLab:
             return self.start_training(body)
         if route == 'connections':
             return self.configure(body)
+        if route == 'connections/models':
+            return ProviderVault.discover(body)
         if route == 'connections/test':
             if body.get('confirmed') is not True:
                 raise ValueError('请确认发送不含客户信息的连接测试，可能产生少量费用')
@@ -609,6 +640,8 @@ class AgentLab:
             return self.run_summary(run)
         if route == 'compare':
             return self.compare(body)
+        if route == 'compare/cases':
+            return self.compare_cases(body)
         if route == 'chat':
             return self.chat(body)
         raise ValueError('接口不存在')

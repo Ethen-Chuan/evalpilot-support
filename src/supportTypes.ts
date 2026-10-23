@@ -1,4 +1,4 @@
-export type Page = 'overview' | 'datasets' | 'benchmark' | 'playground' | 'knowledge' | 'badcases' | 'actions' | 'sources' | 'settings' | 'traces' | 'compare' | 'models' | 'guide';
+export type Page = 'overview' | 'datasets' | 'benchmark' | 'playground' | 'knowledge' | 'badcases' | 'actions' | 'sources' | 'settings' | 'traces' | 'compare' | 'models' | 'guide' | 'modelops';
 import type { Corpus } from './CorpusLabels';
 export type Dataset = { id: string; name: string; provider: string; nature: string; language: string; scope: string; license: string; source: string; revision: string; downloadedAt: string; originalCount: number; count: number; intents: number; splits: Record<string, number>; excludedSensitive: number; deduplicated: number; crossSplitRemoved: number; sha256: string; splitPolicy: string; preprocessing: string; limitations: string; scan: string };
 export type Metric = { accuracy: number; macroF1: number; top3: number; correct: number; total: number; failed: number; accuracyInterval: number[]; batchP95Ms: number; batchSize: number; throughput: number; perIntent?: { intent: string; precision: number; recall: number; f1: number; support: number }[] };

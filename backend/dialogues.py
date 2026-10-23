@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import uuid
+from dataset_labels import add_conditions, facets, parse_filters
 
 ROLES = {"user": "客户", "assistant": "智能客服", "human": "人工客服", "system": "系统", "tool": "工具"}
 ROLE_PREFIXES = {"用户": "user", "客户": "user", "客服": "assistant", "助手": "assistant", "智能客服": "assistant", "人工客服": "human", "人工": "human", "系统": "system", "工具": "tool"}
@@ -120,6 +121,11 @@ class DialogueService:
         return result
 
     def sessions(self, query):
+        scope, labels = parse_filters(query)
+        include_facets = query.get('facets', ['0'])[0] == '1'
+        dataset = query.get('dataset', [''])[0]
+        if include_facets and (not dataset or not self.repository.get('corpus', dataset)):
+            raise ValueError('分类统计需要选择已导入的项目')
         self.refresh_index()
         search = query.get("q", [""])[0].casefold()[:200]
         status = query.get("status", ["all"])[0]
@@ -127,24 +133,25 @@ class DialogueService:
         if search:
             conditions.append('instr(search_text,?)>0')
             parameters.append(search)
-        dataset = query.get('dataset', [''])[0]
         if dataset:
             conditions.append('dataset_id=?')
             parameters.append(dataset)
         filters = {'archived': "json_array_length(payload,'$.archives')>0", 'unarchived': "json_array_length(payload,'$.archives')=0", 'attention': "json_extract(payload,'$.signalCount')>0", 'imported': "json_extract(payload,'$.origin')='user_imported'", 'gap': "EXISTS(SELECT 1 FROM json_each(dialogue_summaries.payload,'$.labelSummary.values.kb_expectation') WHERE value='gap')", 'invalid': "EXISTS(SELECT 1 FROM json_each(dialogue_summaries.payload,'$.labelSummary.values.is_invalid') WHERE value IN ('yes','是'))", 'label_conflict': "json_array_length(payload,'$.labelSummary.conflicts')>0"}
         if status in filters:
             conditions.append(filters[status])
-        intent = query.get('intent', [''])[0]
-        if intent:
-            conditions.append("EXISTS(SELECT 1 FROM json_each(dialogue_summaries.payload,'$.labelSummary.values.intent') WHERE value=?)")
-            parameters.append(intent)
+        add_conditions(conditions, parameters, scope, labels)
         page = max(1, int(query.get("page", ["1"])[0]))
         where = ' AND '.join(conditions)
         with self.repository.connection() as database:
+            database.execute('BEGIN')
             total = database.execute('SELECT count(*) FROM dialogue_summaries WHERE ' + where, parameters).fetchone()[0]
             rows = database.execute("SELECT payload FROM dialogue_summaries WHERE " + where + " ORDER BY json_extract(payload,'$.updatedAt') DESC,id LIMIT 20 OFFSET ?", parameters + [(page - 1) * 20]).fetchall()
             stats = database.execute("SELECT count(*),coalesce(sum(json_extract(payload,'$.messageCount')),0),coalesce(sum(json_array_length(payload,'$.archives')>0),0) FROM dialogue_summaries").fetchone()
-        return {'sessions': [json.loads(row[0]) for row in rows], 'total': total, 'page': page, 'pageSize': 20, 'corpora': self.repository.records('corpus'), 'stats': {'sessions': stats[0], 'messages': stats[1], 'archived': stats[2], 'drafts': sum(draft['status'] == 'draft' for draft in self.repository.records('knowledge_draft'))}}
+            distribution = facets(database, where, parameters, dataset, scope, labels) if include_facets else None
+        result = {'sessions': [json.loads(row[0]) for row in rows], 'total': total, 'page': page, 'pageSize': 20, 'corpora': self.repository.records('corpus'), 'stats': {'sessions': stats[0], 'messages': stats[1], 'archived': stats[2], 'drafts': sum(draft['status'] == 'draft' for draft in self.repository.records('knowledge_draft'))}}
+        if include_facets:
+            result['facets'] = distribution
+        return result
 
     def import_dialogue(self, body):
         if body.get("authorized") is not True:

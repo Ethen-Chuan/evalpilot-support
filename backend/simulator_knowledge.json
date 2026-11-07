@@ -1,0 +1,42 @@
+[
+  {
+    "id": "KB-BOUNDARY", "version": "1.0", "title": "沙箱权限与证据边界", "status": "approved", "source": "本机审核的示例服务规则", "effectiveFrom": "2026-01-01", "expiresAt": null,
+    "aliases": [], "priority": 0,
+    "policy": "只允许检索已审核示例知识和只读沙箱查询；不能操作资金、派单或接通真人。资料不足时澄清，不能补造事实。",
+    "responses": [{"code": "boundary", "text": "这里是本地沙箱，没有执行真实退款、派单或人工转接。", "action": "any"}]
+  },
+  {
+    "id": "KB-BLACKSCREEN", "version": "1.0", "title": "黑屏：先核对菜单与输入链路", "status": "approved", "source": "公开案例整理 · 黑屏示例政策", "effectiveFrom": "2026-01-01", "expiresAt": null,
+    "aliases": ["黑屏", "黑了", "屏幕不亮", "菜单", "HDMI", "输入源", "换了线", "换线"], "priority": 10,
+    "policy": "不重复已经无效的重启；先澄清菜单与输入源。确认菜单正常后才检查输入链路；换线无效或明确要求人工时升级。",
+    "responses": [
+      {"code": "black_clarify", "text": "先核对当前设备：请确认屏幕自身菜单能否打开，以及正在使用的输入源。", "action": "clarify"},
+      {"code": "black_input", "text": "根据你已提供的菜单或输入源信息，请核对屏幕选择的输入源是否与连接接口一致；不要拆机或恢复出厂。", "action": "troubleshoot"},
+      {"code": "black_escalate", "text": "已有排查仍未解决问题，不再重复无效步骤。请通过官方售后入口，由专业人员继续核实输入设备与屏幕状态。", "action": "handoff"}
+    ]
+  },
+  {
+    "id": "KB-WARRANTY", "version": "1.0", "title": "设备切换与保修核验", "status": "approved", "source": "公开案例整理 · 保修示例政策", "effectiveFrom": "2026-01-01", "expiresAt": null,
+    "aliases": ["保修", "在保", "免费维修", "前台", "购买记录", "购买凭证"], "priority": 10,
+    "policy": "切换设备后隔离旧设备结论。购买及保修记录未经核验，不承诺在保或免费维修；沙箱状态不能代表真实保修状态。",
+    "responses": [{"code": "warranty_verify", "text": "这次只核对当前设备，不沿用上一台设备的保修结论。沙箱中的保修状态未核实，不能直接认定在保或免费维修；请通过官方安全入口核对当前设备的购买及保修记录。", "action": "clarify"}]
+  },
+  {
+    "id": "KB-HANDOFF", "version": "1.0", "title": "明确人工诉求与上下文交接", "status": "approved", "source": "公开案例整理 · 人工升级示例政策", "effectiveFrom": "2026-01-01", "expiresAt": null,
+    "aliases": ["人工", "真人", "不想再排查", "整理", "不要让我重复", "交接"], "priority": 50,
+    "policy": "用户明确要求人工时停止重复排查。交接包含当前问题、已发生历史和场景事实；本地草稿不等于接通坐席。",
+    "responses": [{"code": "handoff", "text": "理解你希望由人工继续处理，我们不再重复无效排查。我已整理本地交接草稿，保留当前问题、已提供的事实与已尝试步骤；尚未接通真人，请通过官方售后入口继续处理。", "action": "handoff"}]
+  },
+  {
+    "id": "KB-REFUND", "version": "1.0", "title": "退款状态查询与承诺边界", "status": "approved", "source": "工作区示例政策 · 退款查询", "effectiveFrom": "2026-01-01", "expiresAt": null,
+    "aliases": ["退款", "到账", "钱没到", "退回来", "资金"], "priority": 10,
+    "policy": "到账受审核和支付渠道影响，不能承诺日期或操作退款。查看订单详情中的售后进度，异常时联系正式人工核实。",
+    "responses": [{"code": "refund_progress", "text": "理解你在等待退款。这里的查询只返回示例状态，并非你的真实资金记录。请在「订单详情 → 售后进度」查看实际状态；到账以审核和支付渠道为准，不能保证今天到账，也不能代为操作退款。久未到账请联系正式人工核实。", "action": "explain"}]
+  },
+  {
+    "id": "KB-SAFETY", "version": "1.0", "title": "异常发热或焦味：停止使用并升级", "status": "approved", "source": "本机审核的安全边界示例", "effectiveFrom": "2026-01-01", "expiresAt": null,
+    "aliases": ["焦味", "冒烟", "发烫", "特别烫", "螺丝刀", "拆开", "拆机", "继续开机", "专业售后"], "priority": 100,
+    "policy": "存在异常发热、焦味等风险时停止常规排查。不提供拆机、接触内部元件或带电维修指引；只整理本地升级草稿。",
+    "responses": [{"code": "safety_stop", "text": "当前情况涉及安全风险，请停止使用，不要拆机或接触内部元件，由专业售后继续核实；这里不作故障确诊。", "action": "handoff"}]
+  }
+]

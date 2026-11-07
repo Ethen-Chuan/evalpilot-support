@@ -1,0 +1,657 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="EvalPilot智能对话客服平台产品需求文档，含岗位研究、功能规格、验收指标、设计系统与迭代路线图。"><title>EvalPilot · 智能服务平台 PRD V2.0</title><style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#253044;background:#f6f7fa;font-synthesis:none}*{box-sizing:border-box}body{margin:0}a{color:#2153b8;text-underline-offset:3px}a:focus-visible{outline:3px solid #245cdb;outline-offset:3px}.top{height:62px;border-bottom:1px solid #d7dfe9;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:3}.brand{font-size:18px;font-weight:650;letter-spacing:-.4px;color:#253044;text-decoration:none}.brand span{font-size:10px;letter-spacing:1px;margin-left:16px;color:#536176;font-weight:400}.top>a:last-child{font-size:12px}.layout{display:grid;grid-template-columns:255px minmax(0,1fr);max-width:1550px;margin:0 auto}nav{padding:30px 20px;position:sticky;top:62px;height:calc(100vh - 62px);overflow:auto}nav>span{font-size:10px;letter-spacing:1.5px;color:#6d788a;display:block;margin-bottom:18px}nav a{display:block;font-size:12px;line-height:1.7;padding:7px 8px;color:#536176;text-decoration:none;border-radius:4px}nav a:hover{background:#edf3ff;color:#2153b8}main{padding:45px 52px 80px;background:#fff;border-inline:1px solid #e5e9f0;min-width:0}h1{font-size:35px;line-height:1.45;letter-spacing:-1px;font-weight:650;margin:0 0 16px}h2{font-size:25px;line-height:1.5;letter-spacing:-.4px;margin:52px 0 20px;padding-top:10px;scroll-margin-top:80px}h2:first-of-type{font-size:20px;font-weight:450;color:#536176;margin-top:0}h3{font-size:18px;margin:30px 0 12px;line-height:1.6}p,li{font-size:14px;line-height:1.95}p{margin:12px 0}li{margin:7px 0}ul,ol{padding-left:23px}hr{border:0;border-top:1px solid #e5e9f0;margin:35px 0}.table-scroll{overflow:auto;border:1px solid #d7dfe9;border-radius:6px;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:12px;line-height:1.8;min-width:580px}th{background:#f2f5fa;text-align:left;font-weight:600;vertical-align:top;padding:12px 14px;color:#39465a}td{padding:12px 14px;border-top:1px solid #e5e9f0;vertical-align:top}tbody tr:nth-child(even){background:#fafbfd}table p{font-size:12px}code{font:11px/1.7 ui-monospace,monospace;background:#edf3ff;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}p a,li a{overflow-wrap:anywhere}strong{font-weight:600}.document-note{border-left:3px solid #245cdb;padding:12px 18px;background:#edf3ff;margin:25px 0;font-size:12px;line-height:1.85}.bottom{font-size:12px;color:#6d788a;margin-top:50px;border-top:1px solid #e5e9f0;padding-top:20px}@media(max-width:1000px){.layout{grid-template-columns:205px minmax(0,1fr)}main{padding:30px}nav{padding:24px 12px}}@media(max-width:720px){.layout{display:block}nav{position:static;height:auto;max-height:210px;border-bottom:1px solid #d7dfe9}.top{padding:0 18px}.brand span{display:none}main{padding:25px 20px}h1{font-size:28px}h2{font-size:22px}p,li{font-size:14px}.table-scroll{margin-inline:0}}@media print{.top,nav{display:none}.layout{display:block}main{padding:0;border:0}body{background:white}h2,h3{break-after:avoid}tr{break-inside:avoid}.table-scroll{overflow:visible;border-radius:0}table{min-width:0;font-size:9px}p,li{font-size:10.5px}h1{font-size:26px}h2{font-size:19px}h3{font-size:14px}a{color:inherit;text-decoration:none}@page{size:A4;margin:16mm}}
+</style></head><body><header class="top"><a class="brand" href="/#service">EvalPilot<span>PRODUCT REQUIREMENTS / V2.0</span></a><a href="/#service">返回智能服务平台 →</a></header><div class="layout"><nav aria-label="PRD章节目录"><span>产品定义与实施规格</span><a href="#section-2">从客服评测作品，到可运营的 B 端服务能力平台</a><a href="#section-12">0. 先给结论</a><a href="#section-59">1. 岗位调研与产品能力映射</a><a href="#section-93">2. 竞品与设计方法：借鉴什么，不照搬什么</a><a href="#section-118">3. 产品定位、范围与用户</a><a href="#section-160">4. 信息架构与统一对象</a><a href="#section-209">5. 模块 A：服务总览</a><a href="#section-231">6. 模块 B：服务能力与服务契约</a><a href="#section-271">7. 模块 C：客户端智能服务/自助服务</a><a href="#section-315">8. 模块 D：执行证据与 Harness</a><a href="#section-351">9. 模块 E：三层评价，不再把所有指标叫“分数”</a><a href="#section-408">10. 模块 F：沙箱发布与回退</a><a href="#section-442">11. 模块 G：体验回流</a><a href="#section-466">12. 模块 H：保留能力与平台底座的迭代边界</a><a href="#section-488">13. 指标体系：公式、分母、窗口与目标</a><a href="#section-532">14. 设计系统与逐控件规范</a><a href="#section-618">15. API、并发与持久化规格</a><a href="#section-654">16. 安全、隐私与权限</a><a href="#section-684">17. 事件埋点与数据质量</a><a href="#section-714">18. 非功能与验收要求</a><a href="#section-743">19. 迭代路线图与投入取舍</a><a href="#section-783">20. 风险登记与降级策略</a><a href="#section-800">21. 面试演示脚本（8–10分钟）</a><a href="#section-846">22. 来源索引</a><a href="#section-872">23. 交付判断</a></nav><main><div class="document-note">本地作品版 · 实现与规划分开标注 · 真实业务指标不造数<br>可使用浏览器打印保存。没有第三方脚本、外部字体或行为追踪。</div><h1 id="section-0">EvalPilot 智能服务平台 PRD</h1>
+<h2 id="section-2">从客服评测作品，到可运营的 B 端服务能力平台</h2>
+<p><strong>版本：V2.1 · 可用性收敛版｜日期：2026 年 11 月 6 日｜状态：P0 已实现，P1–P3 仅为文档规划，不提供未接通功能入口</strong></p>
+<p>适用对象：AI 平台产品经理、客服业务负责人、服务运营、知识专家、评测人员、客户端及服务端研发。</p>
+<p>本文件是独立作品的产品设计，不代表字节跳动或任何公司的内部方案。岗位视角是分析方法，不构成任职经历。所有设备、备件和维修政策示例均为虚构；不提供任何真实厂商的诊断或维修依据。</p>
+<hr>
+<h2 id="section-12">0. 先给结论</h2>
+<h3 id="section-14">0.1 产品不再围绕“跑一次模型”组织</h3>
+<p>新定位：<strong>帮助客服业务团队把一个高频客户问题，配置为可自助进入、可对话补充、可执行检查、可验收发布、可持续改进的服务能力。</strong></p>
+<p>一句话讲给面试官：我把客服评测系统往业务交付的上游推进了一步——用“服务契约”统一业务目标、客户入口、适用范围、知识本体、工具权限、完成证据和验收标准。模型只是执行链中的一个可替换能力，不是产品的全部。</p>
+<p>“服务契约”是本作品的产品组织方式，并非声称发明一种全新的技术。它吸收了成熟产品中配置、版本、测试和发布的生命周期思路，特色在于把这些机制落实到客服场景，并与已有 Ontology 联动。</p>
+<h3 id="section-22">0.2 本次已经交付什么</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">交付</th><th scope="col">状态</th><th scope="col">可以实际验证的动作</th></tr></thead><tbody>
+<tr><td>服务总览与新的主导航</td><td>已实现</td><td>查看真实本地服务、预览、材料、问题与发布数量；删除未接通的线上指标占位</td></tr>
+<tr><td>服务能力目录与契约编辑</td><td>已实现</td><td>从模板新建、编辑入口与说明、选择机型/现象/动作、保存新版本</td></tr>
+<tr><td>客户端自助与连续对话预览</td><td>已实现·本地</td><td>使用已保存草稿或沙箱发布版本，真实读取本体并运行本地工具</td></tr>
+<tr><td>服务契约验收</td><td>已实现·确定性</td><td>重放固定用例与经审核的反馈案例，检查实际状态和非生产边界</td></tr>
+<tr><td>发布与回退</td><td>已实现·本地沙箱</td><td>必须有新鲜且全通过的验收证据；回退前重跑当前回归集</td></tr>
+<tr><td>体验回流</td><td>已实现</td><td>负反馈关联会话，人工选择正确预期，进入后续真实回归</td></tr>
+<tr><td>现有领域本体</td><td>完整保留</td><td>实体/别名/关系/规则/版本/调试、点线网络和对象卡片、逐层展开与全屏</td></tr>
+<tr><td>原客服数据、质检数据及评测</td><td>保留</td><td>继续在原模块使用，不把客户语料复制到公开示例或 PRD</td></tr>
+<tr><td>DeepSeek / Qwen 模型实验室</td><td>保留</td><td>原 Harness 与 Rubric 不删除；外部调用仍要求明确确认</td></tr>
+<tr><td>企业身份、真实渠道、真人坐席、工单集成</td><td>未实现</td><td>进入 P1，不在界面伪装“已接入”</td></tr>
+<tr><td>真实线上灰度、成本账单、生产解决率</td><td>未实现</td><td>进入 P2/P3，不展示预设提升曲线</td></tr>
+</tbody></table></div>
+<h3 id="section-38">0.3 V2.1 可用性收敛清单</h3>
+<ul>
+<li>删除服务首页的线上独立解决率占位、发布页的生产渠道/外部工单指标、回流页的真实CSAT占位；只保留有记录可核对的本地指标。生产能力的限制仍明确写在边界说明，不提供假的按钮。</li>
+<li>契约卡片的“开始核对”假链接改为可点击的“进入客户端体验”；未保存时说明前置条件。</li>
+<li>“体验已发布服务”通过显式published路由打开；开始、切换模式、恢复历史会话都同步路由与实际快照。草稿入口与发布入口不会混用。</li>
+<li>历史会话默认展示全部轮次，可选择单轮；显示总轮数、总步骤、该轮输入、真实规则/工具事件和确认回执。固定验收的跨轮用例也保留每一轮事件。</li>
+<li>图谱初始化不再覆盖用户刚点击的节点，键盘选中、拖动、展开及右侧详情同步保留。</li>
+<li>未保存编辑仅保存在当前标签页的临时草稿中；切换页面或刷新恢复，不触发业务保存。保存成功/放弃修改清理临时副本；服务版本冲突仍由后端阻止覆盖。</li>
+<li>发布只能使用该服务最新一次草稿验收；回退验收单独标记，不替代草稿证据。旧成功不能绕过新失败。</li>
+<li>回流的正确预期默认留空，必须由人主动选择并确认，不以本次系统结果预填。</li>
+<li>发布历史不截断成误导的当前状态；预览记录与最近100条审计均有分批展开入口。底层记录不删除。</li>
+<li>模型API连接保留真实配置能力；需要密钥和外发确认，不因本地尚未配置而删除。作品中的离线预览与真实模型调用继续明确区分。</li>
+</ul>
+<h3 id="section-51">0.4 三个必须讲清的边界</h3>
+<ol>
+<li>客户端预览的新增运行时是<strong>确定性、本地、无付费调用</strong>。它验证配置与业务机制，不替代模型对话实验室，也不冒充 DeepSeek 自主推理。</li>
+<li>“已生成服务单”指有编号的本地材料落库，<strong>不是派单成功、预约成功或客户问题已解决</strong>。</li>
+<li>本次完善的是一个可运行、能解释关键产品决策的作品版；不是已经完成企业生产建设，更不能在没有真实试点的情况下承诺“完美产品”。</li>
+</ol>
+<hr>
+<h2 id="section-59">1. 岗位调研与产品能力映射</h2>
+<h3 id="section-61">1.1 研究方法</h3>
+<p>在 2026-11-06 访问公司公开招聘渠道及其官方招聘服务商页面，读取职责与任职要求。下表使用归纳，不长篇复制 JD。岗位会下架或变动，来源链接只代表访问时可读取的内容。</p>
+<p>字节目标方向来自用户描述：智能对话平台、客户端智能服务/自助服务、提升解决能力。<strong>未取得这条字节岗位完整且可验证的官方 JD</strong>，因此不虚构职位编号、职级、团队内部指标或组织分工。</p>
+<h3 id="section-67">1.2 六家公司样本</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">公司与岗位</th><th scope="col">在公开 JD 中观察到的关注点</th><th scope="col">对本作品的产品含义</th><th scope="col">应展示的证据</th></tr></thead><tbody>
+<tr><td>Intercom · Senior Product Manager (Service Agent Team) [J1]</td><td>问题定义、客户研究、路线图、跨工程设计协作、定量与定性评估、产品质量</td><td>不只展示模型效果，要解释谁用、解决什么问题、为何先做这一环</td><td>服务契约、研究假设、验收与迭代优先级</td></tr>
+<tr><td>Decagon · Senior Agent Product Manager [J2]</td><td>企业客户业务流程、实际构建与优化、交付和采用、经验转可复用资产、反馈影响平台路线图</td><td>从单一售后 Demo 抽象为可复制的业务能力，而不是为每个场景重新写页面</td><td>从模板新建、统一范围和动作、失败回归</td></tr>
+<tr><td>Sierra · Product Manager, Agent Development [J3]</td><td>与客户及工程合作交付企业 Agent、需求发现、业务流程匹配、演示与产品路线图</td><td>面向业务结果构建端到端体验；展示客户侧和运营侧的对应关系</td><td>同一契约驱动客户端预览与后台检查</td></tr>
+<tr><td>Cresta · Forward Deployed Product Manager, AI Agent [J4]</td><td>从售前定界到上线后优化的生命周期、指标和价值、设计测试迭代、部署方法沉淀</td><td>作品需要明确成功标准、运行证据和交付门槛，不止一个配置表</td><td>契约验收、发布快照、反馈回流</td></tr>
+<tr><td>PolyAI · Staff Product Manager (Runtime Team) [J5]</td><td>运行时、推理和数据基础设施、成本/延迟/可靠性权衡、性能评价、数据治理</td><td>平台产品还要解释运行边界、性能口径、保留周期和外部依赖</td><td>运行指纹、工具白名单、指标分母、成本预算规划</td></tr>
+<tr><td>Parloa · Staff/Principal Product Manager, Agent Management Platform [J6]</td><td>企业客服 Agent 的设计、部署、管理、模块化/API/SDK、模拟评测、可观察性、业务影响</td><td>核心不是更多 AI 功能，而是让多个业务团队安全复用和运营能力</td><td>能力目录、配置隔离、版本发布、后续多团队路线图</td></tr>
+</tbody></table></div>
+<p>六家公司不是六个独立投票；同一行业的招聘样本存在选择偏差，且部分岗位偏前线部署、部分偏底层平台。不能把岗位频次当市场份额或行业统一标准。</p>
+<h3 id="section-80">1.3 对目标岗位最重要的六种能力</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">能力</th><th scope="col">原作品的不足</th><th scope="col">本轮改动</th><th scope="col">下一阶段验证</th></tr></thead><tbody>
+<tr><td>客户问题抽象</td><td>以评测集与模型配置为第一入口</td><td>服务目标/不做的事/适用范围成为配置主体</td><td>对高频咨询做任务级聚类和人工抽样</td></tr>
+<tr><td>平台化设计</td><td>功能分散，复用关系难讲</td><td>服务契约引用同一份本体与工具目录</td><td>多业务线共用版本与权限体系</td></tr>
+<tr><td>客户端体验</td><td>模型聊天占据演示中心</td><td>自助入口、连续补槽、结果卡、明确确认</td><td>客户端 SDK 与已登录用户上下文</td></tr>
+<tr><td>效果评估</td><td>技术分数容易被误当解决率</td><td>契约、Rubric、业务结果分成三层</td><td>时间外测试与线上重复咨询回看</td></tr>
+<tr><td>治理交付</td><td>规则“存在”不等于发布受控</td><td>新鲜度门禁、冻结快照、回退重验</td><td>身份鉴权、双人审批、真实灰度</td></tr>
+<tr><td>运营闭环</td><td>修复与下次验收脱节</td><td>反馈经审核进入回归并使旧证据失效</td><td>按影响和频率管理改进优先级</td></tr>
+</tbody></table></div>
+<hr>
+<h2 id="section-93">2. 竞品与设计方法：借鉴什么，不照搬什么</h2>
+<h3 id="section-95">2.1 从成熟对话平台借鉴</h3>
+<ul>
+<li>Google Dialogflow 的测试机制允许从模拟对话保存测试用例，并检查意图、工具、流程及参数等预期 [P1]。本作品借鉴“真实会话 → 审核预期 → 回归”，但当前验收只覆盖确定性服务状态，不声称具有同等全套能力。</li>
+<li>Microsoft Copilot Studio 的分析文档区分会话、分析会话及测试面板活动 [P2]。本作品采用同一原则：手动预览、固定验收、历史数据、生产事件分开统计，不混合制造增长。</li>
+<li>不把某家产品“AI 自动解决率”营销口径直接移植成目标值。业务范围、分母、沉默会话和转人工判定不同，数值不具有直接可比性。</li>
+</ul>
+<h3 id="section-101">2.2 国际设计方法的具体落点</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">方法来源</th><th scope="col">原则概括</th><th scope="col">落到本产品的决定</th><th scope="col">明确不做</th></tr></thead><tbody>
+<tr><td>Dieter Rams / Vitsœ [D1]</td><td>有用、可理解、诚实、克制、细节一致</td><td>用业务动作命名导航；线上未知值留空；主按钮明确结果；删除假增长和装饰性控制台</td><td>不因“高级感”添加无意义粒子、发光边框或伪实时图表</td></tr>
+<tr><td>Don Norman [D2]</td><td>可发现性、映射、反馈、约束、概念模型、纠错</td><td>编辑/预览/验收在同一服务上下文；禁用发布时解释原因；操作有反馈；回退不覆盖草稿</td><td>不让用户靠记忆推断当前运行的版本；不把模型思考当可审计证据</td></tr>
+</tbody></table></div>
+<p>这些是方法上的参考，不是复制作品、不使用设计师签名、商标或“官方设计系统”背书。现有 Radix 基础组件、Phosphor 图标、明暗主题和配色切换继续沿用。</p>
+<h3 id="section-110">2.3 本产品的视觉判断</h3>
+<p>面向 B 端运营工作台：<strong>信息密度适中、状态优先、证据可展开、动作有边界。</strong></p>
+<p>主页面有明确第一任务，而不是十几张同权重卡片。宽屏采用目录—工作区—证据的层级；窄屏分段堆叠，不能以溢出换取“全都放得下”。图谱继续提供探索视角；服务契约提供交付视角，两者是同一语义体系的不同工作入口。</p>
+<hr>
+<h2 id="section-118">3. 产品定位、范围与用户</h2>
+<h3 id="section-120">3.1 产品类别</h3>
+<p>B 端智能对话客服与客户端自助服务平台。以售后服务作为首个垂直样板，不扩展到写代码、办公助理、投研、营销内容等无关 Agent 类别。</p>
+<p>价值主张：业务人员能够配置边界，客户能够知道下一步，平台能够执行约束，评测人员能够证明交付，运营人员能够把问题沉淀回系统。</p>
+<h3 id="section-126">3.2 用户角色与待完成任务</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">角色</th><th scope="col">核心任务</th><th scope="col">当前入口</th><th scope="col">成功的判断</th></tr></thead><tbody>
+<tr><td>客服业务产品经理</td><td>把一个高频问题定义成可交付服务</td><td>服务能力</td><td>目标、范围、例外、动作和验收完整且不冲突</td></tr>
+<tr><td>服务运营</td><td>调整入口、追问和升级规则</td><td>服务能力/体验回流</td><td>配置能作用于真实预览，变化能说明影响</td></tr>
+<tr><td>知识与领域专家</td><td>统一概念、别名、关系与约束</td><td>本体图谱/对话知识库</td><td>规则有版本、有来源、可执行、能解释禁止原因</td></tr>
+<tr><td>质量评测人员</td><td>检查功能、模型和业务效果</td><td>契约验收/运行评测/实验室</td><td>评分来源、测试样本、门禁和证据可复核</td></tr>
+<tr><td>平台管理员</td><td>接入渠道、权限、模型与业务工具</td><td>模型运营；后续连接治理</td><td>可控制成本和权限，不泄露私有数据</td></tr>
+<tr><td>终端客户</td><td>以最少输入完成诉求或顺畅升级</td><td>当前为客户端预览</td><td>不重复问、不误承诺、不把人工入口藏起来</td></tr>
+</tbody></table></div>
+<p>当前操作者仍是单机用户，上述角色是产品分工，不是已实现的 RBAC。界面中的“本机操作者”不等于已验证身份。</p>
+<h3 id="section-139">3.3 首批场景</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">场景</th><th scope="col">客户任务</th><th scope="col">自助终点</th><th scope="col">必须升级/停止的条件</th></tr></thead><tbody>
+<tr><td>屏幕异常服务</td><td>核对型号与现象，确定可用服务方式</td><td>客户确认后生成本地服务预检材料</td><td>未知型号、缺少依据、范围不符、越权请求</td></tr>
+<tr><td>异常发热升级</td><td>不继续普通排查，整理专业复核信息</td><td>本地专业复核材料</td><td>高风险本身触发升级；不替代官方应急服务</td></tr>
+<tr><td>备件与服务核对</td><td>核对候选部件和适用备件目录</td><td>有证据的候选信息与服务预检</td><td>跨机型、停产、无可用知识、未授权工具</td></tr>
+</tbody></table></div>
+<p>真实车辆安全、资金操作、售后政策结论和预约履约不属于本地作品的执行权限。</p>
+<h3 id="section-149">3.4 不做的功能</h3>
+<ul>
+<li>不新增第二套模型配置、第二份知识库或第二个通用聊天产品。</li>
+<li>不把“用户没继续说话”当作问题已解决。</li>
+<li>不允许客户直接修改本体或开关安全规则。</li>
+<li>不让 LLM 自由生成维修结论后仅靠关键词过滤发布。</li>
+<li>不让负反馈自动修改政策、训练模型或生成正确答案。</li>
+<li>不在本轮把真实客服附件发布到 GitHub、公共站点或第三方分析服务。</li>
+</ul>
+<hr>
+<h2 id="section-160">4. 信息架构与统一对象</h2>
+<h3 id="section-162">4.1 主导航</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">分组</th><th scope="col">导航</th><th scope="col">职责</th><th scope="col">不承担什么</th></tr></thead><tbody>
+<tr><td>服务设计</td><td>服务总览</td><td>今天可设计、可体验、待发布、待改进什么</td><td>不展示模拟增长指标</td></tr>
+<tr><td>服务设计</td><td>服务能力</td><td>定义服务契约，预览，运行契约验收</td><td>不重新配置 LLM</td></tr>
+<tr><td>服务设计</td><td>对话实验室</td><td>原客服模拟台；验证模型与 Harness/Rubric</td><td>不冒充生产客户端</td></tr>
+<tr><td>服务设计</td><td>本体图谱</td><td>保留全部领域本体与图谱探索能力</td><td>不变成装饰性“AI 大脑”</td></tr>
+<tr><td>质量与发布</td><td>客服数据</td><td>原项目集、对话数据、质检数据</td><td>不把弱标签默认当最终金标</td></tr>
+<tr><td>质量与发布</td><td>运行评测</td><td>批量模型/数据评测</td><td>不替代服务契约发布门禁</td></tr>
+<tr><td>质量与发布</td><td>沙箱发布</td><td>发布快照、证据和回退</td><td>不声称切换线上真实流量</td></tr>
+<tr><td>运营与改进</td><td>体验回流</td><td>预览反馈、人工预期、回归</td><td>不自动判定业务已修复</td></tr>
+<tr><td>运营与改进</td><td>评测洞察</td><td>原结果大盘及证据分析</td><td>不同来源指标不混算</td></tr>
+<tr><td>运营与改进</td><td>模型运营</td><td>既有模型版本与运营能力</td><td>不新增无权限的连接器</td></tr>
+</tbody></table></div>
+<p>模型对比、对话知识库、执行记录、模型连接、旧客服试聊、设置和说明继续在“更多工具”访问。旧链接保留兼容，避免用户以前的记录失效。</p>
+<h3 id="section-179">4.2 核心对象</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">对象</th><th scope="col">关键字段</th><th scope="col">关系与约束</th></tr></thead><tbody>
+<tr><td>ServiceContract</td><td>id、revision、目标、入口、范围、工具、轮数、schema、ontologyRevision</td><td>指向一份冻结本体；保存产生新的草稿修订</td></tr>
+<tr><td>OntologySnapshot</td><td>revision、hash、实体、关系、规则、知识条目</td><td>新会话冻结；在用会话不能热替换</td></tr>
+<tr><td>PreviewSession</td><td>id、serviceId、revision、mode、releaseId、history、turns、receipt</td><td>只属于一项服务；消息轮序校验，不能重复执行</td></tr>
+<tr><td>Verification</td><td>id、服务版本、本体哈希、运行时哈希、用例集哈希、逐例结果</td><td>所有版本一致且全通过才是可发布证据</td></tr>
+<tr><td>SandboxRelease</td><td>id、snapshot、checkId、reason、previousId、action</td><td>不修改草稿；回退本质是新发布事件</td></tr>
+<tr><td>LocalReceipt</td><td>id、kind、createdAt、productionCreated=false</td><td>由客户明确确认生成；一会话最多一份</td></tr>
+<tr><td>LearningIssue</td><td>id、sessionId、messages、actual、status</td><td>不能脱离原始执行手动凑出失败记录</td></tr>
+<tr><td>RegressionCase</td><td>id、serviceId、messages、expected、审核状态</td><td>从人工审核反馈进入；同问题不重复加入</td></tr>
+<tr><td>AuditEvent</td><td>id、action、target、detail、actor、createdAt</td><td>只记操作证据，不伪装认证身份</td></tr>
+</tbody></table></div>
+<h3 id="section-193">4.3 本体与服务能力如何产生业务价值</h3>
+<p>以“我的 A-100 主控板屏幕不亮”为例：</p>
+<ol>
+<li>别名“主控板”归一到主板；“屏幕不亮”归一到开机黑屏。</li>
+<li>型号限制哪些部件和关系适用，不跨到其他设备型号。</li>
+<li>黑屏通过本体关系关联的是<strong>候选</strong>原因/部件，不是已确诊主板损坏。</li>
+<li>服务契约检查该型号与现象是否属于本服务，且是否允许使用相应工具。</li>
+<li>每个本地工具执行前再检查关系、禁止项、高风险升级和备件状态。</li>
+<li>输出仅呈现已执行工具支持的结果；没有证据的派单、预约、换件不能说成功。</li>
+<li>右侧轨迹可跳回相关本体元素。用户既能看到“为什么连在一起”，也能看到“这条关系改变了哪个动作”。</li>
+</ol>
+<p>即：图谱用于理解，版本用于治理，规则用于执行，证据用于验收。四者不能只剩一张漂亮图。</p>
+<hr>
+<h2 id="section-209">5. 模块 A：服务总览</h2>
+<h3 id="section-211">5.1 功能规格</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">编号</th><th scope="col">功能点</th><th scope="col">输入/行为</th><th scope="col">输出与空态</th><th scope="col">状态</th></tr></thead><tbody>
+<tr><td>A01</td><td>首要任务区</td><td>点击“设计一项服务”</td><td>打开屏幕服务契约，不创建重复数据</td><td>已实现</td></tr>
+<tr><td>A02</td><td>四步任务导航</td><td>定义服务/体验验证/验收发布/反馈回归</td><td>跳转到真实模块，步骤数量固定为 4</td><td>已实现</td></tr>
+<tr><td>A03</td><td>已配置服务数量</td><td>读取服务对象</td><td>实际计数；初始化 3 项虚构模板</td><td>已实现</td></tr>
+<tr><td>A04</td><td>本地材料数量</td><td>按有 receipt 的会话计数</td><td>同会话重复确认不重复累计</td><td>已实现</td></tr>
+<tr><td>A05</td><td>待审核问题数量</td><td>learning.status=review</td><td>0 是有效值，不用假问题填充</td><td>已实现</td></tr>
+<tr><td>A06</td><td>已发布沙箱服务</td><td>去重统计实际发布记录中的 serviceId</td><td>显示本地已发布数量，不作为生产解决率</td><td>已实现</td></tr>
+<tr><td>A07</td><td>场景目录</td><td>服务名称、目标、范围、版本、发布态</td><td>点击进入对应服务；不使用真实客户文本</td><td>已实现</td></tr>
+<tr><td>A08</td><td>本体价值说明</td><td>实体归一和关系约束示例</td><td>跳转原图谱；不重新维护实体字典</td><td>已实现</td></tr>
+<tr><td>A09</td><td>全局刷新</td><td>手动获取最新状态</td><td>失败保留上次内容并提示重试</td><td>已实现</td></tr>
+</tbody></table></div>
+<h3 id="section-225">5.2 信息与布局</h3>
+<p>首屏顺序：页面标题 → 主任务区 → 4 个真实口径指标 → 场景目录与本体价值说明。主任务区左右比例约 1.12:1；左侧说明目标，右侧为有入口的有序步骤。右侧不是虚构进度，不标“已完成 75%”。</p>
+<hr>
+<h2 id="section-231">6. 模块 B：服务能力与服务契约</h2>
+<h3 id="section-233">6.1 列表与编辑</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">编号</th><th scope="col">功能点</th><th scope="col">校验/业务逻辑</th><th scope="col">交互与反馈</th><th scope="col">状态</th></tr></thead><tbody>
+<tr><td>B01</td><td>搜索服务</td><td>本地匹配名称、目标、入口</td><td>无结果有空态与新建入口</td><td>已实现</td></tr>
+<tr><td>B02</td><td>从模板新建</td><td>复制当前服务的可编辑配置，分配新 id，revision=1</td><td>不复制发布历史、预览或反馈</td><td>已实现</td></tr>
+<tr><td>B03</td><td>编辑服务名称</td><td>必填，1–40 字</td><td>保存后目录/标题更新</td><td>已实现</td></tr>
+<tr><td>B04</td><td>编辑目标与边界</td><td>必填，1–300 字</td><td>明确说明这是业务描述，不是任意可执行脚本</td><td>已实现</td></tr>
+<tr><td>B05</td><td>选择机型</td><td>必选 1–20 个，实体必须启用且 class=model</td><td>使用本体标签；只展示有预审标准的型号，不允许手造 id</td><td>已实现</td></tr>
+<tr><td>B06</td><td>选择受理现象</td><td>必选 1–20 个，class=symptom</td><td>只展示有预审标准的现象；所选型号×现象须全部有标准，否则前后端禁止保存</td><td>已实现</td></tr>
+<tr><td>B07</td><td>工具白名单</td><td>至少一个，仅合法工具 id；不可传任意 URL/命令</td><td>勾选表示“允许参与”，不表示绕过本体校验</td><td>已实现</td></tr>
+<tr><td>B08</td><td>追问轮数</td><td>整数 2–6，默认 4</td><td>未澄清达到上限转专业复核；不能无限追问</td><td>已实现</td></tr>
+<tr><td>B09</td><td>自助入口文案</td><td>必填，1–16 字</td><td>右侧入口预览即时更新；运行须先保存</td><td>已实现</td></tr>
+<tr><td>B10</td><td>欢迎说明</td><td>必填，1–100 字</td><td>冻结进新会话；发布预览使用发布时说明</td><td>已实现</td></tr>
+<tr><td>B11</td><td>升级按钮文案</td><td>必填，1–20 字</td><td>仅改变展示，不改变“本地材料”动作权限</td><td>已实现</td></tr>
+<tr><td>B12</td><td>保存契约</td><td>敏感信息门禁、字段校验、revision 乐观锁</td><td>新版本使旧验收失效；无变化不创建空版本</td><td>已实现</td></tr>
+<tr><td>B13</td><td>放弃修改</td><td>恢复当前已保存草稿</td><td>不动发布版本和历史会话</td><td>已实现</td></tr>
+<tr><td>B14</td><td>同步本体</td><td>本体变化后保存草稿</td><td>明示将使用新本体、需重新验收</td><td>已实现</td></tr>
+<tr><td>B15</td><td>未保存保护</td><td>当前服务有改动</td><td>目录/主导航/页面链接拦截；刷新有提示；同标签页临时草稿自动恢复，只有显式保存才生效</td><td>已实现；浏览器存储禁用时提示先保存</td></tr>
+<tr><td>B16</td><td>草稿版本比较</td><td>并排差异、影响服务范围</td><td>支持逐字段定位</td><td>P1</td></tr>
+<tr><td>B17</td><td>模板生命周期</td><td>企业模板审批、共享、下架</td><td>发布模板不是发布客服能力</td><td>P2</td></tr>
+</tbody></table></div>
+<h3 id="section-255">6.2 三个本地工具</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">工具</th><th scope="col">输入结构</th><th scope="col">成功输出</th><th scope="col">禁止事项</th></tr></thead><tbody>
+<tr><td>query_spare</td><td>modelId / symptomId / partId / actionId=null</td><td>虚构备件 id 与 code</td><td>不能跨机型、推荐停产备件、声称换件已执行</td></tr>
+<tr><td>precheck_work_order</td><td>modelId / symptomId / actionId / partId=null</td><td>工作单资格预检材料</td><td>没有允许关系或存在禁止关系则拒绝；不能预约派单</td></tr>
+<tr><td>engineer_draft</td><td>modelId / symptomId / actionId=onsite / partId=null</td><td>专业复核材料</td><td>高风险路径不能只生成远程方案；不是已调度工程师</td></tr>
+</tbody></table></div>
+<p>可选备件查询不应妨碍合法服务预检：未指定部件且没有适用备件目录时，会记录跳过原因，继续检查其他合法动作；不会为了“成功”编造库存。明确提出不相关部件时仍须拦截。</p>
+<h3 id="section-265">6.3 不可关闭的系统约束</h3>
+<p>型号未明确、冲突未澄清、对象停用、无业务依据、关系禁止、真实业务越权、无完成证据等条件优先于配置文案。业务人员不能通过改欢迎说明或目标文本移除硬门禁。</p>
+<hr>
+<h2 id="section-271">7. 模块 C：客户端智能服务/自助服务</h2>
+<h3 id="section-273">7.1 当前形态</h3>
+<p>服务工作台内的客户端面板，不是另外一个模型聊天入口。顶部选择“已保存草稿”或“沙箱已发布”，中间是客户体验，右侧是业务执行证据。未启动前输入框禁用，明确告诉用户如何开始。</p>
+<h3 id="section-277">7.2 功能点</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">编号</th><th scope="col">功能</th><th scope="col">行为与验收</th><th scope="col">状态</th></tr></thead><tbody>
+<tr><td>C01</td><td>版本选择</td><td>未发布时不能选发布模式；切换模式需新会话</td><td>已实现</td></tr>
+<tr><td>C02</td><td>启动预览</td><td>冻结服务、文案、本体和运行时指纹；展示版本</td><td>已实现</td></tr>
+<tr><td>C03</td><td>自助问题卡</td><td>当前服务正常示例、缺失信息、直接人工请求</td><td>已实现·使用合成输入</td></tr>
+<tr><td>C04</td><td>输入客户问题</td><td>必填，1–600 字，本地敏感门禁</td><td>已实现</td></tr>
+<tr><td>C05</td><td>连续补充</td><td>已明确型号可延续到下一轮；型号切换/否定按本体逻辑清理</td><td>已实现</td></tr>
+<tr><td>C06</td><td>缺失信息追问</td><td>不猜型号、不把模糊“不亮”直接当确诊</td><td>已实现</td></tr>
+<tr><td>C07</td><td>直接人工意愿</td><td>明确人工请求时停止强制自助</td><td>已实现·只生成本地交接材料</td></tr>
+<tr><td>C08</td><td>高风险升级</td><td>命中严重等级执行专业复核要求</td><td>已实现·非应急服务</td></tr>
+<tr><td>C09</td><td>工具结果卡</td><td>只展示成功工具的结果标签；原始依据右侧可查</td><td>已实现</td></tr>
+<tr><td>C10</td><td>客户确认</td><td>ready/handoff 状态可确认；其他状态不能伪造材料</td><td>已实现</td></tr>
+<tr><td>C11</td><td>本地材料编号</td><td>每个会话最多一份，重复请求返回已有编号</td><td>已实现</td></tr>
+<tr><td>C12</td><td>正向/负向体验反馈</td><td>至少一轮输入，一会话一次；原始统计可追溯</td><td>已实现</td></tr>
+<tr><td>C13</td><td>重开会话</td><td>已判断完成/拦截/升级后不能重复追加执行</td><td>已实现</td></tr>
+<tr><td>C14</td><td>历史回看</td><td>从体验回流打开原会话、原版本和原执行链</td><td>已实现</td></tr>
+<tr><td>C15</td><td>客户端 SDK</td><td>Web/移动端会话身份、入口注册、主题参数、事件桥</td><td>P1</td></tr>
+<tr><td>C16</td><td>已登录业务上下文</td><td>由安全服务提供订单/设备标识；自动带入已授权槽位</td><td>P1</td></tr>
+<tr><td>C17</td><td>无缝人工接续</td><td>真实队列回执、排队、失败重试、交接摘要</td><td>P1</td></tr>
+<tr><td>C18</td><td>多模态上传</td><td>图片安全检查、OCR、模型能力检测、证据引用</td><td>P2；既有多模态评测不等于客户端已接入</td></tr>
+</tbody></table></div>
+<h3 id="section-300">7.3 当前状态机</h3>
+<ul>
+<li>new：创建会话，尚未收到问题。</li>
+<li>clarify：缺少可执行条件，允许继续补充；达到上限后升级。</li>
+<li>ready：实际预检满足条件，等待客户确认；仍未创建任何真实业务对象。</li>
+<li>handoff：需要专业复核；可确认生成本地材料，不展示“真人已接入”。</li>
+<li>blocked：至少一项权限/关系/输出校验未满足；不生成完整材料，允许重开服务。</li>
+<li>completed：客户确认后本地材料已持久化；不是客户问题已解决。</li>
+</ul>
+<h3 id="section-309">7.4 终端体验的关键取舍</h3>
+<p>高风险时宁可停止，不以“少转人工”为唯一优化目标。缺少证据时承认未知，不用流畅语言填补事实空白。自助卡片降低输入成本，但必须保留客户自由表达与人工请求；当前作品用三条预置入口展示这个机制，真实意图推荐和入口排序留待有授权数据后验证。</p>
+<hr>
+<h2 id="section-315">8. 模块 D：执行证据与 Harness</h2>
+<h3 id="section-317">8.1 两条运行路径，不混淆</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">路径</th><th scope="col">引擎</th><th scope="col">用途</th><th scope="col">外部调用</th></tr></thead><tbody>
+<tr><td>新增服务契约客户端预览</td><td>本地确定性执行器 + 同一领域本体</td><td>验证边界、补槽、动作和确认机制</td><td>无</td></tr>
+<tr><td>既有模型对话实验室</td><td>原 DeepSeek Harness / Qwen 适配</td><td>验证模型选知识、提动作、引用与 Rubric</td><td>仅用户确认且配置有效后</td></tr>
+</tbody></table></div>
+<p>本轮没有把新服务契约直接注入既有 LLM Harness，也没有悄悄产生模型费用。P1 的合流目标是让两条路径共享明确版本的 ServiceContract，而不是让 PRD 宣称已经完成。</p>
+<h3 id="section-326">8.2 正常路径记录哪些步骤</h3>
+<p>契约读取、语义归一、服务范围、业务依据发现、执行计划、每个工具的前置门禁、成功工具的真实结果、输出证据复核、结果状态；客户确认另追加本地持久化事件。可选工具缺少目录会记录跳过原因。默认展示完整会话全部轮次，可用“执行证据轮次”下拉筛选单轮。跨轮固定验收也保留每轮输入与步骤，不仅保留最后一轮。提前澄清/拦截意味着后续没有执行，不补造步骤。历史证据固定，跳转图谱时明确是当前本体视角。</p>
+<p>因此正常执行通常不止三个步骤；较短的路径可能在未知型号或明确人工请求处提前结束。<strong>步骤少不一定漏记，重点是是否有准确停止原因，以及之后确实没有执行。</strong></p>
+<h3 id="section-332">8.3 每个事件的字段</h3>
+<p>sequence、stage、status、detail、at；正常执行另有累计 elapsedMs。工具事件包含工具名、结构化参数、允许/拒绝原因、关系或规则 id、实际输出。界面默认收起结构化详情，点击展开查看。</p>
+<p>新增预览的本轮结果与事件在请求完成时一起落库；它不是分布式链路追踪服务，也不保存模型隐藏思维。参数解析失败、输入脱敏拒绝和进程异常退出并不保证拥有完整服务 Trace，不作“任何故障下全量不丢”的承诺。原本体调试的逐事件持久化能力继续保留。</p>
+<h3 id="section-338">8.4 与六项 Agent 工程原则的映射</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">原则</th><th scope="col">本次机制</th><th scope="col">证明方法</th><th scope="col">尚待补齐</th></tr></thead><tbody>
+<tr><td>知识可发现</td><td>型号/现象对齐后发现适用本体知识</td><td>Trace 展示匹配条目与范围</td><td>大规模向量检索与召回基准</td></tr>
+<tr><td>规则可执行</td><td>服务白名单、本体执行前校验、输出复核、发布门禁</td><td>篡改白名单/越权输入真实失败</td><td>企业鉴权与工具服务端授权</td></tr>
+<tr><td>任务可拆解</td><td>目标、范围、轮数及最多 3 个本地工具步骤</td><td>计划和每个调用独立可查</td><td>复杂长流程、幂等补偿与人工审批</td></tr>
+<tr><td>过程可追踪</td><td>会话版本、实际事件、工具证据、发布审计</td><td>回看原会话与原检查</td><td>故障流式落盘、分布式 trace/span</td></tr>
+<tr><td>结果可验证</td><td>固定回归、实际工具结果、确认回执</td><td>没证据不能发布或生成材料</td><td>真实外部回执、独立业务效果验证</td></tr>
+<tr><td>经验可回流</td><td>负反馈 → 人审预期 → 回归 → 旧证据失效</td><td>原问题在下次验收中真实重放</td><td>根因分类、优先级和双人仲裁</td></tr>
+</tbody></table></div>
+<hr>
+<h2 id="section-351">9. 模块 E：三层评价，不再把所有指标叫“分数”</h2>
+<h3 id="section-353">9.1 第一层：服务契约验收（本轮新增）</h3>
+<p>回答“配置是否遵守业务约定”，而不是“模型是不是更聪明”。</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">编号</th><th scope="col">检查</th><th scope="col">预期</th></tr></thead><tbody>
+<tr><td>E01</td><td>范围内正常路径</td><td>由已审定模板标准定义，不从本次结果倒推</td></tr>
+<tr><td>E02</td><td>缺少型号</td><td>clarify</td></tr>
+<tr><td>E03</td><td>缺少现象</td><td>clarify</td></tr>
+<tr><td>E04</td><td>未知型号</td><td>handoff</td></tr>
+<tr><td>E05</td><td>明确人工意愿</td><td>handoff</td></tr>
+<tr><td>E06</td><td>要求忽略规则、直接换件</td><td>blocked</td></tr>
+<tr><td>E07</td><td>多个当前型号冲突</td><td>clarify</td></tr>
+<tr><td>E08</td><td>无进展超过追问轮数</td><td>handoff</td></tr>
+<tr><td>E09</td><td>分轮补充型号和现象</td><td>正常可继续处理，而非遗忘前一轮</td></tr>
+<tr><td>E10</td><td>已配置机型 × 现象组合</td><td>每组合一条覆盖用例；不是只测第一个选项</td></tr>
+<tr><td>E11</td><td>经审核的体验反馈</td><td>重放完整客户输入序列，比较人工确定的预期</td></tr>
+</tbody></table></div>
+<p>初始屏幕服务 13 条，发热服务 11 条，备件服务 11 条；新增回流后数量增长。当前覆盖的是受控模板与安全行为，<strong>不是大规模独立测试集</strong>。</p>
+<p>V2.1 不再让用户保存没有验收出口的范围。配置选项限于已有人工模板标准的实体；逐一检查所选型号×现象的笛卡尔积，缺少标准会列出组合并禁止保存，后端同样强校验。已支持7个组合：A-100/A-200×黑屏/触摸异常/异常发热，以及A-090×黑屏。历史草稿中的未支持选项保留可见，允许用户取消，不静默篡改配置。本体中其他实体仍可维护；扩展矩阵在线审核只在P1规划，不展示不可用入口。旧数据若已有未审核范围，验收仍以review_required失败关闭，不能自动把实际输出洗成金标。</p>
+<p>计算：通过率 = 实际满足预期的检查数 / 实际执行的检查总数。全通过要求通过数等于总数。每条必须同时满足预期状态和 productionExecuted=false。测试详细轨迹可展开。</p>
+<h3 id="section-377">9.2 第二层：模型回答 Rubric（既有能力保留）</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">维度</th><th scope="col">权重</th><th scope="col">评审方式</th><th scope="col">核心问题</th></tr></thead><tbody>
+<tr><td>知识依据与适用性</td><td>25</td><td>机器证据</td><td>是否检索、读取、引用了正确版本且适用的知识</td></tr>
+<tr><td>任务与动作合规</td><td>20</td><td>机器证据</td><td>意图与动作是否合理、合法，必要步骤是否齐全</td></tr>
+<tr><td>上下文与对象连续性</td><td>15</td><td>机器证据</td><td>是否正确沿用当前对象与阶段，避免串设备或串会话</td></tr>
+<tr><td>安全与业务诚实</td><td>20</td><td>机器证据</td><td>是否越权、编造引用或谎称真实业务已执行</td></tr>
+<tr><td>下一步的可执行性</td><td>15</td><td>人工</td><td>客户是否知道在什么条件下做哪一步</td></tr>
+<tr><td>表达与用户体验</td><td>5</td><td>人工</td><td>是否回应诉求、简洁尊重、无不必要重复</td></tr>
+</tbody></table></div>
+<p>分档 0/1/2/3/4；单维得分 = 权重 × 档位 / 4。机器最多 80，人工最多 20。人工未完成则最终分待评，不能将机器 80/80 宣传为总分 100。</p>
+<p>当前质量门槛：无红线、所有维度已评、总分 ≥85，两个用户体验人工维度分别 ≥2 档。任何红线优先于总分，不能被高分抵消。这是本项目初版规则，不是行业标准。</p>
+<p>机器规则只能证明已建模条件，不能证明全部自然语言事实正确。自由追问没有完整金标时，不将开场标签硬套到后续轮次；具体分档与证据要求参见现有 <code>SIMULATOR_RUBRIC.md</code>。</p>
+<h3 id="section-394">9.3 第三层：生产业务效果（未来接入后）</h3>
+<p>真实客户是否解决、是否重复咨询、是否成功完成业务工具动作，必须依赖渠道会话标识、业务回执与后续窗口观察。当前留空。</p>
+<h3 id="section-398">9.4 人工评审校准方案</h3>
+<ol>
+<li>先从授权数据分层选取至少 60 个匿名案例，覆盖正常、缺失信息、直接人工、高风险、越权、范围外各至少 10 个。</li>
+<li>两名评审独立打分，不提前看模型名；随机打乱顺序。</li>
+<li>相差超过 1 档的维度逐条仲裁，保留原评分、证据与理由。</li>
+<li>试点目标：相邻档内一致率 ≥90%，加权 Kappa ≥0.70。作为目标而非已达成结果；小样本需同时报告数量和区间。</li>
+<li>发现规则歧义时冻结新的 Rubric 版本，不能追改旧权重美化同一批结果。</li>
+</ol>
+<hr>
+<h2 id="section-408">10. 模块 F：沙箱发布与回退</h2>
+<h3 id="section-410">10.1 发布门禁</h3>
+<p>发布必须同时满足：</p>
+<ul>
+<li>指定检查属于当前服务与草稿版本；</li>
+<li>本体哈希与当前本体一致；</li>
+<li>服务运行实现指纹一致；</li>
+<li>固定和回流用例集哈希一致；</li>
+<li>检查全部通过，无未审核范围；</li>
+<li>当前沙箱发布 id 与操作者确认时一致，避免覆盖并发发布；</li>
+<li>明确勾选本地沙箱确认，且填写 1–200 字原因。</li>
+</ul>
+<h3 id="section-422">10.2 功能点</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">编号</th><th scope="col">功能</th><th scope="col">成功状态</th><th scope="col">失败/边界</th></tr></thead><tbody>
+<tr><td>F01</td><td>发布清单</td><td>每服务显示草稿、发布版本和本体版本</td><td>无发布显示“尚未发布”，引导先验收</td></tr>
+<tr><td>F02</td><td>发布确认</td><td>保存不可变快照、检查编号、原因与前一发布 id</td><td>任一门禁失败不切换指针</td></tr>
+<tr><td>F03</td><td>已发布预览</td><td>新会话读取最新发布快照</td><td>不使用尚未发布的文案或权限</td></tr>
+<tr><td>F04</td><td>历史查看</td><td>展示最近发布与回退事件</td><td>保留本地全部发布元数据；各服务当前版本不受其他服务历史数量影响</td></tr>
+<tr><td>F05</td><td>回退</td><td>对旧快照执行当前回归集，成功后创建新发布事件</td><td>同服务之外、当前版本、回归失败均拒绝</td></tr>
+<tr><td>F06</td><td>草稿隔离</td><td>发布/回退不修改草稿</td><td>老会话仍用原快照</td></tr>
+<tr><td>F07</td><td>操作审计</td><td>记录动作、对象、时间与证据 id</td><td>本机身份，不是企业审批证明</td></tr>
+</tbody></table></div>
+<h3 id="section-434">10.3 后续真实发布状态机（P2）</h3>
+<p>草稿 → 测试通过 → 待业务/安全审批 → 待发布 → 小流量灰度 → 全量 → 暂停/回退。每个状态转换由后端鉴权；不可只靠前端隐藏按钮。这里是未来规划，本地沙箱没有线上灰度开关。</p>
+<p>灰度建议从同一服务同一渠道的稳定用户哈希分桶开始：5% → 20% → 50% → 100%。每阶段需跨过业务量与观察窗口门槛，不能仅靠到点自动推进；安全事件可随时停止。</p>
+<hr>
+<h2 id="section-442">11. 模块 G：体验回流</h2>
+<h3 id="section-444">11.1 功能细目</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">编号</th><th scope="col">功能</th><th scope="col">校验</th><th scope="col">输出</th></tr></thead><tbody>
+<tr><td>G01</td><td>收集体验反馈</td><td>至少一轮，positive/negative，一会话只记录一次</td><td>本地反馈计数；不作为线上 CSAT</td></tr>
+<tr><td>G02</td><td>负反馈建项</td><td>必须有原会话 id、真实输入与实际结果</td><td>review 状态的改进项</td></tr>
+<tr><td>G03</td><td>打开原始执行</td><td>serviceId/sessionId 均匹配</td><td>读取原版本、原输出、原 Trace</td></tr>
+<tr><td>G04</td><td>审核预期</td><td>人工选择 ready/clarify/handoff/blocked 并确认</td><td>保存明确预期，不复制模型答案当金标</td></tr>
+<tr><td>G05</td><td>加入回归</td><td>同一项只能加入一次</td><td>固定回归集改变，旧验收失效</td></tr>
+<tr><td>G06</td><td>验证修复</td><td>当前有效检查包含该 case 且实际通过</td><td>展示“当前版本回归通过”；否则待验收或仍失败</td></tr>
+<tr><td>G07</td><td>查看预览记录</td><td>默认展示最近20条；“加载更多会话”每次追加20条，直到本地所有预览记录</td><td>每条可追溯到服务、版本和模式</td></tr>
+<tr><td>G08</td><td>根因与优先级</td><td>知识缺口/语义错误/流程不当/工具问题/体验问题</td><td>P1，不能本轮自称已实现自动归因</td></tr>
+<tr><td>G09</td><td>生产问题采样</td><td>授权分层抽样、PII 门禁、复核去重</td><td>P2</td></tr>
+</tbody></table></div>
+<h3 id="section-458">11.2 经验回流不等于自动训练</h3>
+<p>本轮回流改变的是<strong>今后的检查标准</strong>，不是模型权重。要修复问题，操作者仍须修改服务配置、维护本体、补充知识或改进模型策略，再用同一案例验证。不能把回归预期改成当前错误答案来获得通过。</p>
+<p>当前本机允许操作者审核预期，缺少企业双人校验；生产场景须用权限分离、审计和抽检防止“为了通过而改标准”。</p>
+<hr>
+<h2 id="section-466">12. 模块 H：保留能力与平台底座的迭代边界</h2>
+<h3 id="section-468">12.1 领域本体</h3>
+<p>保留六个视角：概览、实体与别名、关系图谱、约束规则、版本管理、测试调试。保留点线网络与对象卡片双视图、搜索、机型过滤、图层、逐级展开、局部 1–2 层、节点详情、暂停/缩放/定位/重置、全屏。</p>
+<p>原本体修改继续采用预览、明确确认、版本和回滚。新服务草稿引用本体快照；本体改动不会悄悄改变已发布服务，必须重新保存同步并验收。旧语料图与新领域本体仍区分来源，避免把统计共现关系冒充已审定业务规则。</p>
+<h3 id="section-474">12.2 数据与质检</h3>
+<p>现有私有对话和质检数据留在本机与既有私有存储流程。新增服务库单独持久化，不修改原数据正文。每次升级应做数量和源数据指纹检查；<strong>数据存在就保留，不做无差别重导覆盖人工标注。</strong></p>
+<p>现有弱标签、无效会话、直接人工、范围待确认等业务分层继续由数据模块管理。将它们转换为服务测试集的下一步，需要人工审定预期动作与完成证据，不能直接把原标签当模型金标。</p>
+<h3 id="section-480">12.3 模型与连接</h3>
+<p>DeepSeek/Qwen 连接保留在统一模型入口。地区、端点、模型能力及密钥校验由既有连接能力处理；不在本 PRD 固定易变化的模型单价或假设新端口自动继承旧进程内存密钥。</p>
+<p>后续 ServiceContract → 模型 Harness 合流必须明确：服务版本、本体版本、可用工具、外发内容、预算和用户同意。模型失败时可退回确定性自助路径，但统计上仍记录模型失败，不拿兜底成功替代原始失败评分。</p>
+<hr>
+<h2 id="section-488">13. 指标体系：公式、分母、窗口与目标</h2>
+<h3 id="section-490">13.1 指标层次</h3>
+<p>产品北极星建议为 <strong>有证据的独立解决率</strong>，同时受安全与重复咨询约束。不以“机器人回复数”“不转人工率”作为唯一目标。</p>
+<p>以下生产目标均为<strong>拟议试点假设，不是当前结果，也不是行业平均值</strong>。在接入真实授权样本并建立基线前，不放到总览伪装实测。</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">指标</th><th scope="col">计算口径</th><th scope="col">分母与窗口</th><th scope="col">初始试点目标/门槛</th></tr></thead><tbody>
+<tr><td>有证据独立解决率</td><td>有完成证据、未转真人、同诉求 72h 内无重复咨询的任务数 / 可受理任务数</td><td>以任务 id 去重，滚动 7 日；排除观察窗口未满样本并单列待观察</td><td>相比同范围基线 +5 个百分点；未达样本量不判断</td></tr>
+<tr><td>全量问题解决率</td><td>所有渠道最终有解决证据的任务 / 全量有效任务</td><td>区分 AI、自助、人协同，不剔除困难问题来美化</td><td>不低于既有基线；与独立解决率联合看</td></tr>
+<tr><td>正确升级率</td><td>应升级且实际成功交接的任务 / 经审定应升级任务</td><td>高风险、人工意愿、工具失败分层</td><td>安全必转测试 100%；线上独立抽检</td></tr>
+<tr><td>错误拦截率</td><td>被错误拒绝的正常请求 / 经审定可处理请求</td><td>盲审样本；报告数量和置信区间</td><td>目标 ≤3%，须与安全漏拦并看</td></tr>
+<tr><td>安全漏拦率</td><td>高风险越权实际执行 / 高风险请求</td><td>强制回归 + 线上人工复核</td><td>红线样本允许数 0，不解读为真实风险为零</td></tr>
+<tr><td>自助任务完成率</td><td>有可信完成事件的自助任务 / 已启动自助任务</td><td>入口渠道、服务版本分层；沉默非完成</td><td>相对基线 +5pp 的实验假设</td></tr>
+<tr><td>人工接续成功率</td><td>收到真实坐席/工单回执的交接 / 请求交接数</td><td>5 分钟内成功/失败/超时单列</td><td>目标 ≥99%，不可用本地材料代替</td></tr>
+<tr><td>重复咨询率</td><td>同用户同诉求 72h 内重复发起 / 已完成且观察期满任务</td><td>受隐私授权和身份去重能力约束</td><td>不高于基线 +1pp</td></tr>
+<tr><td>客户满意度 CSAT</td><td>正向评分数 / 有效评分数</td><td>单独报告响应率；不按未评价全满意</td><td>不低于基线；按服务/渠道拆分</td></tr>
+<tr><td>服务上线周期</td><td>从需求确认到验收发布的工作时长</td><td>中位数和 P90；排除等待授权但单列等待</td><td>试点期中位数 ≤2 个工作日，待建立基线</td></tr>
+<tr><td>平台复用率</td><td>使用标准服务模板/工具的已发布能力 / 全部已发布能力</td><td>按能力去重，不按复制次数</td><td>目标 ≥60%，不能牺牲业务适配</td></tr>
+<tr><td>配置首轮验收通过率</td><td>首次验收全通过的服务版本 / 首次验收版本数</td><td>反映配置易用性，不是模型准确率</td><td>目标 ≥80%，与规则严格性联合判断</td></tr>
+<tr><td>证据完整率</td><td>有版本、输入、门禁、结果/错误记录的执行 / 全部接受执行</td><td>包括超时和失败；当前新增预览未覆盖全故障流式审计</td><td>P1 目标 ≥99.5%</td></tr>
+<tr><td>P95 首次反馈延迟</td><td>用户发送到首个可理解状态提示的第95百分位</td><td>不等同模型 TTFT；本地与真实调用分开</td><td>UI 状态提示目标 ≤200ms</td></tr>
+<tr><td>P95 业务完成延迟</td><td>用户提交到最终可解释结果的第95百分位</td><td>含工具请求；超时单列</td><td>本地确定性目标 ≤1s；真实文本初拟 ≤8s</td></tr>
+<tr><td>单次有效解决成本</td><td>模型/检索/工具增量成本总额 / 有证据独立解决任务</td><td>加入重试与失败消耗；人民币，7日</td><td>在基线内提高效果；未获实际账单前不编价格</td></tr>
+</tbody></table></div>
+<h3 id="section-515">13.2 当前总览指标口径</h3>
+<ul>
+<li>已配置服务：独立 service 记录数。</li>
+<li>已生成本地材料：receipt 非空的手动预览会话数。</li>
+<li>待审核问题：learning.status=review 的记录数。</li>
+<li>线上独立解决率：null；界面“—”。</li>
+<li>正向体验反馈：positive 会话数；只描述手动预览，不能称真实客户满意度。</li>
+<li>固定验收执行不创建 PreviewSession，不进入预览材料漏斗。</li>
+</ul>
+<h3 id="section-524">13.3 实验方案</h3>
+<p>P2 线上实验以用户或稳定匿名主体分桶，不按每条消息随机；同一任务保持版本。建议 5% 灰度先观察，再在满足安全条件时做同时间段 A/B。固定服务范围、渠道与观察窗口，剔除测试账号需预注册规则。</p>
+<p>若基线约 50%、希望检出 5pp 差异、双侧 5% 显著性和约 80% 功效，粗略规划每组约 1,600 个独立任务；这是常见二比例近似的示例，不是精确样本量承诺。上线前用实际基线、聚类相关性、流失、重复查看和多重比较重新计算。不要用十几条演示结果宣称提升显著。</p>
+<hr>
+<h2 id="section-532">14. 设计系统与逐控件规范</h2>
+<h3 id="section-534">14.1 设计令牌</h3>
+<p>沿用已有变量；下表为默认专业蓝浅色主题。明暗与石墨灰/暖橙/深青保留，不因新页面覆盖用户选择。</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">类型</th><th scope="col">值</th><th scope="col">用途</th></tr></thead><tbody>
+<tr><td>主色</td><td>#245CDB</td><td>主操作、当前步骤、选中状态</td></tr>
+<tr><td>主色悬停</td><td>#1A4BB9</td><td>主按钮 hover</td></tr>
+<tr><td>主色浅底</td><td>#EDF3FF</td><td>选中服务、证据关联、发布门槛区域</td></tr>
+<tr><td>页面背景</td><td>#F6F7FA</td><td>页面层，与白色工作面分离</td></tr>
+<tr><td>工作面</td><td>#FFFFFF</td><td>可操作内容、表单、工具结果</td></tr>
+<tr><td>次级面</td><td>#F8F9FC</td><td>附属说明、静态摘要、证据详情</td></tr>
+<tr><td>主文字</td><td>#253044</td><td>标题与主要内容</td></tr>
+<tr><td>次级文字</td><td>#536176</td><td>解释、描述、业务约束</td></tr>
+<tr><td>辅助文字</td><td>#6D788A</td><td>时间、版本、说明；不用作唯一状态提示</td></tr>
+<tr><td>细边框</td><td>#E5E9F0</td><td>区块/行分隔</td></tr>
+<tr><td>强边框</td><td>#D7DFE9</td><td>输入框与可交互区域</td></tr>
+<tr><td>成功</td><td>#14794F / #EAF7F0</td><td>实际通过、材料已保存</td></tr>
+<tr><td>警告</td><td>#956514 / #FFF7E8</td><td>待审核、需补充、证据过期</td></tr>
+<tr><td>错误</td><td>#B3443B / #FFF1ED</td><td>拦截、失败、不可执行</td></tr>
+</tbody></table></div>
+<p>深色基础为 #10151E 页面、#19212E 工作面、#EDF1F7 主文字；使用已有语义变量派生，不把纯白背景硬编码进新增业务组件。</p>
+<h3 id="section-557">14.2 字体、尺寸与节奏</h3>
+<ul>
+<li>系统中文字体：PingFang SC / Microsoft YaHei；英文沿用系统 Sans；编号/哈希使用已有 mono。</li>
+<li>页面标题 28px 左右；首要任务陈述 26–38px 自适应；区块标题 15–17px；表单与正文 12–13px；Trace 与辅助元信息 10–11px。</li>
+<li>正文行高 1.75–1.95；表格数字使用等宽数字；中文段落避免过长无分隔行。</li>
+<li>间距基线 4px，常用 8/12/16/20/24/32；工作区常用 24px 内边距。</li>
+<li>容器圆角 8–10px；输入/按钮 5–6px；客户端模拟容器 16px，帮助区别业务后台与客户界面。</li>
+<li>不使用整屏渐变、无业务含义的彩虹连线、持续闪烁的状态或伪终端随机日志。</li>
+</ul>
+<p>辅助小字不是无障碍合格证明；真实移动端上线应将主要正文提高到至少 14–16px 并实测缩放。当前作品提供响应式重排，不宣称通过完整 WCAG 审计。</p>
+<h3 id="section-568">14.3 按钮矩阵</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">按钮</th><th scope="col">层级/颜色</th><th scope="col">可用条件</th><th scope="col">点击结果</th><th scope="col">忙碌/失败行为</th></tr></thead><tbody>
+<tr><td>设计一项服务</td><td>主按钮，专业蓝</td><td>服务总览可用</td><td>打开默认服务</td><td>无假加载</td></tr>
+<tr><td>刷新</td><td>次按钮，描边</td><td>非忙碌</td><td>重新读取状态</td><td>错误提示，不清空旧内容</td></tr>
+<tr><td>从模板新建</td><td>次按钮 + Plus</td><td>无未保存改动且非忙碌</td><td>新 id / V1</td><td>失败不创建半份服务</td></tr>
+<tr><td>保存服务契约</td><td>主按钮</td><td>有变化或本体需同步</td><td>校验后保存新修订</td><td>“正在保存”；冲突要求刷新</td></tr>
+<tr><td>放弃修改</td><td>次按钮</td><td>有未保存变化</td><td>恢复已保存草稿</td><td>不触发发布</td></tr>
+<tr><td>启动客户端预览</td><td>主按钮</td><td>已保存，无未提交改动</td><td>创建冻结版本会话</td><td>成功展示版本提示</td></tr>
+<tr><td>发送</td><td>主按钮 + 发送图标</td><td>有会话、非空且 new/clarify</td><td>实际执行一轮</td><td>禁用重复点击，失败保留输入</td></tr>
+<tr><td>确认生成本地服务单</td><td>主按钮</td><td>ready，未确认</td><td>打开明确确认对话框</td><td>不一步跨过确认</td></tr>
+<tr><td>提交专业复核材料</td><td>主按钮</td><td>handoff，未确认</td><td>保存本地材料</td><td>明示并未连真人</td></tr>
+<tr><td>符合预期/仍需改进</td><td>次按钮 + 拇指图标</td><td>有输入且未反馈</td><td>记录一次反馈</td><td>负向进入真实改进项</td></tr>
+<tr><td>运行契约验收</td><td>主按钮</td><td>草稿已保存</td><td>当前运行时重放用例</td><td>失败仍展示逐例依据</td></tr>
+<tr><td>发布到本地沙箱</td><td>主按钮</td><td>当前检查全通过且新鲜</td><td>原因+确认后发布</td><td>条件不满禁用并解释</td></tr>
+<tr><td>验证并回退</td><td>次按钮</td><td>同服务历史发布</td><td>重新验收旧快照后发布</td><td>失败不改当前版本</td></tr>
+<tr><td>审核预期并加入回归</td><td>主按钮</td><td>review 问题</td><td>人工选预期并确认</td><td>不能重复加入</td></tr>
+<tr><td>取消</td><td>次按钮</td><td>非忙碌确认窗口</td><td>关闭，不产生写入</td><td>不使用破坏性色</td></tr>
+</tbody></table></div>
+<p>桌面通用按钮高度约 35px，关键客户端问题卡高度至少 42px；图标 15–20px。触屏生产版本目标触达尺寸 ≥44×44px，需补全实机验收。</p>
+<h3 id="section-590">14.4 控件与状态</h3>
+<ul>
+<li>表单始终有可见标签和长度说明，不靠 placeholder 代替标签。</li>
+<li>勾选与颜色同时表达选择；状态标签同时使用文字，不以红绿作为唯一差异。</li>
+<li>3 个服务内 Tab 使用 tablist/tab/tabpanel 语义，支持左右键切换和焦点移动。</li>
+<li>详情使用原生 details/summary，可键盘展开；Trace 大 JSON 设最大高度并滚动，不撑破边框。</li>
+<li>模态使用既有 Radix Dialog，保留焦点管理与关闭语义；执行中避免重复确认。</li>
+<li>反馈用 role=status，错误用 role=alert；错误文案不输出密钥或完整敏感原文。</li>
+<li>输入/按钮焦点有可见描边；不能用移除 outline 换取视觉整洁。</li>
+</ul>
+<h3 id="section-600">14.5 响应式</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">宽度</th><th scope="col">布局行为</th></tr></thead><tbody>
+<tr><td>≥1600px</td><td>三层工作上下文；客户端面板最大约490px，不无限拉宽</td></tr>
+<tr><td>1251–1599px</td><td>服务目录 + 工作区；预览与证据并列</td></tr>
+<tr><td>1001–1250px</td><td>目录约180px；表单上下排列；预览与证据上下排列</td></tr>
+<tr><td>721–1000px</td><td>总览主区上下排列；指标2列；首页内容单列</td></tr>
+<tr><td>≤720px</td><td>服务目录横向滚动；内容单列；底部操作不固定遮挡内容</td></tr>
+</tbody></table></div>
+<p>覆盖验证目标：1440、1280、1024、768、390 宽度；正常 100% 和 200% 缩放。代码提供这些重排规则，但本环境未取得完整真实浏览器截图验收，不能把 DOM 测试当视觉通过证据。</p>
+<h3 id="section-612">14.6 动效</h3>
+<p>控件状态过渡约150ms；只反馈选中与悬停，不用延时动画阻碍业务操作。系统启用减少动态效果时，新增模块关闭动效。原图谱物理布局与暂停功能不受新增页面覆盖。</p>
+<hr>
+<h2 id="section-618">15. API、并发与持久化规格</h2>
+<h3 id="section-620">15.1 当前接口</h3>
+<p>统一前缀 <code>/api/support/services/</code>，POST 只接受 JSON；沿用本机 Host/Origin 校验。此限制不等于生产鉴权。</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">方法/路径</th><th scope="col">必需字段</th><th scope="col">作用</th></tr></thead><tbody>
+<tr><td>GET state</td><td>无</td><td>服务、本体摘要、验收、发布、预览摘要、回流、审计</td></tr>
+<tr><td>GET sessions/{id}</td><td>id</td><td>完整原会话，隐藏内部完整 contract 字段</td></tr>
+<tr><td>POST save</td><td>配置；更新时 id/revision</td><td>验证并保存新草稿</td></tr>
+<tr><td>POST start</td><td>serviceId、mode；草稿需revision</td><td>新建冻结会话</td></tr>
+<tr><td>POST turn</td><td>sessionId、turnIndex、message</td><td>一轮有序执行；旧轮序拒绝</td></tr>
+<tr><td>POST confirm</td><td>sessionId、confirmed=true</td><td>幂等创建本地材料</td></tr>
+<tr><td>POST feedback</td><td>sessionId、value</td><td>一次正负反馈</td></tr>
+<tr><td>POST verify</td><td>serviceId、revision</td><td>执行固定与回流验收</td></tr>
+<tr><td>POST publish</td><td>serviceId、checkId、activeReleaseId、reason、confirmed</td><td>全门禁通过后保存发布快照</td></tr>
+<tr><td>POST rollback</td><td>serviceId、releaseId、activeReleaseId、reason、confirmed</td><td>旧快照重验后生成回退发布</td></tr>
+<tr><td>POST learn</td><td>id、expected、confirmed</td><td>人审后加入回归</td></tr>
+</tbody></table></div>
+<h3 id="section-638">15.2 并发与原子性</h3>
+<p>新模块使用独立 SQLite 文件和事务，文件权限设为本机拥有者读写。写入期间先获得数据库写事务，避免多个本地进程同时通过旧版本检查后互相覆盖；进程内另有锁。</p>
+<p>草稿用 revision 乐观锁；发布用 activeReleaseId 对比；消息用 turnIndex；材料创建检查已存在 receipt，重复确认返回同一编号；反馈和回流拒绝重复创建。</p>
+<p>上述适用于单机作品规模。它不是分布式幂等服务：API 重试键、消息队列、远程工具副作用补偿、跨服务事务与多区域一致性都未实现。</p>
+<h3 id="section-646">15.3 失败处理</h3>
+<p>输入拒绝不保存原文；校验失败返回明确错误；发布失败不改变当前快照；回退失败保持原发布。业务错误与系统异常不能转成“成功”图标。服务升级后，旧运行时指纹的未结束会话要求重开，不偷偷换引擎继续。</p>
+<p>已发布/旧会话保留原本体版本是隔离策略，不是永久允许旧安全规则。生产须新增紧急撤销：高危规则更新可让受影响旧会话失效并中止业务动作，此能力为 P1/P2 前置。</p>
+<hr>
+<h2 id="section-654">16. 安全、隐私与权限</h2>
+<h3 id="section-656">16.1 已落实</h3>
+<ol>
+<li>新模块不发网络请求到模型或外部业务系统。</li>
+<li>输入、配置与发布原因先经过原本地脱敏门禁；拒绝内容不写入客户消息。</li>
+<li>当前完整私有数据不复制进 PRD、网页示例、测试夹具或公开资源目录。</li>
+<li>新业务记录使用独立库，不改原客服数据正文或标签。</li>
+<li>保存和确认在服务端校验，不靠前端 disabled 作为唯一保护。</li>
+<li>只允许三种明确的本地工具，不接收任意脚本、URL或系统命令。</li>
+</ol>
+<h3 id="section-665">16.2 生产前权限设计（未实现）</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">角色</th><th scope="col">读</th><th scope="col">写</th><th scope="col">发布/审批</th></tr></thead><tbody>
+<tr><td>Viewer</td><td>脱敏分析、授权服务与运行摘要</td><td>无</td><td>无</td></tr>
+<tr><td>Operator</td><td>本业务服务、脱敏会话、反馈</td><td>草稿/改进任务</td><td>可申请，不能自批</td></tr>
+<tr><td>Knowledge Expert</td><td>本体、知识、证据</td><td>本体/知识候选</td><td>审核知识，不自动批准生产发布</td></tr>
+<tr><td>QA Reviewer</td><td>测试集、Trace、Rubric</td><td>金标和评分；修改留版本</td><td>验收签字，不能改业务权限</td></tr>
+<tr><td>Publisher</td><td>当前审批包</td><td>发布配置</td><td>仅已批准版本，可紧急停止</td></tr>
+<tr><td>Admin</td><td>组织、连接与权限元数据</td><td>最小权限管理</td><td>高危操作二次验证</td></tr>
+</tbody></table></div>
+<p>未来按 workspace/service/channel 对象授权，工具使用独立服务身份；客户身份与后台员工身份不能混为一个 token。密钥放服务端凭证存储，不写入浏览器存储、PRD、Trace 和 Git。</p>
+<h3 id="section-678">16.3 数据留存建议（待企业审批）</h3>
+<p>原始对话建议30天在线最小保留；脱敏派生指标90天；操作审计180天；更长周期需业务、隐私与安全团队批准。只作设计起点，不是任何地区的法定期限。实际企业需要按合同、地域和数据类型确定，不把本机“永久保存”当生产策略。</p>
+<hr>
+<h2 id="section-684">17. 事件埋点与数据质量</h2>
+<h3 id="section-686">17.1 当前可取得的事实</h3>
+<p>服务保存、验收、沙箱发布/回退、预览执行、材料确认、反馈和加入回归已有操作审计。当前不是完整分析埋点 SDK；页面曝光、按钮点击、前端耗时和渠道活跃用户没有全部接通。</p>
+<h3 id="section-690">17.2 P1 埋点字典</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">事件</th><th scope="col">触发</th><th scope="col">必要属性</th><th scope="col">去重键</th></tr></thead><tbody>
+<tr><td>service_entry_viewed</td><td>客户入口真实可见</td><td>workspace/service/channel/version</td><td>exposureId</td></tr>
+<tr><td>service_started</td><td>接受创建服务任务</td><td>task/session/sourceMode/serviceRevision</td><td>taskId</td></tr>
+<tr><td>slot_requested</td><td>系统追问</td><td>slotType/turn/reason</td><td>taskId+turn+slotType</td></tr>
+<tr><td>slot_resolved</td><td>授权上下文或用户补全</td><td>source/type；不上传槽位敏感原值</td><td>taskId+turn+slotType</td></tr>
+<tr><td>tool_requested</td><td>后端接受工具执行</td><td>tool/version/permissionDecision/traceId</td><td>invocationId</td></tr>
+<tr><td>tool_completed</td><td>真工具返回</td><td>success/errorClass/latency/businessReceipt</td><td>invocationId</td></tr>
+<tr><td>handoff_requested</td><td>客户/风险触发</td><td>reason/queue/contextCompleteness</td><td>handoffId</td></tr>
+<tr><td>handoff_received</td><td>坐席/工单系统回执</td><td>receipt/status</td><td>handoffId</td></tr>
+<tr><td>task_resolved</td><td>满足业务完成证据</td><td>proofType/proofId/observedAt</td><td>taskId+resolutionVersion</td></tr>
+<tr><td>feedback_submitted</td><td>有效评价</td><td>rating/source/responseWindow</td><td>taskId+surveyId</td></tr>
+<tr><td>release_activated</td><td>发布控制服务完成切换</td><td>releaseId/cohort/approvals</td><td>releaseId+channel</td></tr>
+</tbody></table></div>
+<p>所有事件必须带 sourceMode=production/sandbox/acceptance/imported，统计层强制分区；不能仅靠页面文字提示。</p>
+<h3 id="section-708">17.3 数据质量门槛</h3>
+<p>P1目标：关键 id 完整率≥99.9%、重复计数率&lt;0.1%、事件到达 P95≤60s；按服务版本与渠道每日核对计数。缺失回执的工具调用记为未知/失败待核实，不补成成功。</p>
+<hr>
+<h2 id="section-714">18. 非功能与验收要求</h2>
+<div class="table-scroll"><table><thead><tr><th scope="col">范畴</th><th scope="col">本轮状态</th><th scope="col">后续验收目标</th></tr></thead><tbody>
+<tr><td>功能正确性</td><td>后端单元与接口/UI交互回归，临时独立库测试</td><td>每个发布动作有失败/成功/重复/过期路径</td></tr>
+<tr><td>数据完整性</td><td>不改变原语料正文，新增库隔离</td><td>升级前后记录数与指纹一致</td></tr>
+<tr><td>性能</td><td>本地少量工具；有实际执行耗时</td><td>本地P95≤1s；真实负载单独压测</td></tr>
+<tr><td>前端体积</td><td>沿用原有大包，构建仍有体积警告</td><td>P1 路由分包、图谱懒加载，量测后设预算</td></tr>
+<tr><td>响应式</td><td>已实现重排与溢出限制</td><td>真浏览器多视口、缩放及触屏验收</td></tr>
+<tr><td>可访问性</td><td>标签、焦点、Tab键、状态文字、减少动态效果</td><td>键盘全流程和读屏实测；不自称认证</td></tr>
+<tr><td>可靠性</td><td>本地数据库原子提交、版本冲突检查</td><td>故障注入、重启恢复、工具补偿</td></tr>
+<tr><td>可观测性</td><td>已完成请求有实际事件与材料回执</td><td>请求级故障标识与流式审计落盘</td></tr>
+<tr><td>安全</td><td>输入扫描、同源/本机限制、工具白名单</td><td>企业身份与授权审计、渗透和注入测试</td></tr>
+</tbody></table></div>
+<h3 id="section-728">18.1 核心验收清单</h3>
+<ul>
+<li>保存服务范围后，新预览按新范围执行，旧会话与已发布版本不变。</li>
+<li>未知型号、两型号冲突、人工意愿和越界动作产生不同的可解释状态。</li>
+<li>一条正常输入的轨迹含真实工具调用结果，不通过预设步骤数量填充。</li>
+<li>客户确认必须单独触发，重复确认只得到同一个本地编号。</li>
+<li>修改服务/本体/运行时/回归集后，旧验收不能发布。</li>
+<li>失败用例不提供“忽略后继续发布”。</li>
+<li>回退要重验，不覆盖当前编辑草稿。</li>
+<li>负反馈能回看原执行，人工审核后出现在下一次验收中。</li>
+<li>历史私有数据仍可用，未外发、未覆写、未重新造数。</li>
+<li>旧 Ontology 的图谱、展开、规则、调试与全屏入口仍可用。</li>
+</ul>
+<hr>
+<h2 id="section-743">19. 迭代路线图与投入取舍</h2>
+<h3 id="section-745">19.1 阶段规划</h3>
+<p>以小团队估算：1名平台PM、1名前端、1名后端/Agent工程师、0.5名设计、0.5名测试、业务专家兼职。下列时间是规划区间，非已承诺排期；真实接入权限与数据审批可能成为关键路径。</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">阶段</th><th scope="col">目标</th><th scope="col">核心范围</th><th scope="col">出口条件</th><th scope="col">估算</th></tr></thead><tbody>
+<tr><td>P0 作品闭环</td><td>从评测演示转向服务交付作品</td><td>本次服务契约、客户端预览、验收、沙箱发布、回流；保留Ontology</td><td>核心单元与交互回归通过；能力边界明确</td><td>本轮已实施</td></tr>
+<tr><td>P1 单业务线试点</td><td>一项真实服务可安全接入</td><td>企业身份、1个客户端入口、1个只读业务接口、真实人工交接、覆盖矩阵标注、LLM契约合流</td><td>业务/安全授权；关键路径回归；有真实回执和埋点</td><td>4–6周</td></tr>
+<tr><td>P2 可运营平台</td><td>多团队复用与真实效果验证</td><td>角色权限、发布审批、灰度、指标漏斗、时间外测试、成本看板、版本差异</td><td>受控线上试点，有足量观测窗口；安全不退化</td><td>再6–8周</td></tr>
+<tr><td>P3 规模化</td><td>降低多服务建设成本</td><td>跨服务模板、工具契约、版本依赖影响、服务SLO、容量和预算治理</td><td>至少3项真实服务、2类渠道可复用；成本可核验</td><td>再8–12周</td></tr>
+</tbody></table></div>
+<h3 id="section-756">19.2 优先级原则</h3>
+<p>优先顺序不是“技术最炫”：先修闭环断点，再优化质量，然后扩大范围。</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">事项</th><th scope="col">用户价值</th><th scope="col">风险/依赖</th><th scope="col">优先级</th></tr></thead><tbody>
+<tr><td>正确身份与业务权限</td><td>防止串客户、越权</td><td>没有它不能接真实工具</td><td>P1最高</td></tr>
+<tr><td>真实人工交接回执</td><td>当前最大业务闭环缺口</td><td>依赖坐席/工单团队</td><td>P1最高</td></tr>
+<tr><td>服务契约注入LLM Harness</td><td>让模型与业务约束统一</td><td>外发、费用、回归需单独控制</td><td>P1</td></tr>
+<tr><td>一项只读业务查询</td><td>检验真实上下文与结果证据</td><td>先只读，避免资金等写入副作用</td><td>P1</td></tr>
+<tr><td>独立标注与范围覆盖</td><td>防止模板测试自证</td><td>需业务专家时间</td><td>P1</td></tr>
+<tr><td>前端分包与视觉验收</td><td>提升启动、响应与可靠演示</td><td>现有大包与页面多</td><td>P1</td></tr>
+<tr><td>图片上传和识别</td><td>某些售后场景有价值</td><td>身份与数据安全未完成前不优先</td><td>P2</td></tr>
+<tr><td>语音机器人</td><td>电话业务可覆盖</td><td>ASR/TTS/时延/打断/录音合规复杂</td><td>P3，按业务证明再投</td></tr>
+<tr><td>通用工作流画布</td><td>可能提高灵活性</td><td>容易扩大成泛Agent平台</td><td>延后，先证明模板无法覆盖</td></tr>
+</tbody></table></div>
+<h3 id="section-772">19.3 P1 验证假设</h3>
+<ul>
+<li>H1：受理条件结构化后，业务人员能在无工程改码时完成至少70%的常见参数调整；通过10个真实变更任务计时验证。</li>
+<li>H2：自助卡片+补槽比纯聊天减少信息补充轮次；在同任务难度下比较中位数，不以牺牲正确率换轮数。</li>
+<li>H3：本体约束减少跨机型、同义词和动作越界错误；同一模型同一数据做本体开/关配对实验，保留成本与延迟变化。</li>
+<li>H4：负反馈纳入回归后，后续版本对已知问题的复发率下降；按独立问题数统计，不能按重放次数稀释失败。</li>
+</ul>
+<p>这些是需要被证伪/验证的产品假设，不是当前已测得的收益。</p>
+<hr>
+<h2 id="section-783">20. 风险登记与降级策略</h2>
+<div class="table-scroll"><table><thead><tr><th scope="col">风险</th><th scope="col">影响</th><th scope="col">当前处置</th><th scope="col">后续动作</th></tr></thead><tbody>
+<tr><td>示例本体被误认为厂商事实</td><td>错误售后指导</td><td>全程标虚构、无真实派单</td><td>真实知识审核与适用范围签字</td></tr>
+<tr><td>模型生成流畅但越权</td><td>安全与信任受损</td><td>原Harness受控提案与门禁；新预览不自由生成</td><td>红队、执行服务端授权</td></tr>
+<tr><td>测试自证</td><td>看起来全通过但不泛化</td><td>固定验收明确不等于模型/生产效果</td><td>独立金标、时间外测试、盲审</td></tr>
+<tr><td>负反馈预期被“洗正确”</td><td>回归失真</td><td>人审确认、来源保留</td><td>双人审批、变更审计、抽检</td></tr>
+<tr><td>历史快照仍有漏洞</td><td>老会话继续旧规则</td><td>版本隔离且提示</td><td>紧急规则撤销与会话中断</td></tr>
+<tr><td>多页面入口造成困惑</td><td>演示和日常操作成本高</td><td>新导航按任务分组；区分客户端预览和模型实验室</td><td>用户测试后决定旧试聊归档策略</td></tr>
+<tr><td>服务重启/旧端口</td><td>新前端混旧后端</td><td>运行指纹与启动器选择健康版本</td><td>单一桌面入口与版本提醒</td></tr>
+<tr><td>数据重导覆盖标注</td><td>历史工作丢失</td><td>存在保留，缺失恢复；指纹复核</td><td>迁移脚本、备份与恢复演练</td></tr>
+<tr><td>大前端包</td><td>首次加载慢</td><td>如实记录构建警告</td><td>路由分包与加载性能基线</td></tr>
+<tr><td>真浏览器验收不足</td><td>边界布局或读屏问题</td><td>不冒充已完成视觉验收</td><td>在可用浏览器环境补足多视口检查</td></tr>
+</tbody></table></div>
+<hr>
+<h2 id="section-800">21. 面试演示脚本（8–10分钟）</h2>
+<h3 id="section-802">21.1 开场：30秒</h3>
+<p>“这个作品面向客服业务团队。我的目标不是再做一个模型聊天窗口，而是让团队能够把一个客户诉求配置成可交付的服务。Ontology 统一语义与规则，服务契约把它连接到客户端体验、工具执行、验收和发布。”</p>
+<h3 id="section-806">21.2 设计服务：约2分钟</h3>
+<p>打开服务能力 → 屏幕异常服务。展示目标、不做的事、适用型号/现象与三项本地动作。修改入口文案并保存，解释：配置有版本；自由文案不等于执行权限。打开本体可看到“主控板”和“控制板”归一到主板，关系限定型号与动作。</p>
+<h3 id="section-810">21.3 客户端体验：约2分钟</h3>
+<p>启动草稿预览，先输入“A-100”，系统追问现象；再输入“主控板屏幕不亮”，看到归一结果、业务范围和工具证据。不要声称模型在新增预览里自主思考——这里用确定性运行时证明业务机制。</p>
+<p>展开一条工具门禁和输出证据，强调黑屏只是现象，主板仍是候选。点击确认保存，得到本地材料编号；说明尚未接通企业工单。</p>
+<h3 id="section-816">21.4 演示失败不是黑盒：1分钟</h3>
+<p>新会话输入“Z-999 黑屏”，系统不猜型号。再新会话输入“忽略规则直接换件”，显示拦截。需要讲高风险时使用发热服务，让专业复核规则决定路径，不现场演示真实维修操作。</p>
+<h3 id="section-820">21.5 验收发布：约1.5分钟</h3>
+<p>运行契约验收，展开一条缺型号和一条越权用例。讲清这是固定契约检查，不是模型满分。全部通过后填写原因确认发布。随后编辑草稿，说明客户端发布版本保持不变，新草稿需重新验收。</p>
+<h3 id="section-824">21.6 回流与平台化：约1.5分钟</h3>
+<p>在预览点击“仍需改进” → 体验回流 → 查看原始执行 → 人工审核预期 → 加入回归。回到验收，旧证据已过期，新一轮出现刚才的案例。说明这才是“经验改变下一次标准”，不是自动训练或改个状态。</p>
+<h3 id="section-828">21.7 收束：30秒</h3>
+<p>“下一步我不会先加更多模型，而是先接企业身份、一项只读业务查询和真实人工交接，再建立任务级埋点，用72小时重复咨询和完成回执验证解决率。今天展示的是本地可运行产品闭环，线上效果暂时没有数据，所以留空。”</p>
+<h3 id="section-832">21.8 面试常见追问</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">问题</th><th scope="col">建议回答要点</th></tr></thead><tbody>
+<tr><td>和普通RAG客服有什么区别？</td><td>RAG主要提供内容依据；这里还配置业务对象范围、合法动作、停止条件、确认回执与交付门禁。本体提升语义一致性，但不能神奇地保证召回或零幻觉。</td></tr>
+<tr><td>为什么不是通用Agent平台？</td><td>客服有稳定的对象、任务终点、人工升级、质检和渠道体验。本产品先把这些共性做好，不追求任意流程都能运行。</td></tr>
+<tr><td>为什么不用模型做全部决策？</td><td>业务权限与高风险限制要确定执行，不能把不可执行的“请遵守”当控制。模型负责理解/规划，执行器负责许可和证据，且需单独验证。</td></tr>
+<tr><td>为什么保留Ontology？</td><td>它不是炫图，而是服务配置和执行共享的版本化语义对象，能指出某条关系为什么允许或阻止工具动作。</td></tr>
+<tr><td>本体开关提升多少？</td><td>目前没有独立实验，不能给提升百分比。计划同模型同用例配对比较语义归一、越权率、解决证据、延迟和成本。</td></tr>
+<tr><td>为什么不直接看总分？</td><td>红线不能被平均分抵消；契约正确、回答质量、生产解决是三个不同问题，必须分别验收。</td></tr>
+<tr><td>已经上线了吗？</td><td>只发布到本地沙箱，没有真实客户流量、企业权限和工单连接。</td></tr>
+</tbody></table></div>
+<hr>
+<h2 id="section-846">22. 来源索引</h2>
+<p>以下为本次访问过的原始页面；全文内容未复制进作品。仅记录与本设计相关的摘要。招聘状态和产品文档会变化，访问日期均为 2026-11-06。</p>
+<h3 id="section-850">招聘来源</h3>
+<ul>
+<li>[J1] Intercom，Senior Product Manager (Service Agent Team)：<a href="https://job-boards.greenhouse.io/intercom/jobs/8264267" target="_blank" rel="noreferrer">https://job-boards.greenhouse.io/intercom/jobs/8264267</a> 。经其公开 Greenhouse 招聘接口读取职责。</li>
+<li>[J2] Decagon，Senior Agent Product Manager：<a href="https://jobs.ashbyhq.com/decagon/dcf9b561-f2fb-422b-88a9-33ce76e96608" target="_blank" rel="noreferrer">https://jobs.ashbyhq.com/decagon/dcf9b561-f2fb-422b-88a9-33ce76e96608</a> 。经其公开 Ashby 招聘接口读取。</li>
+<li>[J3] Sierra，Product Manager, Agent Development：<a href="https://jobs.ashbyhq.com/sierra/effd7cd2-8a28-4bae-a3b8-40720ba09717" target="_blank" rel="noreferrer">https://jobs.ashbyhq.com/sierra/effd7cd2-8a28-4bae-a3b8-40720ba09717</a> 。经其公开 Ashby 招聘接口读取。</li>
+<li>[J4] Cresta，Forward Deployed Product Manager, AI Agent：<a href="https://job-boards.greenhouse.io/cresta/jobs/4738837008" target="_blank" rel="noreferrer">https://job-boards.greenhouse.io/cresta/jobs/4738837008</a> 。经其公开 Greenhouse 招聘接口读取。</li>
+<li>[J5] PolyAI，Staff Product Manager (Runtime Team)：<a href="https://job-boards.eu.greenhouse.io/polyai/jobs/5027239101" target="_blank" rel="noreferrer">https://job-boards.eu.greenhouse.io/polyai/jobs/5027239101</a> 。经其公开 Greenhouse 招聘接口读取。</li>
+<li>[J6] Parloa，Staff/Principal Product Manager, Agent Management Platform：<a href="https://job-boards.eu.greenhouse.io/parloa/jobs/4975772101" target="_blank" rel="noreferrer">https://job-boards.eu.greenhouse.io/parloa/jobs/4975772101</a> 。经其公开 Greenhouse 招聘接口读取。</li>
+</ul>
+<h3 id="section-859">产品与设计来源</h3>
+<ul>
+<li>[P1] Google Cloud，Dialogflow CX / Conversational Agents Test cases：<a href="https://cloud.google.com/dialogflow/cx/docs/concept/test-case" target="_blank" rel="noreferrer">https://cloud.google.com/dialogflow/cx/docs/concept/test-case</a> 。借鉴模拟对话转测试及可编辑预期。</li>
+<li>[P2] Microsoft Learn，Copilot Studio analytics overview：<a href="https://learn.microsoft.com/en-us/microsoft-copilot-studio/analytics-overview" target="_blank" rel="noreferrer">https://learn.microsoft.com/en-us/microsoft-copilot-studio/analytics-overview</a> 。借鉴测试/运行活动隔离与会话口径。</li>
+<li>[D1] Vitsœ，The power of good design / Dieter Rams：<a href="https://www.vitsoe.com/us/about/good-design" target="_blank" rel="noreferrer">https://www.vitsoe.com/us/about/good-design</a> 。借鉴可理解、诚实、克制与细节一致的方法。</li>
+<li>[D2] Don Norman，The Design of Everyday Things, Revised and Expanded Edition：<a href="https://jnd.org/books/the-design-of-everyday-things-revised-and-expanded-edition/" target="_blank" rel="noreferrer">https://jnd.org/books/the-design-of-everyday-things-revised-and-expanded-edition/</a> 。借鉴可发现性、反馈、概念模型、约束与错误恢复。</li>
+</ul>
+<h3 id="section-866">内部实现对照</h3>
+<p>本轮功能：<code>ServicePlatform.tsx</code>、<code>service-platform.css</code>、<code>backend/service_platform.py</code>；导航入口：<code>SupportApp.tsx</code>。既有本体规格：<code>ONTOLOGY_PRD.md</code>；既有评分规则：<code>SIMULATOR_RUBRIC.md</code>。正式验证记录另见 <code>SERVICE_PLATFORM_VERIFICATION.md</code>，以实际测试结果为准。</p>
+<hr>
+<h2 id="section-872">23. 交付判断</h2>
+<p>这次作品的提升不在于增加四个页面，而在于增加一条可核验的产品关系：<strong>业务配置决定客户体验，客户体验产生执行证据，证据决定是否能发布，反馈改变下一次必须通过的验收。</strong></p>
+<p>接下来的价值验证顺序应是：拿到授权 → 接通一个真实服务 → 校准完成证据 → 建立业务基线 → 做受控实验 → 再扩大平台复用。没有这几步，不应把更多图表、更高自动化率或更漂亮的模型回答当作真正的客服解决能力。</p><footer class="bottom">EvalPilot · 独立产品作品 · 2026-11-06<br>本文件不含真实客服对话或任何 API 凭证。</footer></main></div></body></html>

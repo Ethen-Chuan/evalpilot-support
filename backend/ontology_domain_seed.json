@@ -1,0 +1,60 @@
+{
+  "version": "domain-v1",
+  "boundary": "虚构设备、备件与政策，仅本机教学沙箱。不是任何厂商的维修依据；不执行真实派单、换件或资金操作。",
+  "classes": [
+    {"id":"model","label":"设备机型"}, {"id":"component","label":"零部件"}, {"id":"symptom","label":"故障现象"}, {"id":"cause","label":"候选根因"}, {"id":"spare","label":"备件"}, {"id":"action","label":"维修动作"}, {"id":"severity","label":"故障等级"}
+  ],
+  "entities": [
+    {"id":"model-a","class":"model","label":"A-100","aliases":["示例一型"],"enabled":true,"modelIds":[],"attributes":{"configuration":"教学版","discontinued":false}},
+    {"id":"model-b","class":"model","label":"A-200","aliases":["示例二型"],"enabled":true,"modelIds":[],"attributes":{"configuration":"教学版","discontinued":false}},
+    {"id":"model-old","class":"model","label":"A-090","aliases":["示例旧型号"],"enabled":true,"modelIds":[],"attributes":{"configuration":"历史教学版","discontinued":true}},
+    {"id":"mainboard","class":"component","label":"主板","aliases":["主控板","控制板"],"enabled":true,"modelIds":["model-a","model-old"],"attributes":{"description":"候选部件，不代表已经损坏"}},
+    {"id":"display","class":"component","label":"显示模组","aliases":["车机屏幕","屏幕组件"],"enabled":true,"modelIds":["model-a","model-b"],"attributes":{}},
+    {"id":"speaker","class":"component","label":"喇叭","aliases":["扬声器"],"enabled":true,"modelIds":["model-a"],"attributes":{}},
+    {"id":"battery","class":"component","label":"电池","aliases":["电池组"],"enabled":true,"modelIds":["model-a","model-b"],"attributes":{}},
+    {"id":"sensor","class":"component","label":"传感器","aliases":[],"enabled":true,"modelIds":["model-a"],"attributes":{}},
+    {"id":"black","class":"symptom","label":"开机黑屏","aliases":["屏幕黑屏","屏幕不亮","开机无显示","开机屏幕不亮","黑屏"],"enabled":true,"modelIds":[],"attributes":{"description":"可观察现象，不能与无法上电或主板损坏等同"}},
+    {"id":"touch","class":"symptom","label":"触控失灵","aliases":["触摸没反应"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"noise","class":"symptom","label":"异响","aliases":["异常声音"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"charge","class":"symptom","label":"无法充电","aliases":["充不进去电"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"heat","class":"symptom","label":"异常发热","aliases":["冒烟","焦味","特别烫"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"firmware","class":"cause","label":"固件异常","aliases":["固件问题"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"hardware","class":"cause","label":"硬件损坏","aliases":[],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"loose","class":"cause","label":"连接松动","aliases":["接线松动"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"spare-board","class":"spare","label":"主板备件示例","aliases":["DEMO-BOARD-01"],"enabled":true,"modelIds":["model-a"],"attributes":{"code":"DEMO-BOARD-01","replaceable":true,"discontinued":false}},
+    {"id":"spare-old","class":"spare","label":"已停产主板备件示例","aliases":["DEMO-OLD-01"],"enabled":true,"modelIds":["model-old"],"attributes":{"code":"DEMO-OLD-01","replaceable":true,"discontinued":true}},
+    {"id":"spare-speaker","class":"spare","label":"喇叭备件示例","aliases":["DEMO-SPEAKER-01"],"enabled":true,"modelIds":["model-a"],"attributes":{"code":"DEMO-SPEAKER-01","replaceable":true,"discontinued":false}},
+    {"id":"remote","class":"action","label":"远程复核","aliases":["远程处理"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"onsite","class":"action","label":"现场工程师复核","aliases":["上门修","上门维修"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"factory","class":"action","label":"返厂复核","aliases":["返厂维修"],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"no-repair","class":"action","label":"无需维修","aliases":[],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"minor","class":"severity","label":"轻微告警","aliases":[],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"normal","class":"severity","label":"一般故障","aliases":[],"enabled":true,"modelIds":[],"attributes":{}},
+    {"id":"major","class":"severity","label":"重大故障","aliases":["严重故障"],"enabled":true,"modelIds":[],"attributes":{}}
+  ],
+  "relations": [
+    {"id":"rel-black-hardware","source":"black","target":"hardware","type":"possible_cause","modelIds":["model-a","model-old"]},
+    {"id":"rel-black-firmware","source":"black","target":"firmware","type":"possible_cause","modelIds":["model-a","model-b"]},
+    {"id":"rel-hardware-board","source":"hardware","target":"mainboard","type":"affects","modelIds":["model-a","model-old"]},
+    {"id":"rel-firmware-display","source":"firmware","target":"display","type":"affects","modelIds":["model-a","model-b"]},
+    {"id":"rel-black-speaker","source":"black","target":"speaker","type":"excludes_part","modelIds":[]},
+    {"id":"rel-board-spare","source":"mainboard","target":"spare-board","type":"has_spare","modelIds":["model-a"]},
+    {"id":"rel-board-old","source":"mainboard","target":"spare-old","type":"has_spare","modelIds":["model-old"]},
+    {"id":"rel-speaker-spare","source":"speaker","target":"spare-speaker","type":"has_spare","modelIds":["model-a"]},
+    {"id":"rel-black-onsite","source":"black","target":"onsite","type":"allows_action","modelIds":["model-a","model-old"]},
+    {"id":"rel-black-remote","source":"black","target":"remote","type":"allows_action","modelIds":["model-a","model-b"]},
+    {"id":"rel-black-factory","source":"black","target":"factory","type":"allows_action","modelIds":["model-b"]},
+    {"id":"rel-black-no-onsite","source":"black","target":"onsite","type":"forbids_action","modelIds":["model-b"]},
+    {"id":"rel-heat-major","source":"heat","target":"major","type":"has_severity","modelIds":[]},
+    {"id":"rel-heat-onsite","source":"heat","target":"onsite","type":"allows_action","modelIds":["model-a","model-b"]}
+  ],
+  "rules": [
+    {"id":"rule-major","label":"重大故障必须专业现场复核","template":"major_dispatch","enabled":true,"entityId":"major","actionId":"onsite","description":"重大故障不能只给远程方案；沙箱只生成工程师复核草稿。"},
+    {"id":"rule-retired","label":"停产机型不推荐停产备件","template":"discontinued_spare","enabled":true,"description":"停产信息仅为虚构属性；没有可用备件时转专家复核。"}
+  ],
+  "documents": [
+    {"id":"DEMO-KB-BLACK","title":"黑屏的专业复核范围","entityIds":["black","mainboard"],"modelIds":["model-a"],"harnessKnowledgeIds":["KB-BLACKSCREEN"],"content":"仅可查询示例候选备件和生成现场复核草稿；黑屏不能确诊主板损坏。"},
+    {"id":"DEMO-KB-SECOND","title":"另一型号的黑屏处理范围","entityIds":["black","display"],"modelIds":["model-b"],"harnessKnowledgeIds":["KB-BLACKSCREEN"],"content":"示例二型只支持远程或返厂复核，不支持本示例上门流程。"},
+    {"id":"DEMO-KB-HEAT","title":"发热现象的升级边界","entityIds":["heat","major"],"modelIds":["model-a","model-b"],"harnessKnowledgeIds":["KB-SAFETY","KB-HANDOFF"],"content":"停止远程维修建议并升级专业复核；本工具不代替官方应急指引。"}
+  ]
+}

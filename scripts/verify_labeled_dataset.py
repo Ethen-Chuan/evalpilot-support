@@ -3,6 +3,7 @@ import collections
 import datetime
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -13,7 +14,7 @@ def verify(directory, audit):
     manifest = json.loads(manifest_path.read_text())
     if 'redactions' in manifest:
         (audit / 'redaction-counters.json').write_text(json.dumps(manifest.pop('redactions'), ensure_ascii=False, indent=2))
-    scanner = Path.home() / '.config/ept/codex/dlp/dlp'
+    scanner = Path(os.environ.get('EVAL_DLP_PATH', str(Path.home() / '.config/ept/codex/dlp/dlp')))
     totals = collections.Counter()
     identifiers = set()
     message_identifiers = set()

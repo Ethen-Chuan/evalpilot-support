@@ -1,0 +1,10 @@
+{
+  "version": "ontology-demo-knowledge-v1",
+  "source": "人工编写的售后教学知识，不是厂商手册或客户资料",
+  "documents": [
+    {"id": "DEMO-STARTUP", "version": "1", "title": "整机启动异常：先核实外部状态", "kind": "symptom", "nodeId": "startup", "content": "启动异常仅是现象。先记录指示灯是否亮、屏幕菜单能否显示及已尝试步骤；不能据此认定无法上电或主控板损坏。", "nextAction": "check_external_state"},
+    {"id": "DEMO-BLACK", "version": "1", "title": "整机屏幕黑屏：区分显示与供电现象", "kind": "symptom", "nodeId": "black", "content": "屏幕黑屏不等于无法上电。先核实屏幕自身菜单和输入源状态，不推断故障部件，不指导拆机。", "nextAction": "check_external_state"},
+    {"id": "DEMO-FAULT-A", "version": "1", "title": "A-100 的 E102：主控板候选复核", "kind": "fault", "nodeId": "code-a", "content": "仅适用于虚构型号 A-100 的 E102。主控板只是候选部件，必须由专业售后复核；不能作为直接更换部件的依据。", "nextAction": "professional_review"},
+    {"id": "DEMO-FAULT-B", "version": "1", "title": "A-200 的 E102：供电模块候选复核", "kind": "fault", "nodeId": "code-b", "content": "仅适用于虚构型号 A-200 的 E102。候选是供电模块，不沿用 A-100 的主控板映射；需专业售后复核，不授权直接换件。", "nextAction": "professional_review"}
+  ]
+}

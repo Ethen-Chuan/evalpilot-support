@@ -15,6 +15,8 @@ class TraceCategoryTests(unittest.TestCase):
         self.assertIn('不是人工', self.summary('quality.review')['durationScope'])
         self.assertEqual(self.summary(origin='external_reported')['category'], 'external')
         self.assertEqual(self.summary('unknown')['category'], 'other')
+        self.assertEqual(self.summary('support.simulator')['category'], 'chat')
+        self.assertIn('回填', self.summary('support.simulator')['durationScope'])
 
     def test_batch_search_combined_filters_and_counts_are_consistent(self):
         rows = [self.summary(), self.summary('quality.judge', status='error', durationMs=2000), self.summary('experience.learning', durationMs=None, status='interrupted')]

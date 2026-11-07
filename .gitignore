@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .venv/
+.venv
 venv/
 __pycache__/
 *.py[cod]
@@ -13,6 +14,7 @@ __pycache__/
 *.p12
 *.pfx
 data/
+.evalpilot-local-data/
 models/
 runtime/
 uploads/

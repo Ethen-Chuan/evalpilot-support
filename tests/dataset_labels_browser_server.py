@@ -21,6 +21,17 @@ for index in range(32):
         values['knowledge_category'] = ['常见故障']
     session = fixture_session(index, values=values, conflicts=['intent'] if index == 0 else [])
     support_api.save('imported_dialogue', session['id'], session)
+support_api.save('corpus', 'LABEL-ROUTING', {'id': 'LABEL-ROUTING', 'name': '匿名范围标注测试', 'nature': '隔离测试构造，不是真实客户数据', 'importedAt': support_api.now(), 'scanStatus': 'passed', 'totals': {'sessions': 6, 'messages': 12, 'gapSessions': 0, 'invalidSessions': 2, 'conflictSessions': 0, 'imagesWithheld': 0, 'videosWithheld': 0}, 'intentDistribution': {'info_query': 1}})
+for index, values in enumerate([
+    {'is_invalid': ['是'], 'invalid_reason': ['前文缺失']},
+    {'is_invalid': ['是'], 'invalid_reason': ['\n前文缺失\t', '无具体内容']},
+    {'is_invalid': ['否'], 'direct_handoff': ['是'], 'handoff_reason': ['需人工查询确认']},
+    {'is_invalid': ['否'], 'direct_handoff': ['是']},
+    {},
+    {'intent': ['info_query']},
+], 1000):
+    session = fixture_session(index, dataset='LABEL-ROUTING', values=values)
+    support_api.save('imported_dialogue', session['id'], session)
 support_api.DIALOGUES.refresh_index()
 print('Isolated dataset label fixture ready; no real customer content', flush=True)
 ThreadingHTTPServer(('127.0.0.1', server.PORT), server.Handler).serve_forever()

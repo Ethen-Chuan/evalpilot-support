@@ -2,6 +2,7 @@ import argparse
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -9,32 +10,38 @@ import subprocess
 from dialogues import DialogueService, analyze, fingerprint
 
 
+def scan_file(source):
+    if source.is_symlink() or not source.is_file():
+        raise ValueError('数据文件缺失或为符号链接，未导入')
+    scanner = Path(os.environ.get('EVAL_DLP_PATH', str(Path.home() / '.config/ept/codex/dlp/dlp')))
+    scanned = subprocess.run([str(scanner), 'scan', str(source)], capture_output=True, text=True, timeout=240)
+    report = json.loads(scanned.stdout) if scanned.returncode == 0 else None
+    if not report or report.get('max_severity') != 0 or report.get('findings'):
+        raise ValueError('文件复扫未通过，未导入')
+    return report
+
+
 def checked_records(directory):
-    scanner = Path.home() / '.config/ept/codex/dlp/dlp'
     manifest_path = directory / 'manifest.json'
-    scanned_manifest = subprocess.run([str(scanner), 'scan', str(manifest_path)], capture_output=True, text=True, timeout=60)
-    manifest_report = json.loads(scanned_manifest.stdout) if scanned_manifest.returncode == 0 else None
-    if not manifest_report or manifest_report['max_severity'] != 0 or manifest_report.get('findings'):
-        raise ValueError('数据清单未通过扫描，未导入')
+    scan_file(manifest_path)
     manifest = json.loads(manifest_path.read_text())
     if manifest.get('schemaVersion') != 1 or manifest.get('scanStatus') != 'passed':
         raise ValueError('数据包尚未完成全量复扫')
     records = []
     receipts = []
+    filenames = set()
     for entry in manifest['files']:
         name = entry['name']
-        if Path(name).name != name or not name.endswith('_redacted.jsonl'):
+        if Path(name).name != name or not name.endswith('_redacted.jsonl') or name in filenames:
             raise ValueError('数据包路径不合法')
+        filenames.add(name)
         source = directory / name
+        if source.is_symlink():
+            raise ValueError('不允许符号链接数据文件')
         content = source.read_bytes()
         if hashlib.sha256(content).hexdigest() != entry['sha256']:
             raise ValueError('文件内容与复核指纹不一致')
-        scanned = subprocess.run([str(scanner), 'scan', str(source)], capture_output=True, text=True, timeout=240)
-        if scanned.returncode:
-            raise ValueError('文件扫描失败，未导入')
-        report = json.loads(scanned.stdout)
-        if report['max_severity'] != 0 or report.get('findings'):
-            raise ValueError('文件复扫仍有风险，未导入')
+        scan_file(source)
         rows = [json.loads(line) for line in content.decode().splitlines() if line.strip()]
         if len(rows) != entry['sessions']:
             raise ValueError('文件记录数不一致')

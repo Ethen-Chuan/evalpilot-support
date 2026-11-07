@@ -6,8 +6,11 @@ FIELDS = {
     'intent': '客户意图', 'emotion': '用户情绪', 'product_line': '产品类别',
     'fault_domain': '故障域', 'type': '工单类型', 'kb_expectation': '知识覆盖',
     'expected_system': '关联系统', 'knowledge_category': '知识分类',
+    'is_invalid': '是否无效会话', 'invalid_reason': '无效原因',
+    'direct_handoff': '是否直接转人工', 'handoff_reason': '转人工原因',
 }
 SCOPES = {'all': '全部会话', 'regular': '常规会话', 'invalid': '无效会话', 'handoff': '直接转人工', 'unclassified': '范围待确认'}
+TRIMMED_VALUE_SQL = 'trim(value,char(9,10,11,12,13,28,29,30,31,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288))'
 
 
 def label_values(summary, field):
@@ -33,7 +36,7 @@ def values_expression(field):
 
 def contains(field, entries):
     literals = ','.join("'" + value + "'" for value in entries)
-    return f"EXISTS(SELECT 1 FROM {values_expression(field)} WHERE type='text' AND trim(value) IN ({literals}))"
+    return f"EXISTS(SELECT 1 FROM {values_expression(field)} WHERE type='text' AND {TRIMMED_VALUE_SQL} IN ({literals}))"
 
 
 def scope_sql(scope):
@@ -72,9 +75,9 @@ def add_conditions(conditions, parameters, scope, labels):
     for field, value in labels.items():
         expression = values_expression(field)
         if value is None:
-            conditions.append(f"NOT EXISTS(SELECT 1 FROM {expression} WHERE type='text' AND trim(value)<>'')")
+            conditions.append(f"NOT EXISTS(SELECT 1 FROM {expression} WHERE type='text' AND {TRIMMED_VALUE_SQL}<>'')")
         else:
-            conditions.append(f"EXISTS(SELECT 1 FROM {expression} WHERE type='text' AND trim(value)=?)")
+            conditions.append(f"EXISTS(SELECT 1 FROM {expression} WHERE type='text' AND {TRIMMED_VALUE_SQL}=?)")
             parameters.append(value)
 
 
@@ -96,9 +99,12 @@ def facets(database, where, parameters, dataset, scope, labels):
             conflicts += field in (summary.get('conflicts') or [])
         total = len(summaries)
         dimensions.append({'field': field, 'name': name, 'total': total, 'covered': covered, 'missing': total - covered,
+                           'kind': 'source_text' if field in ('invalid_reason', 'handoff_reason') else 'category',
                            'coverage': covered / total if total else None, 'multiValueSessions': multi, 'conflictSessions': conflicts,
                            'values': [{'value': value, 'count': count, 'ratio': count / total if total else None} for value, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))]})
     return {'total': len(summaries), 'projectTotal': len(all_rows), 'scope': scope, 'filters': labels,
             'scopes': [{'id': identifier, 'name': name, 'count': scope_counts[identifier]} for identifier, name in SCOPES.items()],
-            'dimensions': dimensions, 'source': 'imported_human_labels', 'unit': 'unique_conversation',
+            'dimensions': dimensions, 'profileVersion': 2,
+            'unlabeledSessions': sum(not any(label_values(summary, field) for field in (summary.get('values') or {})) for summary in summaries),
+            'source': 'imported_human_labels', 'unit': 'unique_conversation',
             'policy': '汇总已导入的有效提交标注；草稿及取消标注不计。每个标签按完整会话去重，缺失不推断，多值与分歧均保留。'}

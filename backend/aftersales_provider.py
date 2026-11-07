@@ -1,11 +1,17 @@
 import copy
 import http.client
 import json
+from pathlib import Path
 import re
 import secrets
 import ssl
 import threading
 import time
+from urllib.parse import urlsplit
+
+
+QWEN_REGIONS = json.loads(Path(__file__).with_name('qwen_regions.json').read_text())
+HARNESS_PROVIDERS = ('deepseek', 'qwen')
 
 
 SERVICES = {
@@ -13,7 +19,7 @@ SERVICES = {
     'deepseek': {'modelsPath': '/models', 'name': 'DeepSeek · 云端 API', 'host': 'api.deepseek.com', 'path': '/chat/completions', 'endpoint': 'https://api.deepseek.com', 'limitField': 'max_tokens', 'note': 'Flash 图文模型 ID：deepseek-flash。官方文档核对于 2026-10-22，当时对应 V4.1-Flash-1017；云端别名可能更新。看图通过不代表工具调用或 DSH Agent 循环已验证。'},
     'deepseek_vl2': {'modelsPath': '/v1/models', 'name': 'DeepSeek-VL2 · 私有部署', 'path': '/v1/chat/completions', 'endpoint': 'http://127.0.0.1:8000/v1', 'limitField': 'max_tokens', 'local': True, 'note': '连接你已部署的 VL2 OpenAI 兼容推理服务，不会自动下载模型。仅接受本机回环地址；内网 GPU 服务请先建立 SSH 隧道。局域网地址、公网代理和云端 Key 不可混用。'},
     'anthropic': {'modelsPath': '/v1/models', 'name': 'Anthropic / Claude', 'host': 'api.anthropic.com', 'path': '/v1/messages', 'endpoint': 'https://api.anthropic.com', 'limitField': 'max_tokens'},
-    'qwen': {'name': '通义千问 / 百炼（北京）', 'host': 'dashscope.aliyuncs.com', 'path': '/compatible-mode/v1/chat/completions', 'endpoint': 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'limitField': 'max_tokens', 'note': '仅北京地域 API Key；请从百炼控制台复制模型 ID。本适配器关闭可选深度思考，使用非流式 JSON 输出。'},
+    'qwen': {'name': '通义千问 / 阿里云百炼', 'host': 'dashscope.aliyuncs.com', 'path': '/compatible-mode/v1/chat/completions', 'endpoint': 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'limitField': 'max_tokens', 'note': '使用按量 API Key，并选择其创建地域；支持官方业务空间专属 Base URL。Coding Plan 专属 Key 不用于本评测接口。模型 ID 从同一地域控制台复制；关闭可选深度思考。'},
     'moonshot': {'name': 'Kimi / Moonshot（中国站）', 'host': 'api.moonshot.cn', 'path': '/v1/chat/completions', 'modelsPath': '/v1/models', 'endpoint': 'https://api.moonshot.cn/v1', 'limitField': 'max_tokens'},
     'zhipu': {'name': '智谱 / GLM', 'host': 'open.bigmodel.cn', 'path': '/api/paas/v4/chat/completions', 'endpoint': 'https://open.bigmodel.cn/api/paas/v4', 'limitField': 'max_tokens', 'note': '使用开放平台通用 API Key，不是 Coding Plan 专属端点；请从控制台复制模型 ID。'},
 }
@@ -24,11 +30,22 @@ class ProviderError(ValueError):
 
 
 def service_catalog():
-    return [{'id': identifier, 'name': service['name'], 'endpoint': service['endpoint'], 'discovery': bool(service.get('modelsPath')), 'note': service.get('note', ''), **({'local': True} if service.get('local') else {})} for identifier, service in SERVICES.items()]
+    return [{'id': identifier, 'name': service['name'], 'endpoint': service['endpoint'], 'discovery': bool(service.get('modelsPath')), 'note': service.get('note', ''), 'harness': identifier in HARNESS_PROVIDERS, **({'regions': QWEN_REGIONS} if identifier == 'qwen' else {}), **({'local': True} if service.get('local') else {})} for identifier, service in SERVICES.items()]
 
 
 def connection_service(provider, endpoint=None):
     service = SERVICES[provider]
+    if provider == 'qwen':
+        address = service['endpoint'] if endpoint is None else endpoint
+        if not isinstance(address, str):
+            raise ValueError('请选择百炼地域或填写官方业务空间 Base URL')
+        address = address.rstrip('/')
+        regions = '|'.join(re.escape(item['id']) for item in QWEN_REGIONS)
+        shared = {item['endpoint'] for item in QWEN_REGIONS if item['endpoint']}
+        workspace = re.fullmatch(r'https://[a-z0-9][a-z0-9-]{0,62}\.(' + regions + r')\.maas\.aliyuncs\.com/compatible-mode/v1', address)
+        if address not in shared and not workspace:
+            raise ValueError('百炼地址须为选定地域的官方 Base URL，或官方业务空间专属地址；不要添加 /chat/completions、查询参数或 Coding Plan 端点')
+        return {**service, 'host': urlsplit(address).hostname, 'endpoint': address}
     if not service.get('local'):
         return service
     if not isinstance(endpoint, str):
@@ -50,6 +67,12 @@ def credentials(body):
     if not isinstance(provider, str) or provider not in SERVICES or body.get('confirmed') is not True:
         raise ValueError('请选择受支持的服务，并确认授权的发送目的地')
     key = body.get('apiKey', '')
+    if isinstance(key, str):
+        key = key.strip()
+    if provider == 'qwen':
+        connection_service(provider, body.get('endpoint'))
+        if isinstance(key, str) and key.startswith('sk-sp-'):
+            raise ValueError('这是 Coding Plan 专属 Key。本评测使用百炼按量 API，请在对应地域创建普通 API Key；不要把密钥发到聊天里')
     if SERVICES[provider].get('local'):
         connection_service(provider, body.get('endpoint'))
         if key == '':
@@ -67,9 +90,19 @@ def provider_headers(provider, key):
     return {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key}
 
 
-def check_response_status(status):
+def check_response_status(status, provider=None):
     if status == 200:
         return
+    if provider == 'qwen':
+        messages = {
+            400: '百炼 HTTP 400：请核对模型 ID 及 JSON、工具或图像参数是否受该模型支持；不自动重试',
+            401: '百炼 HTTP 401：Key 与地域/业务空间可能不匹配，或密钥已失效；请核对当前地址和普通按量 API Key',
+            403: '百炼 HTTP 403：请检查账号已开通百炼、模型调用权限、业务空间授权和账户状态',
+            404: '百炼 HTTP 404：模型或调用路径不可用；请从当前地域控制台复制完整模型 ID',
+            429: '百炼 HTTP 429：调用频率、并发或额度受限；本次未自动重试，请检查控制台限额',
+        }
+        if status in messages:
+            raise ProviderError(messages[status])
     if status in (401, 403):
         raise ProviderError('模型服务拒绝认证或权限不足，请检查密钥、地域及模型权限')
     if status == 429:
@@ -108,7 +141,7 @@ class ProviderVault:
         try:
             connection.request('GET', service['modelsPath'], headers=provider_headers(provider, key))
             response = connection.getresponse()
-            check_response_status(response.status)
+            check_response_status(response.status, provider)
             raw = response.read(1_000_001)
             if len(raw) > 1_000_000:
                 raise ProviderError('模型列表超过接收上限，请手动填写模型 ID')
@@ -190,7 +223,7 @@ class ProviderVault:
         try:
             connection.request('POST', service['path'], body=json.dumps(payload, ensure_ascii=False).encode(), headers=headers)
             response = connection.getresponse()
-            check_response_status(response.status)
+            check_response_status(response.status, configuration['provider'])
             raw = response.read(1_000_001)
             if len(raw) > 1_000_000:
                 raise ProviderError('模型返回超过接收上限，未保存不完整结果')

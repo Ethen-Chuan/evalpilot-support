@@ -43,7 +43,7 @@ async function check() {
   const ready = async count => { await wait(() => document.querySelector('.dataset-labels')?.getAttribute('aria-busy') === 'false' && document.querySelector('.dataset-label-filters strong')?.textContent === String(count)); assert.ok(document.querySelector('.project-case-caption').textContent.includes(`当前 ${count} 个案例`)); };
   try {
     await ready(32);
-    assert.equal(document.querySelectorAll('.dataset-label-card').length, 8);
+    assert.equal(document.querySelectorAll('.dataset-labels > .dataset-label-grid > .dataset-label-card').length, 8);
     assert.equal(document.querySelectorAll('.project-case-table tbody tr').length, 20);
     const originalIntent = card('客户意图').textContent;
     await click('下一页案例'); await ready(32);
@@ -92,9 +92,46 @@ async function check() {
     assert.equal(document.querySelectorAll('.dataset-label-card').length, 0);
     await click('重新读取'); await ready(32);
     await click('收起分类'); assert.equal(document.querySelectorAll('.dataset-label-card').length, 0);
-    await click('展开分类'); assert.equal(document.querySelectorAll('.dataset-label-card').length, 8);
+    await click('展开分类'); assert.equal(document.querySelectorAll('.dataset-labels > .dataset-label-grid > .dataset-label-card').length, 8);
+    window.location.hash = 'datasets?project=LABEL-ROUTING&scope=invalid'; await ready(2);
+    assert.equal(card('客户意图'), null);
+    assert.equal(document.querySelectorAll('.dataset-label-reasons > .dataset-label-card').length, 1);
+    assert.ok(card('无效原因').textContent.includes('种原始写法'));
+    assert.ok(document.querySelector('.dataset-scope-summary').textContent.includes('无效会话已保留'));
+    assert.ok(document.querySelector('.project-case-table thead').textContent.includes('原始无效原因'));
+    await click('筛选无效原因：前文缺失，2段'); await ready(2);
+    await click('清空标签'); await ready(2);
+    await click('筛选无效原因：无具体内容，1段'); await ready(1);
+    assert.equal(JSON.parse(new URLSearchParams(window.location.hash.split('?')[1]).get('labels')).invalid_reason, '无具体内容');
+    assert.ok(document.querySelector('.project-case-reason').textContent.includes('无具体内容'));
+    const sourceReturn = window.location.hash;
+    document.querySelector('.project-case-open').click(); await wait(() => window.location.hash.startsWith('#knowledge'));
+    window.history.back(); await wait(() => window.location.hash === sourceReturn); await ready(1);
+    fill(field('筛选案例状态'), 'invalid'); await ready(1);
+    [...document.querySelectorAll('.dataset-label-scopes button')].find(element => element.textContent.startsWith('直接转人工')).click(); await ready(2);
+    assert.equal(field('筛选案例状态').value, 'all');
+    assert.equal(new URLSearchParams(window.location.hash.split('?')[1]).has('labels'), false);
+    assert.equal(card('客户意图'), null);
+    assert.ok(document.querySelector('.project-case-table thead').textContent.includes('原始转人工原因'));
+    assert.ok(document.querySelector('.dataset-scope-summary').textContent.includes('不等于人工已经接通'));
+    await click('筛选转人工原因：需人工查询确认，1段'); await ready(1);
+    await click('清空标签'); await ready(2);
+    await click('筛选转人工原因未标注，1段'); await ready(1);
+    assert.ok(card('转人工原因').textContent.includes('来源未填写转人工原因'));
+    assert.ok(document.querySelector('.project-case-reason').textContent.includes('来源未填写原因'));
+    [...document.querySelectorAll('.dataset-label-scopes button')].find(element => element.textContent.startsWith('范围待确认')).click(); await ready(2);
+    assert.equal(document.querySelector('.dataset-label-reasons'), null);
+    assert.equal(document.querySelectorAll('.dataset-scope-summary dd')[0].textContent, '1 段');
+    assert.equal(document.querySelectorAll('.dataset-scope-summary dd')[1].textContent, '2 段');
+    assert.equal(document.querySelectorAll('.dataset-scope-summary dd')[2].textContent, '2 段');
+    assert.ok(document.querySelector('.project-case-table thead').textContent.includes('来源范围标记'));
+    assert.ok(card('客户意图').textContent.includes('信息查询'));
+    assert.equal(document.querySelector('.dataset-label-secondary').open, true);
+    fill(field('搜索案例编号或完整对话内容'), 'LABEL-CASE-1004'); await ready(1);
+    assert.equal(document.querySelectorAll('.dataset-label-card').length, 0);
+    assert.ok(document.querySelector('.dataset-scope-summary').textContent.includes('全部标签为空'));
     assert.deepEqual(errors, []);
-    console.log('PASS: dataset facets pagination, exact label counts, cross-filters, missing labels, scope, search, return navigation, legacy intent, stale response protection, retry and collapse');
+    console.log('PASS: dataset facets pagination, exact label counts, cross-filters, missing labels, routing reasons, unclassified diagnostics, scope reset, search, return navigation, legacy intent, stale response protection, retry and collapse');
   } finally { window.close(); }
 }
 

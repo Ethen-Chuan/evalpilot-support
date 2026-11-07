@@ -49,7 +49,8 @@ export function QuickStart({ compact = false, onNavigate }: { compact?: boolean;
     setTimeout(() => URL.revokeObjectURL(target), 1000);
   };
   return <article ref={root} className={`quick-start ${compact ? 'compact' : ''}`} onClick={event => { if ((event.target as HTMLElement).closest('a')) onNavigate?.(); }}>
-    <header className="guide-header">{!compact && <h1>使用说明</h1>}<p>按顺序体验，不必先学会所有功能。</p><div className="lab-row-actions"><Button onClick={download}><DownloadSimple size={16} />下载说明书</Button>{!compact && <Button onClick={() => window.print()}><Printer size={16} />打印说明</Button>}</div></header>
+    <header className="guide-header">{!compact && <h1>使用说明</h1>}<p>先走完一项服务，再按需深入本体、模型和数据。</p><div className="lab-row-actions"><a className="text-link" href="/product-prd.html" target="_blank" rel="noreferrer">阅读完整产品 PRD</a><Button onClick={download}><DownloadSimple size={16} />下载原评测工具说明</Button>{!compact && <Button onClick={() => window.print()}><Printer size={16} />打印说明</Button>}</div></header>
+    <section className="guide-chapter"><h2>新版：从服务设计到验收发布</h2><ol><li>打开<a className="text-link" href="#service">服务总览</a>，了解服务契约、客户端体验、发布和回流的关系。</li><li>进入<a className="text-link" href="#services?id=screen-care">屏幕异常服务</a>，修改自助入口、适用机型和允许动作，保存草稿。</li><li>在“客户端体验”启动预览，输入“A-100”，再补充“主控板屏幕不亮”。右侧会显示本体归一、真实工具结果和约束依据。</li><li>进入“契约验收”，全部通过后才能发布到本地沙箱。草稿修改不会覆盖发布版本。</li><li>预览中点击“仍需改进”，到<a className="text-link" href="#improve">体验回流</a>审核正确预期，再运行包含此问题的新验收。</li></ol><p>新增客户端预览是确定性本地执行，不调用付费模型，也没有接通真实工单或真人坐席。原<a className="text-link" href="#simulator">对话实验室</a>继续负责 DeepSeek / Qwen 与六维 Rubric；<a className="text-link" href="#ontology">本体图谱</a>保留原有网络、对象卡片、编辑、展开和全屏。</p></section>
     <div className="guide-intro">{paragraphs(intro)}</div>
     {chapters.slice(1).map(chapter => {
       const divider = chapter.indexOf('\n');

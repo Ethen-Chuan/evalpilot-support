@@ -149,6 +149,51 @@ class DatasetLabelTests(unittest.TestCase):
         self.assertNotIn('draft-only', values)
         self.assertNotIn('cancelled-only', values)
 
+    def test_routing_reasons_are_preserved_and_drill_down_without_business_labels(self):
+        support_api.save('corpus', 'LABEL-ROUTING', {'id': 'LABEL-ROUTING'})
+        entries = [
+            {'is_invalid': ['是'], 'invalid_reason': ['前文缺失', ' 前文缺失\n']},
+            {'is_invalid': ['\n是\t'], 'invalid_reason': ['\n前文缺失\t', '无具体内容']},
+            {'is_invalid': ['是'], 'invalid_reason': ['\n\t\u3000']},
+            {'is_invalid': ['否'], 'direct_handoff': ['是'], 'handoff_reason': ['需人工查询确认']},
+            {},
+            {'intent': ['info_query']},
+        ]
+        for index, values in enumerate(entries, 1000):
+            session = fixture_session(index, dataset='LABEL-ROUTING', values=values)
+            support_api.save('imported_dialogue', session['id'], session)
+        before = copy.deepcopy(support_api.records('imported_dialogue'))
+        invalid = self.listing(dataset='LABEL-ROUTING', scope='invalid')
+        self.assertEqual(invalid['facets']['profileVersion'], 2)
+        self.assertEqual(invalid['total'], 3)
+        self.assertEqual(self.dimension(invalid, 'intent')['covered'], 0)
+        reason = self.dimension(invalid, 'invalid_reason')
+        self.assertEqual((reason['kind'], reason['covered'], reason['missing'], reason['multiValueSessions']), ('source_text', 2, 1, 1))
+        self.assertEqual({item['value']: item['count'] for item in reason['values']}, {'前文缺失': 2, '无具体内容': 1})
+        for dimension in invalid['facets']['dimensions']:
+            for value in dimension['values']:
+                filtered = self.listing({dimension['field']: value['value']}, dataset='LABEL-ROUTING', scope='invalid')
+                self.assertEqual(filtered['total'], value['count'])
+            self.assertEqual(self.listing({dimension['field']: None}, dataset='LABEL-ROUTING', scope='invalid')['total'], dimension['missing'])
+        handoff = self.listing(dataset='LABEL-ROUTING', scope='handoff')
+        self.assertEqual(handoff['total'], 1)
+        self.assertEqual(self.dimension(handoff, 'handoff_reason')['coverage'], 1)
+        self.assertEqual(self.listing({'handoff_reason': '需人工查询确认'}, dataset='LABEL-ROUTING', scope='handoff')['total'], 1)
+        unknown = self.listing(dataset='LABEL-ROUTING', scope='unclassified')
+        self.assertEqual((unknown['total'], unknown['facets']['unlabeledSessions']), (2, 1))
+        self.assertEqual(self.dimension(unknown, 'is_invalid')['missing'], 2)
+        self.assertEqual(self.dimension(unknown, 'direct_handoff')['missing'], 2)
+        self.assertEqual(before, support_api.records('imported_dialogue'))
+
+    def test_sql_and_python_agree_on_whitespace_normalization(self):
+        import sqlite3
+        from dataset_labels import TRIMMED_VALUE_SQL
+        whitespace = ''.join(chr(codepoint) for codepoint in range(0x110000) if chr(codepoint).isspace())
+        with sqlite3.connect(':memory:') as database:
+            for text in (whitespace, whitespace + '来源原因' + whitespace, '普通原因', '\u3000是\u00a0'):
+                result = database.execute(f'SELECT {TRIMMED_VALUE_SQL} FROM (SELECT ? AS value)', (text,)).fetchone()[0]
+                self.assertEqual(result, text.strip())
+
 
 if __name__ == '__main__':
     unittest.main()

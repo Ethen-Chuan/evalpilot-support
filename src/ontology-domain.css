@@ -1,0 +1,141 @@
+.ontology-domain { display:grid; gap:22px; min-width:0; color:var(--ink); padding-bottom:28px; }
+.ontology-domain * { box-sizing:border-box; }
+.ods-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:22px; padding:10px 0 0; }
+.ods-eyebrow { font:10px var(--mono); color:var(--muted); letter-spacing:1.5px; }
+.ods-heading h1 { font-size:clamp(23px,2.3vw,33px); line-height:1.45; font-weight:600; letter-spacing:-.7px; margin:10px 0; }
+.ods-heading p,.ods-panel p,.ods-help,.ods-section-head p,.ods-graph aside p { color:var(--secondary); font-size:12px; line-height:1.9; }
+.ods-heading>div:last-child,.ods-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.ods-boundary { display:flex; align-items:center; flex-wrap:wrap; gap:12px; background:var(--subtle); border:1px solid var(--line); padding:12px 15px; font-size:11px; color:var(--secondary); border-radius:6px; }
+.ods-boundary>span { flex:1; min-width:220px; }
+.ods-boundary a,.ods-return { display:inline-flex; align-items:center; gap:7px; color:var(--accent-text); text-decoration:none; }
+.ods-return { padding:10px 0 18px; font-size:12px; }
+.ods-tabs { display:flex; gap:28px; border-bottom:1px solid var(--line); overflow-x:auto; }
+.ods-tabs button { flex-shrink:0; padding:12px 0 15px; font-size:13px; color:var(--secondary); border-bottom:2px solid transparent; }
+.ods-tabs button[aria-current] { color:var(--accent-text); border-color:var(--accent); font-weight:600; }
+.ods-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid var(--line); border-radius:7px; background:var(--surface); }
+.ods-metrics section { padding:21px 25px; border-right:1px solid var(--line); }
+.ods-metrics section:last-child { border:0; }
+.ods-metrics span { display:block; color:var(--secondary); font-size:11px; margin-bottom:12px; }
+.ods-metrics strong { font:500 29px var(--mono); letter-spacing:-1px; }
+.ods-panel { background:var(--surface); border:1px solid var(--line); border-radius:7px; padding:23px; min-width:0; }
+.ods-panel h2 { font-size:17px; font-weight:600; line-height:1.65; margin:0 0 8px; }
+.ods-panel h3 { font-size:14px; line-height:1.6; }
+.ods-overview-grid { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:20px; }
+.ods-story { border-top:3px solid var(--accent); padding:28px; }
+.ods-story>span { font-size:11px; color:var(--muted); }
+.ods-story h2 { font-size:25px; line-height:1.55; margin:16px 0; }
+.ods-story ol { padding:10px 0 12px 20px; line-height:2.5; font-size:13px; }
+.ods-story>.text-link { display:flex; margin-top:18px; font-size:12px; }
+.ods-facts { margin:18px 0; }
+.ods-facts>div { display:flex; justify-content:space-between; gap:18px; padding:13px 0; border-bottom:1px solid var(--line); font-size:12px; }
+.ods-facts dt { color:var(--secondary); }
+.ods-facts dd { text-align:right; margin:0; font-weight:550; }
+.ods-section-head { display:flex; justify-content:space-between; align-items:center; gap:15px; flex-wrap:wrap; }
+.ods-section-head h2 { margin-top:0; }
+.ods-section-head p { margin:4px 0 12px; max-width:740px; }
+.ods-maintenance { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:13px 16px; }
+.ods-maintenance summary { cursor:pointer; font-size:12px; color:var(--secondary); }
+.ods-maintenance>div { display:flex; flex-wrap:wrap; gap:18px; align-items:center; margin:18px 0 8px; }
+.ods-maintenance label { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; }
+.ods-maintenance p { font-size:11px; color:var(--muted); line-height:1.8; }
+.ods-search { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.ontology-domain :is(input:not([type=checkbox]),select,textarea),.ods-editor :is(input:not([type=checkbox]),select,textarea) { background:var(--surface); border:1px solid var(--line-strong); border-radius:5px; color:var(--ink); font:inherit; padding:9px 11px; min-width:0; max-width:100%; }
+.ontology-domain textarea,.ods-editor textarea { width:100%; resize:vertical; min-height:90px; line-height:1.8; }
+.ontology-domain input[type=checkbox],.ods-editor input[type=checkbox] { accent-color:var(--accent); }
+.ontology-domain :focus-visible,.ods-editor :focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.ontology-domain .table-wrap { max-width:100%; overflow-x:auto; }
+.ods-entity-table { min-width:850px; width:100%; }
+.ods-entity-table td:first-child { min-width:150px; }
+.ods-entity-table td:nth-child(3) { min-width:200px; max-width:400px; white-space:normal; }
+.ods-entity-table code,.ods-entity-table small { display:block; margin-top:6px; font-size:10px; color:var(--muted); }
+.ods-alias { display:inline-block; padding:3px 7px; border:1px solid var(--line); border-radius:4px; background:var(--subtle); margin:3px 5px 3px 0; font-size:11px; }
+.ods-muted { color:var(--muted); font-size:11px; }
+.ods-rules { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.ods-rules section { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.ods-rules p { flex:1; margin:0; }
+.ods-rules code { color:var(--muted); font-size:10px; margin:7px 0; }
+.ods-version { padding:22px 0; border-top:1px solid var(--line); }
+.ods-version header { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.ods-version header>span { color:var(--muted); font-size:11px; flex:1; }
+.ods-diffs details { border:1px solid var(--line); border-radius:4px; margin:10px 0; }
+.ods-diffs summary { padding:12px; font-size:12px; cursor:pointer; }
+.ods-diffs details>div,.ods-trace-payload { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:12px; background:var(--subtle); }
+.ods-diffs h4,.ods-trace-payload h4 { font-size:11px; color:var(--secondary); margin:0 0 10px; }
+.ods-diffs pre,.ontology-domain pre { white-space:pre-wrap; overflow-wrap:anywhere; font:11px/1.8 var(--mono); max-height:300px; overflow:auto; margin:0; }
+.ods-editor { display:grid; gap:18px; }
+.ods-editor>label,.ods-debug-input form>label { display:grid; gap:8px; font-size:12px; }
+.ods-model-scope { border:1px solid var(--line); border-radius:4px; padding:12px; display:flex; flex-wrap:wrap; gap:14px; font-size:12px; }
+.ods-model-scope legend { padding:0 6px; color:var(--secondary); }
+.ods-model-scope label { display:flex; gap:7px; align-items:center; }
+.ods-class-list { display:grid; gap:8px; margin-bottom:20px; }
+.ods-class-list>div { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:7px 0; border-bottom:1px solid var(--line); }
+.ods-debug-layout { display:grid; grid-template-columns:minmax(270px,.8fr) minmax(0,1.2fr); gap:20px; align-items:start; }
+.ods-debug-input form { display:grid; gap:17px; margin-top:25px; }
+.ods-example-list { display:grid; gap:8px; padding-top:10px; }
+.ods-example-list button { display:flex; align-items:center; justify-content:space-between; text-align:left; padding:11px 13px; font-size:12px; border:1px solid var(--line); border-radius:5px; background:var(--subtle); }
+.ods-example-list button:hover { border-color:var(--accent); }
+.ods-debug-input details { margin-top:22px; font-size:12px; }
+.ods-debug-result>h2 { font-size:17px; margin:18px 0 26px; }
+.ods-mappings { display:grid; gap:6px; }
+.ods-mappings>div { display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:10px 12px; border-radius:4px; background:var(--subtle); font-size:12px; }
+.ods-mappings small { font-size:10px; color:var(--muted); margin-left:auto; }
+.ods-tool { border:1px solid var(--line); border-left:3px solid #358778; border-radius:5px; padding:15px; margin:12px 0; }
+.ods-tool.blocked,.ods-tool.failed { border-left-color:#b7832a; }
+.ods-tool>strong { font:11px var(--mono); margin-right:10px; }
+.ods-tool summary { font-size:11px; cursor:pointer; margin-bottom:8px; }
+.ods-output-check { padding:16px; background:var(--subtle); border-radius:5px; margin:16px 0; }
+.ods-output-check strong { font-size:12px; }
+.ods-run-id { display:block; color:var(--muted); font-size:10px; margin-top:15px; overflow-wrap:anywhere; }
+.ods-trace>details { border-top:1px solid var(--line); }
+.ods-trace>details>summary { display:flex; flex-wrap:wrap; align-items:center; gap:12px; cursor:pointer; padding:14px 0; }
+.ods-trace summary>span:first-child { font:11px var(--mono); color:var(--muted); }
+.ods-trace summary>strong { font-size:12px; flex:1; min-width:160px; }
+.ods-trace summary>small { color:var(--muted); font:10px var(--mono); }
+.ods-loading { text-align:center; padding:70px 20px; color:var(--secondary); }
+.ods-graph { border:1px solid var(--line); border-radius:7px; background:var(--surface); min-width:0; overflow:hidden; }
+.ods-graph-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; padding:13px 16px; border-bottom:1px solid var(--line); }
+.ods-graph-toolbar>div { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.ods-graph-toolbar strong { font-size:13px; }
+.ods-graph-toolbar small { color:var(--muted); font-size:10px; }
+.ods-graph-layout { display:grid; grid-template-columns:minmax(0,1fr) 265px; min-height:580px; }
+.ods-graph-canvas { position:relative; min-width:0; min-height:580px; overflow:hidden; background:var(--subtle); }
+.ods-graph-canvas .ontology-object-host { position:absolute; inset:0; height:100%; width:100%; }
+.ods-graph-controls { position:absolute; bottom:16px; left:16px; display:flex; flex-wrap:wrap; gap:6px; padding:5px; background:var(--surface); border:1px solid var(--line); border-radius:6px; max-width:calc(100% - 32px); }
+.ods-graph aside { min-width:0; padding:22px 17px; border-left:1px solid var(--line); max-height:650px; overflow:auto; }
+.ods-graph aside h3 { font-size:19px; margin:14px 0 8px; }
+.ods-graph aside>code { display:block; font-size:10px; color:var(--muted); overflow-wrap:anywhere; margin-bottom:14px; }
+.ods-graph aside>button { display:grid; grid-template-columns:minmax(0,1fr) 14px; width:100%; text-align:left; gap:6px; padding:12px 0; border-bottom:1px solid var(--line); font-size:12px; }
+.ods-graph aside>button small { grid-column:1 / -1; color:var(--muted); font-size:10px; }
+.ods-graph-expanded { position:fixed; inset:0; z-index:150; width:100%; height:100dvh; border:0; border-radius:0; display:flex; flex-direction:column; }
+.ods-graph-expanded .ods-graph-layout { flex:1; min-height:0; }
+.ods-graph-expanded .ods-graph-canvas { min-height:0; }
+.ods-graph-expanded aside { max-height:none; }
+.ods-graph:fullscreen { height:100vh; }
+@media(max-width:1100px) {
+  .ods-overview-grid,.ods-debug-layout { grid-template-columns:minmax(0,1fr); }
+  .ods-graph-layout { grid-template-columns:minmax(0,1fr) 220px; }
+  .ods-heading>div:last-child { flex-shrink:0; }
+}
+@media(max-width:740px) {
+  .ontology-domain { gap:16px; }
+  .ods-heading { flex-direction:column; }
+  .ods-tabs { gap:22px; }
+  .ods-panel { padding:17px; }
+  .ods-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ods-metrics section { border-bottom:1px solid var(--line); padding:17px; }
+  .ods-metrics strong { font-size:24px; }
+  .ods-rules,.ods-diffs details>div,.ods-trace-payload { grid-template-columns:minmax(0,1fr); }
+  .ods-graph-layout { grid-template-columns:minmax(0,1fr); }
+  .ods-graph-canvas { min-height:470px; }
+  .ods-graph aside { border-left:0; border-top:1px solid var(--line); max-height:240px; }
+  .ods-graph-expanded .ods-graph-layout { grid-template-rows:minmax(0,1fr) 190px; }
+  .ods-facts>div { display:grid; gap:8px; }
+  .ods-facts dd { text-align:left; }
+}
+.ods-history { display:flex; width:100%; align-items:center; gap:14px; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line); text-align:left; font-size:12px; flex-wrap:wrap; }
+.ods-history code { font:10px var(--mono); }
+.ods-acceptance { border-bottom:1px solid var(--line); padding:13px 0; }
+.ods-acceptance summary { display:flex; gap:10px; align-items:center; cursor:pointer; font-size:12px; }
+.ods-acceptance pre { padding-top:12px; }
+.ods-checkboxes { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; }
+.ods-checkboxes label { display:flex; gap:7px; align-items:center; }

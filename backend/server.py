@@ -320,7 +320,7 @@ class Handler(BaseHTTPRequestHandler):
         origin = self.headers.get("Origin")
         if not self.valid_host() or (origin and origin not in {f"http://127.0.0.1:{PORT}", f"http://localhost:{PORT}", "http://127.0.0.1:5173", "http://localhost:5173"}):
             return self.send(403, {"error": "来源校验失败"})
-        if self.path.startswith(('/api/support/lab/', '/api/support/experience/', '/api/support/modelops/')) and self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
+        if self.path.startswith(('/api/support/lab/', '/api/support/experience/', '/api/support/modelops/', '/api/support/simulator/', '/api/support/ontology/', '/api/support/services/')) and self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
             return self.send(415, {'error': '模型配置和执行接口只接受 JSON 请求'})
         try:
             length = int(self.headers.get("Content-Length", "0"))
@@ -418,6 +418,8 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     initialize()
     support_api.initialize()
+    from private_corpus import restore_at_startup
+    restore_at_startup(support_api)
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     print(f"EvalPilot ready: http://127.0.0.1:{PORT}", flush=True)
     server.serve_forever()

@@ -1,0 +1,17 @@
+[
+  "backend/service_platform.py",
+  "backend/support_api.py",
+  "backend/simulator_runtime.json",
+  "scripts/customer_harness.mjs",
+  "scripts/qwen_harness_adapter.mjs",
+  "backend/qwen_regions.json",
+  "backend/aftersales_provider.py",
+  "backend/customer_simulator.py",
+  "backend/simulator_knowledge.py",
+  "backend/simulator_rubric.py",
+  "backend/ontology.py",
+  "backend/ontology_registry.py",
+  "backend/ontology_domain.py",
+  "backend/ontology_domain_seed.json",
+  "backend/ontology_domain_acceptance.py"
+]

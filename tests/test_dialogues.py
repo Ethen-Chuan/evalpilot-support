@@ -39,7 +39,8 @@ class DialogueTests(unittest.TestCase):
         return self.service.create_draft({"archiveId": archive["id"], "messageIds": [message["id"] for message in messages], "title": "退款进度核实", "question": "如何核实退款进度？", "content": "请在官方售后页面核实审核状态。", "keywords": ["退款进度核实"]})
 
     def test_full_local_session_not_limited_by_state_recent_thirty(self):
-        first = support_api.chat({"message": "退款到账要多久？"})
+        with patch.object(support_api, 'now', return_value='2026-10-10T11:00:00+00:00'):
+            first = support_api.chat({"message": "退款到账要多久？"})
         for index in range(1, 36):
             turn = copy.deepcopy(first)
             turn.update(id=f"MSG-TEST-{index:04d}", message=f"匿名追问第 {index} 轮", answer=f"答复第 {index} 轮", traceId=None, createdAt=f"2026-10-10T11:{index:02d}:00+00:00")

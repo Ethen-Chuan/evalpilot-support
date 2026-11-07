@@ -24,8 +24,8 @@ function projectReturnFromHash() {
   const params = new URLSearchParams(location.hash.split('?')[1] || '');
   const target = params.get('returnTo');
   const project = params.get('project');
-  if (!target?.startsWith('#datasets?') || !project || params.get('dataset') !== project) return null;
-  return new URLSearchParams(target.slice('#datasets?'.length)).get('project') === project ? target : null;
+  if (!target || !/^#(?:datasets|ontology)\?/.test(target) || !project || params.get('dataset') !== project) return null;
+  return new URLSearchParams(target.slice(target.indexOf('?') + 1)).get('project') === project ? target : null;
 }
 
 async function request<T>(path: string, body?: unknown): Promise<T> {
@@ -168,7 +168,7 @@ export function DialogueKnowledge({ policies, notify, changed, resume }: { polic
     finally { setPending(false); }
   };
   return <div className="dialogue-knowledge">
-    {projectReturn && <a className="project-return-link" href={projectReturn}><ArrowLeft size={15} />返回项目案例</a>}
+    {projectReturn && <a className="project-return-link" href={projectReturn}><ArrowLeft size={15} />{projectReturn.startsWith('#ontology?') ? '返回关系图谱' : '返回项目案例'}</a>}
     <div className="page-head"><div><span className="eyebrow">CONVERSATION KNOWLEDGE BASE</span><h1>对话知识库</h1><p>保留整段上下文与每轮证据，先沉淀原始资料，再审核可复用的答复知识。</p></div><div className="page-actions"><Button primary onClick={() => setImportOpen(true)}><UploadSimple size={16} />导入完整对话</Button></div></div>
     <div className="knowledge-tabs" role="tablist" aria-label="知识库内容"><button role="tab" aria-selected={tab === 'dialogues'} onClick={() => choose(sessionId, archiveId)}><ChatsCircle size={18} />对话资料<span>{listing?.stats.sessions || 0}</span></button><button role="tab" aria-selected={tab === 'drafts'} onClick={() => choose(sessionId, archiveId, 'drafts')}><PencilSimple size={18} />知识草稿<span>{drafts.filter(draft => draft.status === 'draft').length}</span></button><button role="tab" aria-selected={tab === 'policies'} onClick={() => choose(sessionId, archiveId, 'policies')}><BookOpen size={18} />答复知识</button></div>
     {error && <div className="notice error" role="alert">{error}。当前列表可能不是最新数据。</div>}

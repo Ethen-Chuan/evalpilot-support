@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
-from aftersales_provider import ProviderError, ProviderVault, SERVICES, service_catalog
+from aftersales_provider import ProviderError, ProviderVault, QWEN_REGIONS, SERVICES, service_catalog
 
 
 class ProviderDiscoveryTests(unittest.TestCase):
@@ -26,7 +26,9 @@ class ProviderDiscoveryTests(unittest.TestCase):
         catalog = service_catalog()
         self.assertEqual({item['id'] for item in catalog}, {'openai', 'anthropic', 'deepseek', 'qwen', 'moonshot', 'zhipu', 'deepseek_vl2'})
         self.assertEqual({item['id'] for item in catalog if item['discovery']}, {'openai', 'anthropic', 'deepseek', 'moonshot', 'deepseek_vl2'})
-        self.assertTrue(all(set(item) == {'id', 'name', 'endpoint', 'discovery', 'note'} for item in catalog if not item.get('local')))
+        self.assertTrue(all(set(item) == {'id', 'name', 'endpoint', 'discovery', 'note', 'harness'} for item in catalog if not item.get('local') and item['id'] != 'qwen'))
+        self.assertEqual({item['id'] for item in catalog if item['harness']}, {'deepseek', 'qwen'})
+        self.assertEqual(next(item for item in catalog if item['id'] == 'qwen')['regions'], QWEN_REGIONS)
         self.assertEqual([item['id'] for item in catalog if item.get('local')], ['deepseek_vl2'])
 
     def test_listing_uses_only_allowed_host_and_get_without_body(self):
@@ -116,6 +118,51 @@ class ProviderDiscoveryTests(unittest.TestCase):
             self.assertEqual(result['usage']['total_tokens'], 7)
             if provider == 'qwen':
                 self.assertFalse(payload['enable_thinking'])
+
+    def test_qwen_region_and_workspace_destinations_survive_configuration(self):
+        endpoints = [item['endpoint'] for item in QWEN_REGIONS if item['endpoint']]
+        endpoints += [f'https://workspace-test.{region["id"]}.maas.aliyuncs.com/compatible-mode/v1' for region in QWEN_REGIONS]
+        for endpoint in endpoints:
+            with self.subTest(endpoint=endpoint):
+                vault = ProviderVault()
+                status = vault.configure({**self.body, 'provider': 'qwen', 'endpoint': endpoint, 'candidateModel': 'test-model', 'judgeModel': 'test-model'})
+                self.assertEqual(status['endpoint'], endpoint)
+                patcher, connection = self.transport({'choices': [{'message': {'content': '{"ok":true}'}, 'finish_reason': 'stop'}]})
+                with patcher as factory:
+                    vault.complete(status['revision'], 'candidate', [{'role': 'user', 'content': 'JSON test'}], json_output=True)
+                self.assertEqual(factory.call_args.args[0], urllib.parse.urlsplit(endpoint).hostname)
+                self.assertEqual(connection.request.call_args.args, ('POST', '/compatible-mode/v1/chat/completions'))
+                self.assertNotIn(self.body['apiKey'], json.dumps(status))
+
+    def test_qwen_rejects_nonofficial_endpoints_and_coding_credentials(self):
+        body = {**self.body, 'provider': 'qwen', 'candidateModel': 'test-model', 'judgeModel': 'test-model'}
+        endpoints = ['https://untrusted.invalid/compatible-mode/v1', 'http://dashscope.aliyuncs.com/compatible-mode/v1', 'https://dashscope.aliyuncs.com.evil.invalid/compatible-mode/v1', 'https://space.cn-beijing.maas.aliyuncs.com@evil.invalid/compatible-mode/v1', 'https://space.invalid.maas.aliyuncs.com/compatible-mode/v1', 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', 'https://dashscope.aliyuncs.com/compatible-mode/v1?redirect=1', 'https://dashscope.aliyuncs.com:443/compatible-mode/v1', '']
+        with patch('aftersales_provider.http.client.HTTPSConnection') as transport:
+            for endpoint in endpoints:
+                with self.subTest(endpoint=endpoint), self.assertRaises(ValueError):
+                    ProviderVault().configure({**body, 'endpoint': endpoint})
+            with self.assertRaisesRegex(ValueError, 'Coding Plan'):
+                ProviderVault().configure({**body, 'apiKey': 'sk-sp-' + 'placeholder-only'})
+            transport.assert_not_called()
+
+    def test_qwen_error_codes_are_actionable_without_upstream_body(self):
+        vault = ProviderVault()
+        status = vault.configure({**self.body, 'provider': 'qwen', 'candidateModel': 'test-model', 'judgeModel': 'test-model'})
+        for code in [400, 401, 403, 404, 429]:
+            patcher, connection = self.transport({'error': self.body['apiKey']}, status=code)
+            with patcher, self.assertRaisesRegex(ProviderError, f'HTTP {code}') as error:
+                vault.complete(status['revision'], 'candidate', [{'role': 'user', 'content': 'test'}])
+            self.assertNotIn(self.body['apiKey'], str(error.exception))
+            self.assertEqual(connection.request.call_count, 1)
+            connection.getresponse.return_value.read.assert_not_called()
+
+    def test_key_paste_whitespace_is_trimmed_without_changing_internal_bytes(self):
+        vault = ProviderVault()
+        body = {**self.body, 'provider': 'qwen', 'candidateModel': 'test-model', 'judgeModel': 'test-model'}
+        vault.configure({**body, 'apiKey': '  ' + self.body['apiKey'] + '\n'})
+        self.assertEqual(vault.snapshot()['apiKey'], self.body['apiKey'])
+        with self.assertRaises(ValueError):
+            vault.configure({**body, 'apiKey': 'placeholder with spaces'})
 
     def test_test_checks_candidate_json_not_just_ok_text(self):
         vault = ProviderVault()

@@ -62,6 +62,23 @@
 .dataset-label-placeholder { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; padding: 40px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; color: var(--secondary); font-size: 12px; line-height: 1.8; text-align: center; }
 .dataset-label-placeholder strong { font-size: 14px; color: var(--ink); }
 .dataset-label-no-values { padding: 22px 0; font-size: 12px; line-height: 1.7; color: var(--secondary); }
+.dataset-scope-summary { display: flex; align-items: flex-start; gap: 12px; padding: 18px; margin-bottom: 18px; border: 1px solid var(--line-strong); border-left: 3px solid var(--accent); border-radius: 8px; background: var(--surface); }
+.dataset-scope-summary > svg { flex-shrink: 0; color: var(--accent-text); margin-top: 2px; }
+.dataset-scope-summary > div { min-width: 0; }
+.dataset-scope-summary h3 { margin: 0; font-size: 14px; line-height: 1.7; font-weight: 600; }
+.dataset-scope-summary p { margin: 6px 0 0; font-size: 12px; line-height: 1.8; color: var(--secondary); overflow-wrap: anywhere; }
+.dataset-scope-summary .dataset-scope-missing { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
+.dataset-scope-summary dl { display: flex; gap: 12px 32px; flex-wrap: wrap; margin: 18px 0 12px; }
+.dataset-scope-summary dt { font-size: 12px; color: var(--secondary); }
+.dataset-scope-summary dd { margin: 6px 0 0; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dataset-label-source-note { font-size: 12px; color: var(--secondary); line-height: 1.8; margin: 2px 0 10px; }
+.dataset-label-card.is-source-text .dataset-label-name, .dataset-label-card.is-source-text .dataset-label-name > span { white-space: normal; overflow-wrap: anywhere; }
+.dataset-label-reasons { grid-template-columns: minmax(0, 1fr); }
+.dataset-label-reasons .dataset-label-row { padding: 12px 0; }
+.dataset-label-secondary { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 16px; }
+.dataset-label-secondary > summary { font-size: 12px; color: var(--secondary); cursor: pointer; line-height: 1.8; }
+.dataset-label-secondary > .dataset-label-grid { margin-top: 14px; }
+.project-case-table .project-case-reason { display: block; white-space: normal; overflow-wrap: anywhere; line-height: 1.8; }
 .dataset-label-loading { position: relative; }
 .dataset-label-loading-text { display: block; font-size: 12px; line-height: 1.8; margin: 0 0 14px; color: var(--secondary); }
 .dataset-label-skeleton { display: grid; gap: 16px; padding: 22px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-height: 247px; }

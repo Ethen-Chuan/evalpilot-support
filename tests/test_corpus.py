@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import subprocess
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -49,6 +50,24 @@ class RedactionTests(unittest.TestCase):
         row['data']['n_turns'] = 3
         with self.assertRaises(ValueError):
             convert_record(row, 'source-test', 1, self.redactor)
+
+    def test_explicit_dataset_identifier_is_preserved(self):
+        record = convert_record(source_row(), 'source-test', 1, self.redactor, dataset_id='sample-private-v1')
+        self.assertEqual(record['datasetId'], 'sample-private-v1')
+
+    def test_converter_refuses_nonempty_output_and_invalid_identifier(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            output = folder / 'output'
+            output.mkdir()
+            original = output / 'keep.txt'
+            original.write_text('preserve')
+            command = [sys.executable, str(ROOT / 'scripts/redact_labeled_dataset.py'), '--source', str(folder), '--output', str(output), '--key', str(folder / 'private.key')]
+            for arguments in [[], ['--dataset-id', '../invalid']]:
+                result = subprocess.run(command + arguments, capture_output=True, timeout=20)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(original.read_text(), 'preserve')
+                self.assertFalse((folder / 'private.key').exists())
 
     def test_conflicting_final_and_draft_labels_retained(self):
         row = source_row()

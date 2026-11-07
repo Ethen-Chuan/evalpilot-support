@@ -235,7 +235,7 @@ def summarize_labels(sets):
     return {'values': {field: sorted(entries) for field, entries in values.items()}, 'conflicts': sorted(field for field, entries in versions.items() if len(entries) > 1)}
 
 
-def convert_record(row, source_file, position, redactor):
+def convert_record(row, source_file, position, redactor, dataset_id=DATASET_ID):
     data = row['data']
     identifier = 'CORP-' + redactor.alias('session', data['task_id'])
     parsed = extract_messages(data['conversation'])
@@ -248,7 +248,7 @@ def convert_record(row, source_file, position, redactor):
     sets = annotation_sets(row, redactor)
     summary = summarize_labels(sets)
     intent = next(iter(summary['values'].get('intent', [])), 'unclear')
-    return {'schemaVersion': 1, 'id': identifier, 'datasetId': DATASET_ID, 'title': f"设备售后 · {INTENT_NAMES.get(intent, '标注会话')} · {identifier[-6:]}", 'origin': 'user_imported', 'sourceLabel': '用户提供真实售后语料 · 脱敏文本', 'messages': messages, 'annotationSets': sets, 'labelSummary': summary, 'provenance': {'file': source_file, 'row': position, 'participant': 'PERSON-' + redactor.alias('participant', data.get('user_id', data['task_id'])), 'imagesWithheld': data.get('n_images', 0), 'videosWithheld': data.get('n_videos', 0), 'declaredMessages': data['n_turns'], 'runtimeTraceAvailable': False}, 'completeness': '保留上游提供的全部消息轮次与角色。身份、链接及高风险正文已脱敏或隔离；图片视频未导入。只保留按时钟推算的相对时差，不代表已验证的持续时长。上游没有运行 Trace，不补造。', 'privacy': {'status': 'automated_rules_checked', 'reviewRequiredBeforeSharing': True, 'originalMediaImported': False}}
+    return {'schemaVersion': 1, 'id': identifier, 'datasetId': dataset_id, 'title': f"设备售后 · {INTENT_NAMES.get(intent, '标注会话')} · {identifier[-6:]}", 'origin': 'user_imported', 'sourceLabel': '用户提供真实售后语料 · 脱敏文本', 'messages': messages, 'annotationSets': sets, 'labelSummary': summary, 'provenance': {'file': source_file, 'row': position, 'participant': 'PERSON-' + redactor.alias('participant', data.get('user_id', data['task_id'])), 'imagesWithheld': data.get('n_images', 0), 'videosWithheld': data.get('n_videos', 0), 'declaredMessages': data['n_turns'], 'runtimeTraceAvailable': False}, 'completeness': '保留上游提供的全部消息轮次与角色。身份、链接及高风险正文已脱敏或隔离；图片视频未导入。只保留按时钟推算的相对时差，不代表已验证的持续时长。上游没有运行 Trace，不补造。', 'privacy': {'status': 'automated_rules_checked', 'reviewRequiredBeforeSharing': True, 'originalMediaImported': False}}
 
 
 def main():
@@ -256,7 +256,12 @@ def main():
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--key', type=Path, required=True)
+    parser.add_argument('--dataset-id', default=DATASET_ID)
     options = parser.parse_args()
+    if not re.fullmatch(r'[a-z][a-z0-9-]{2,79}', options.dataset_id):
+        raise ValueError('Dataset ID must be a stable lowercase identifier')
+    if options.output.exists() and any(options.output.iterdir()):
+        raise ValueError('Output directory is not empty; existing packages are never overwritten')
     os.umask(0o077)
     options.output.mkdir(parents=True, exist_ok=True)
     options.key.parent.mkdir(parents=True, exist_ok=True)
@@ -280,6 +285,8 @@ def main():
                         for value in result.get('value', {}).get('text', []):
                             identifiers.update(re.findall(r'[A-Za-z0-9-]{6,}', value))
     redactor = Redactor(options.key.read_bytes(), identifiers)
+    if not raw_files:
+        raise ValueError('No supported source JSON files found')
     totals = collections.Counter()
     roles = collections.Counter()
     distribution = collections.Counter()
@@ -293,7 +300,7 @@ def main():
             for position, row in enumerate(json.loads(file.read_text()), 1):
                 totals['sourceSessions'] += 1
                 try:
-                    record = convert_record(row, file.stem, position, redactor)
+                    record = convert_record(row, file.stem, position, redactor, options.dataset_id)
                 except (ValueError, KeyError, TypeError) as problem:
                     quarantined.append({'file': file.stem, 'row': position, 'reason': type(problem).__name__})
                     continue
@@ -320,7 +327,7 @@ def main():
         file_manifest.append({'name': output.name, 'sessions': count, 'sha256': hashlib.sha256(output.read_bytes()).hexdigest()})
         print(json.dumps({'processedFile': file.stem, 'sessions': count}, ensure_ascii=False), flush=True)
     (options.key.parent / 'redaction-counters.json').write_text(json.dumps(dict(redactor.counts), ensure_ascii=False, indent=2))
-    manifest = {'id': DATASET_ID, 'name': '售后完整对话 · 脱敏版', 'schemaVersion': 1, 'nature': '用户提供的真实历史标注语料；非平台实时采集', 'usage': '仅本机授权分析，未经业务复核不公开、不训练、不自动发布答复知识', 'totals': dict(totals), 'roles': dict(roles), 'intentDistribution': dict(distribution), 'metadataFilesExcluded': metadata_files, 'quarantined': quarantined, 'files': file_manifest, 'scanStatus': 'pending_full_file_rescan'}
+    manifest = {'id': options.dataset_id, 'name': '售后完整对话 · 脱敏版', 'schemaVersion': 1, 'nature': '用户提供的真实历史标注语料；非平台实时采集', 'usage': '仅本机授权分析，未经业务复核不公开、不训练、不自动发布答复知识', 'totals': dict(totals), 'roles': dict(roles), 'intentDistribution': dict(distribution), 'metadataFilesExcluded': metadata_files, 'quarantined': quarantined, 'files': file_manifest, 'scanStatus': 'pending_full_file_rescan'}
     (options.output / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
     print(json.dumps({'totals': totals, 'quarantined': len(quarantined)}, ensure_ascii=False), flush=True)
 

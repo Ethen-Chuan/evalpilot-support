@@ -1,0 +1,69 @@
+.ontology-command-panel { display:flex; flex-direction:column; color:var(--og-ink); min-width:0; font-size:12px; line-height:1.75; }
+.ontology-command-panel p { margin:0; }
+.ontology-command-panel button { cursor:pointer; }
+.ontology-command-panel>header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--og-border); }
+.ontology-command-panel>header>div { display:flex; align-items:center; gap:8px; }
+.ontology-command-panel>header strong { font-size:13px; font-weight:600; }
+.ontology-command-panel>header>button { padding:5px; color:var(--og-muted); }
+.oc-context { padding:12px 16px; background:var(--accent-soft,#edf5f0); border-bottom:1px solid var(--og-border); }
+.oc-context>span { color:var(--og-muted); font-size:10px; margin-right:10px; }
+.oc-context>strong { font-size:13px; font-weight:600; }
+.oc-context>p { font-size:11px; line-height:1.8; margin:5px 0; overflow-wrap:anywhere; }
+.oc-context>small { font-size:10px; color:var(--accent,#39795f); }
+.oc-log { height:340px; min-height:180px; overflow:auto; overscroll-behavior:contain; padding:12px; background:var(--og-panel,#f8faf9); }
+.oc-welcome { color:var(--og-muted); font-size:11px; padding:16px 5px; }
+.oc-welcome>strong { display:block; font-size:13px; color:var(--og-ink); margin-bottom:10px; font-weight:500; }
+.oc-welcome>button,.oc-read>button { display:flex; align-items:center; gap:5px; margin-top:13px; font-size:11px; color:var(--accent,#39795f); }
+.oc-event { border:1px solid var(--og-border); border-radius:6px; background:var(--surface,#fff); padding:13px; margin-bottom:14px; min-width:0; overflow-wrap:anywhere; }
+.oc-event .oc-user { background:var(--accent-soft,#edf5f0); padding:8px 10px; font-size:11px; border-radius:4px; margin-bottom:12px; white-space:pre-wrap; }
+.oc-event-heading { display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:11px; }
+.oc-event-heading svg { color:var(--accent,#39795f); flex-shrink:0; }
+.oc-event-heading strong { font-weight:600; }
+.oc-event-heading>span { font-size:10px; color:var(--og-muted); margin-left:auto; }
+.oc-event.blocked { border-color:#d8b294; }
+.oc-event.blocked .oc-event-heading svg { color:#a66632; }
+.oc-changes { padding:0; margin:10px 0; list-style:none; font-size:11px; }
+.oc-changes li { border-top:1px solid var(--og-border); padding:8px 0; }
+.oc-changes b { font-size:10px; font-weight:500; margin-right:8px; color:var(--accent,#39795f); }
+.oc-changes small { display:block; color:var(--og-muted); font-size:10px; margin-top:5px; }
+.oc-event .oc-validation { font-size:10px; margin:10px 0; color:var(--og-muted); }
+.oc-read { font-size:11px; margin-top:12px; }
+.oc-read>strong { font-weight:600; }
+.oc-read>p { margin:7px 0; }
+.oc-read ul { padding-left:17px; color:var(--og-muted); font-size:10px; }
+.oc-call { border-top:1px solid var(--og-border); padding-top:9px; margin-top:10px; font-size:10px; color:var(--og-muted); }
+.oc-call summary,.oc-help summary { cursor:pointer; }
+.oc-call code { display:block; padding:10px 0; white-space:pre-wrap; overflow-wrap:anywhere; color:var(--og-ink); font-size:10px; }
+.oc-call ol { padding-left:17px; line-height:1.9; }
+.oc-call small { font-size:9px; }
+.oc-call pre { max-height:250px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font-size:10px; }
+.oc-error,.oc-warning,.oc-notice { padding:10px 16px; border-top:1px solid var(--og-border); font-size:11px; overflow-wrap:anywhere; }
+.oc-error { color:#a05239; background:#fcf5ee; }
+.oc-warning { color:#936329; background:#fcf8ef; }
+.oc-notice { color:var(--accent,#39795f); background:var(--accent-soft,#edf5f0); }
+.oc-confirm { padding:12px 15px; background:#fbf7ed; border-block:1px solid #daceaf; }
+.oc-confirm>strong { font-size:12px; font-weight:600; display:block; }
+.oc-confirm>span { color:var(--og-muted); font-size:10px; display:block; margin:6px 0 11px; }
+.oc-confirm>div { display:flex; flex-wrap:wrap; gap:8px; }
+.oc-confirm button,.oc-composer button { display:flex; align-items:center; gap:5px; border:1px solid var(--og-border); border-radius:5px; padding:8px 10px; font-size:11px; }
+.oc-confirm button:first-child,.oc-composer button { background:var(--accent,#39795f); color:white; }
+.oc-composer { padding:13px 15px; border-top:1px solid var(--og-border); background:var(--surface,#fff); }
+.oc-composer label { font-size:11px; font-weight:500; display:block; margin-bottom:7px; }
+.oc-composer textarea { display:block; width:100%; min-width:0; max-height:160px; resize:vertical; padding:9px 10px; border:1px solid var(--og-border); border-radius:6px; font:inherit; font-size:12px; background:var(--surface,#fff); color:var(--og-ink); }
+.oc-composer>div { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:9px; }
+.oc-composer small { font-size:9px; color:var(--og-muted); }
+.oc-help { padding:12px 15px; border-top:1px solid var(--og-border); color:var(--og-muted); font-size:11px; }
+.oc-help p { margin:9px 0; font-size:10px; }
+.oc-help button { display:block; width:100%; text-align:left; padding:7px 0; color:var(--accent,#39795f); border-bottom:1px solid var(--og-border); font-size:10px; overflow-wrap:anywhere; }
+.oc-loading { display:flex; gap:8px; align-items:center; padding:20px; color:var(--og-muted); }
+.ontology-inspector-tabs { display:flex; position:sticky; top:0; z-index:2; background:var(--surface,#fff); border-bottom:1px solid var(--og-border); padding:8px 12px; gap:8px; }
+.ontology-inspector-tabs button { flex:1; padding:8px; border:1px solid transparent; border-radius:5px; font-size:11px; cursor:pointer; }
+.ontology-inspector-tabs button[aria-pressed=true] { color:var(--accent,#39795f); background:var(--accent-soft,#edf5f0); border-color:var(--og-border); }
+.ontology-inspector.is-command-panel { display:flex; flex-direction:column; overflow:hidden; }
+.is-command-panel>.ontology-inspector-tabs { flex-shrink:0; }
+.ontology-command-holder { flex:1; min-height:0; display:flex; flex-direction:column; }
+.ontology-command-holder>.ontology-command-panel { flex:1; min-height:0; }
+.ontology-command-panel>header,.oc-context,.oc-composer,.oc-confirm,.oc-help,.oc-error,.oc-warning,.oc-notice { flex-shrink:0; }
+.oc-context>p { max-height:60px; overflow:auto; }
+.ontology-command-holder .oc-log { flex:1; height:auto; min-height:80px; }
+.oc-help[open] { max-height:180px; overflow:auto; }

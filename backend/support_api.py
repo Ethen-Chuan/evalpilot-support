@@ -21,6 +21,10 @@ from dialogues import DialogueService
 from agent_lab import AgentLab
 from experience import ExperienceService
 from modelops import ModelOpsService
+from customer_simulator import CustomerSimulator
+from ontology import OntologyService
+from service_platform import ServicePlatform
+import quality_corpus
 from trace_categories import describe as describe_trace, listing as trace_listing
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +37,9 @@ DIALOGUES = DialogueService(sys.modules[__name__])
 LAB = AgentLab(sys.modules[__name__])
 EXPERIENCE = ExperienceService(sys.modules[__name__])
 MODELOPS = ModelOpsService(sys.modules[__name__])
+SIMULATOR = CustomerSimulator(sys.modules[__name__])
+ONTOLOGY = OntologyService(sys.modules[__name__])
+SERVICES = ServicePlatform(sys.modules[__name__], ONTOLOGY)
 
 
 class TracedRequestError(ValueError):
@@ -150,7 +157,7 @@ def state():
     metadata = json.loads((ROOT / "datasets/manifest.json").read_text())
     runs = sorted(records("run"), key=lambda run: run["createdAt"], reverse=True)
     conversations = records("conversation")
-    return {"corpora": records("corpus"), "datasets": metadata, "runs": [run_summary(run) for run in runs], "knowledge": records("knowledge"), "actions": sorted(records("action"), key=lambda action: action["createdAt"], reverse=True), "uat": get("uat", "latest"), "conversations": sorted(conversations, key=lambda conversation: conversation["createdAt"], reverse=True)[:30], "intentLabels": INTENTS, "runtime": {"engine": ENGINE_VERSION, "mode": "本地真实训练与推理", "model": "TF-IDF + LinearSVC", "externalCalls": False, "productionConnections": False}, "traceStats": trace_stats(), "references": json.loads((ROOT / "backend/references.json").read_text())}
+    return {"corpora": records("corpus"), "qualityCorpora": records("quality_corpus"), "datasets": metadata, "runs": [run_summary(run) for run in runs], "knowledge": records("knowledge"), "actions": sorted(records("action"), key=lambda action: action["createdAt"], reverse=True), "uat": get("uat", "latest"), "conversations": sorted(conversations, key=lambda conversation: conversation["createdAt"], reverse=True)[:30], "intentLabels": INTENTS, "runtime": {"engine": ENGINE_VERSION, "mode": "本地真实训练与推理", "model": "TF-IDF + LinearSVC", "externalCalls": False, "productionConnections": False}, "traceStats": trace_stats(), "references": json.loads((ROOT / "backend/references.json").read_text())}
 
 
 def trace_summary(trace):
@@ -359,6 +366,19 @@ def report_markdown(run):
 
 
 def dispatch_get(path, query):
+    if path.startswith('/api/support/services/'):
+        return SERVICES.get(path.removeprefix('/api/support/services/')), None, None
+    if path == '/api/support/quality/records':
+        return quality_corpus.listing(sys.modules[__name__], query), None, None
+    if path.startswith('/api/support/quality/records/'):
+        record = get('quality_record', path.removeprefix('/api/support/quality/records/'))
+        if not record or record['datasetId'] != query.get('project', [''])[0]:
+            raise ValueError('该质检项目中不存在此记录')
+        return record, None, None
+    if path.startswith('/api/support/ontology/'):
+        return ONTOLOGY.get(path, query), None, None
+    if path.startswith('/api/support/simulator/'):
+        return SIMULATOR.get(path, query), None, None
     if path == '/api/support/modelops/state':
         return MODELOPS.state(), None, None
     if path.startswith('/api/support/lab/multimodal/images/'):
@@ -453,6 +473,12 @@ def dispatch_get(path, query):
 
 
 def dispatch_post(path, body):
+    if path.startswith('/api/support/services/'):
+        return SERVICES.post(path.removeprefix('/api/support/services/'), body)
+    if path.startswith('/api/support/ontology/'):
+        return ONTOLOGY.post(path, body)
+    if path.startswith('/api/support/simulator/'):
+        return SIMULATOR.post(path, body)
     if path.startswith('/api/support/modelops/'):
         return MODELOPS.post(path, body)
     if path.startswith('/api/support/experience/'):

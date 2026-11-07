@@ -15,7 +15,7 @@ async function check({ packageRoot = process.env.PLAYWRIGHT_PACKAGE_ROOT, output
     import React from 'react';
     import { createRoot } from 'react-dom/client';
     import { Theme } from '@radix-ui/themes';
-    import { DatasetLabels, labelFields } from './src/DatasetLabels';
+    import { DatasetLabels, businessLabelFields } from './src/DatasetLabels';
     const total = 16500;
     const rows = {
       intent: [['fault_repair', 12345], ['info_query', 2300], ['feature_inquiry', 830], ['policy_inquiry', 390], ['complaint', 200]],
@@ -27,14 +27,24 @@ async function check({ packageRoot = process.env.PLAYWRIGHT_PACKAGE_ROOT, output
       expected_system: [['类别-DEMOSYSTEMA', 7000], ['类别-DEMOSYSTEMB', 3500], ['类别-DEMOSYSTEMC', 2100], ['类别-DEMOSYSTEMD', 1500], ['类别-DEMOSYSTEME', 550], ['类别-DEMOSYSTEMF', 220], ['类别-DEMOSYSTEMG', 90]],
       knowledge_category: [['这是一项专门用于验证长标签省略与可访问名称的测试分类', 10000], ['功能使用', 5000], ['售后政策与流程', 450]],
     };
-    const facets = { total, projectTotal: total, scope: 'all', filters: {}, policy: '仅用于排版测试的合成统计，非客户数据', scopes: [{id:'all',name:'全部会话',count:16500},{id:'regular',name:'常规会话',count:15000},{id:'invalid',name:'无效会话',count:700},{id:'handoff',name:'直接转人工',count:500},{id:'unclassified',name:'范围待确认',count:300}], dimensions: Object.entries(labelFields).map(([field,name]) => {
+    const facets = { total, projectTotal: total, scope: 'all', filters: {}, policy: '仅用于排版测试的合成统计，非客户数据', scopes: [{id:'all',name:'全部会话',count:16500},{id:'regular',name:'常规会话',count:15000},{id:'invalid',name:'无效会话',count:700},{id:'handoff',name:'直接转人工',count:500},{id:'unclassified',name:'范围待确认',count:300}], dimensions: Object.entries(businessLabelFields).map(([field,name]) => {
       const covered = rows[field].reduce((sum, item) => sum + item[1], 0);
       return {field,name,total,covered,missing:total-covered,coverage:covered/total,multiValueSessions:0,conflictSessions:0,values:rows[field].map(([value,count])=>({value,count,ratio:count/total}))};
     }) };
     const state = new URLSearchParams(location.search).get('state');
+    const scope = ['invalid', 'handoff', 'unclassified'].includes(state) ? state : 'all';
+    if (scope !== 'all') {
+      facets.total = 2; facets.profileVersion = 2; facets.unlabeledSessions = scope === 'unclassified' ? 2 : 0;
+      facets.dimensions.forEach(dimension => Object.assign(dimension, {total:2,covered:0,missing:2,coverage:0,values:[]}));
+      if (scope !== 'unclassified') {
+        const field = scope === 'invalid' ? 'invalid_reason' : 'handoff_reason';
+        facets.dimensions.push({field,name:scope==='invalid'?'无效原因':'转人工原因',kind:'source_text',total:2,covered:2,missing:0,coverage:1,multiValueSessions:0,conflictSessions:0,values:[{value:'这是一段仅用于排版验证的较长原始原因说明，保留完整文字并在窄屏自动换行，不应覆盖右侧的会话数量或比例。',count:1,ratio:.5},{value:'前文缺失，需人工核对',count:1,ratio:.5}]});
+      }
+      for (const [field,name] of [['is_invalid','是否无效会话'],['direct_handoff','是否直接转人工']]) facets.dimensions.push({field,name,total:2,covered:0,missing:2,coverage:0,multiValueSessions:0,conflictSessions:0,values:[]});
+    }
     const filters = state === 'selected' ? {intent: 'fault_repair'} : {};
     if (state === 'zero') { facets.total = 0; facets.dimensions.forEach(dimension => { Object.assign(dimension,{total:0,covered:0,missing:0,coverage:null,values:[]}); }); }
-    createRoot(document.getElementById('root')).render(<Theme><div className="visual-fixture"><p className="fixture-caption">隔离排版验证 · 合成统计，非客户数据</p><DatasetLabels facets={facets} pending={state==='loading'} error={state==='error'?'fixture':''} scope="all" filters={filters} chooseScope={()=>{}} choose={()=>{}} remove={()=>{}} clear={()=>{}} refresh={()=>{}} /></div></Theme>);
+    createRoot(document.getElementById('root')).render(<Theme><div className="visual-fixture"><p className="fixture-caption">隔离排版验证 · 合成统计，非客户数据</p><DatasetLabels facets={facets} pending={state==='loading'} error={state==='error'?'fixture':''} scope={scope} filters={filters} chooseScope={()=>{}} choose={()=>{}} remove={()=>{}} clear={()=>{}} refresh={()=>{}} /></div></Theme>);
   `;
   const built = await esbuild.build({ stdin: { contents: fixture, resolveDir: project, sourcefile: 'label-visual.tsx', loader: 'tsx' }, bundle: true, write: false, format: 'iife', loader: { '.css': 'empty' }, define: { 'process.env.NODE_ENV': '"production"' } });
   const assets = await fs.readdir(project + '/dist/assets');
@@ -112,6 +122,15 @@ async function check({ packageRoot = process.env.PLAYWRIGHT_PACKAGE_ROOT, output
     await render(960, 'light', 'zero');
     assert.equal(await page.locator('.dataset-label-card').count(), 0);
     assert.ok(await page.getByText('没有符合条件的会话').isVisible());
+    for (const scope of ['invalid', 'handoff', 'unclassified']) {
+      for (const width of [1440, 760, 390, 320]) {
+        await render(width, 'light', scope);
+        assert.equal(await page.locator('.dataset-label-card').count(), scope === 'unclassified' ? 0 : 1);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        assert.equal(await page.locator('.dataset-label-name > span').evaluateAll(elements => elements.every(element => element.scrollWidth <= element.clientWidth + 1)), true);
+        await page.locator('.dataset-labels').screenshot({path:path.join(output, 'scope-' + scope + '-' + width + '.png')});
+      }
+    }
     for (const palette of ['graphite', 'teal', 'orange']) {
       await render(960, 'light', '', palette);
       const matching = await page.locator('.dataset-label-track i').first().evaluate(element => getComputedStyle(element).backgroundColor === getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().replace(/^#([0-9a-f]{6})$/i, (_, hex) => `rgb(${parseInt(hex.slice(0,2),16)}, ${parseInt(hex.slice(2,4),16)}, ${parseInt(hex.slice(4,6),16)})`));

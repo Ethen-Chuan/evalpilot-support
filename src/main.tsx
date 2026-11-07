@@ -4,6 +4,8 @@ import '@radix-ui/themes/styles.css';
 import SupportApp from './SupportApp';
 import { AppearanceProvider } from './appearance';
 import './support.css';
+import './workbench.css';
+import './ontology-studio.css';
 
 class ErrorBoundary extends React.Component<{children:React.ReactNode},{failed:boolean}> {
   state = {failed:false};

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { ArrowClockwise, ArrowDown, ArrowRight, ArrowSquareOut, ArrowUpRight, ArrowsLeftRight, BookOpen, Bug, CaretDown, CaretLeft, CaretRight, ChartBar, Check, CheckCircle, CircleNotch, ClipboardText, Database, DownloadSimple, Flask, FolderOpen, GearSix, GithubLogo, Headset, Info, Kanban, Lightbulb, List, MagnifyingGlass, Moon, Palette, PaperPlaneTilt, PencilSimple, Play, Plus, ShieldCheck, Sparkle, SquaresFour, Star, Sun, Target, ThumbsDown, ThumbsUp, WarningCircle, X } from '@phosphor-icons/react';
 import { Badge, Button, DateText, Empty, ExternalLink, Modal, Panel, PanelHead, SearchInput, Status, number } from './ui';
@@ -14,17 +14,27 @@ import { ExperienceDashboard } from './ExperienceDashboard';
 import { QuickStart } from './QuickStart';
 import { ModelOps } from './ModelOps';
 import { ConnectionModal } from './ModelConnection';
+import { CustomerSimulator } from './CustomerSimulator';
+import { OntologyWorkspace } from './OntologyWorkspace';
+import { ServicePlatform } from './ServicePlatform';
+import { Graph as GraphIcon } from '@phosphor-icons/react';
 import { rememberedRun, runFromHash, runUrl } from './labNavigation';
 import { ChatsCircle } from '@phosphor-icons/react';
 import './traces.css';
 
-const routes: { id: Page; name: string; icon: typeof SquaresFour; advanced?: boolean }[] = [
-  { id: 'datasets', name: '项目集', icon: FolderOpen },
+const routes: { id: Page; name: string; icon: typeof SquaresFour; advanced?: boolean; group?: string; aliases?: string[] }[] = [
+  { id: 'service', name: '服务总览', icon: SquaresFour, group: '服务设计' },
+  { id: 'services', name: '服务能力', icon: ClipboardText },
+  { id: 'simulator', name: '对话实验室', icon: Headset, aliases: ['客服模拟台'] },
+  { id: 'ontology', name: '本体图谱', icon: GraphIcon, aliases: ['Ontology', 'ontology', '知识图谱'] },
+  { id: 'datasets', name: '客服数据', icon: FolderOpen, group: '质量与发布', aliases: ['项目集'] },
   { id: 'benchmark', name: '运行评测', icon: Flask },
-  { id: 'overview', name: '结果大盘', icon: SquaresFour },
-  { id: 'compare', name: '模型对比', icon: ArrowsLeftRight },
+  { id: 'releases', name: '沙箱发布', icon: ShieldCheck },
+  { id: 'improve', name: '体验回流', icon: Lightbulb, group: '运营与改进' },
+  { id: 'overview', name: '评测洞察', icon: ChartBar, aliases: ['结果大盘'] },
   { id: 'modelops', name: '模型运营', icon: ShieldCheck },
-  { id: 'guide', name: '使用说明', icon: BookOpen },
+  { id: 'guide', name: '使用说明', icon: BookOpen, advanced: true },
+  { id: 'compare', name: '模型对比', icon: ArrowsLeftRight, advanced: true },
   { id: 'playground', name: '客服试聊', icon: Headset, advanced: true },
   { id: 'models', name: '模型连接', icon: GearSix, advanced: true },
   { id: 'knowledge', name: '对话知识库', icon: BookOpen, advanced: true },
@@ -35,7 +45,7 @@ const routeFromHash = (): Page => {
   const route = location.hash.slice(1).split('?')[0];
   if (route === 'runs' || route === 'badcases') return 'benchmark';
   if (route === 'actions' || route === 'sources') return route;
-  return routes.find(value => value.id === route)?.id || 'datasets';
+  return routes.find(value => value.id === route)?.id || 'service';
 };
 class ApiError extends Error { traceId?: string; }
 async function api<T>(path: string, payload?: unknown): Promise<T> {
@@ -54,6 +64,9 @@ export default function SupportApp() {
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
   const [mobile, setMobile] = useState(false);
+  const [navigationMode, setNavigationMode] = useState<'auto' | 'wide' | 'compact'>('auto');
+  const compactNavigation = navigationMode === 'compact' || (navigationMode === 'auto' && page === 'ontology');
+  const appearance = useAppearance();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [connectionOpen, setConnectionOpen] = useState(false);
@@ -100,6 +113,12 @@ export default function SupportApp() {
   if (!state) return <div className="loading-screen"><span className="brand-symbol"><SquaresFour size={28} weight="bold" /></span><h1>EvalPilot</h1><p>{error || '正在读取本地评测工作区…'}</p>{error ? <Button primary onClick={() => void refresh()}>重新连接</Button> : <div className="loading-track" />}</div>;
   const active = state.runs.find(run => run.status === 'running');
   const content: Record<Page, ReactNode> = {
+    service: <ServicePlatform view="home" />,
+    services: <ServicePlatform view="studio" />,
+    releases: <ServicePlatform view="releases" />,
+    improve: <ServicePlatform view="improve" />,
+    simulator: <CustomerSimulator />,
+    ontology: <OntologyWorkspace />,
     modelops: <ModelOps corpora={state.corpora} />,
     guide: <QuickStart />,
     overview: <ExperienceDashboard />,
@@ -115,16 +134,17 @@ export default function SupportApp() {
     settings: <Settings state={state} />,
     traces: <TraceView traceId={traceId} choose={identifier => { setTraceId(identifier); setPage('traces'); const params = new URLSearchParams(location.hash.split('?')[1] || ''); if (identifier) params.set('trace', identifier); else params.delete('trace'); location.hash = `traces${params.size ? `?${params}` : ''}`; window.scrollTo(0,0); }} run={identifier => { if (identifier.startsWith('MMRUN-')) { location.hash = `compare?mode=vision&mmrun=${encodeURIComponent(identifier)}`; setPage('compare'); } else if (identifier.startsWith('EVAL-')) { location.hash = `benchmark?run=${encodeURIComponent(identifier)}`; setPage('benchmark'); } else { setSelectedRunId(identifier); go('benchmark'); } }} conversation={identifier => { setPage('knowledge'); location.hash = traceConversationUrl(identifier, location.hash); window.scrollTo(0,0); }} notify={notify} changed={refresh} />,
   };
-  return <div className="app-shell">
+  return <div className={'app-shell workbench-shell' + (compactNavigation ? ' compact-navigation' : '')} data-page={page}>
     {mobile && <div className="nav-scrim" onClick={() => setMobile(false)} />}
     <aside className={`sidebar ${mobile ? 'open' : ''}`}>
-      <a className="brand" href="#datasets" onClick={() => go('datasets')}><span className="brand-symbol"><SquaresFour size={23} weight="bold" /></span><span>EvalPilot<small>模型评测与运营</small></span></a>
-      <button className="workspace" onClick={() => go('settings')}><span className="workspace-icon">E</span><span>评测工作区<small>项目管理 · 评测与运营</small></span><CaretDown size={13} /></button>
-      <nav aria-label="主导航">{routes.filter(route => !route.advanced).map(route => <button key={route.id} className={`nav-item ${page === route.id ? 'active' : ''}`} aria-current={page === route.id ? 'page' : undefined} onClick={() => go(route.id)}><route.icon size={19} /><span>{route.name}</span></button>)}</nav>
+      <a className="brand" href="#service" onClick={() => go('service')} title="EvalPilot · 智能服务平台"><span className="brand-symbol"><GraphIcon size={23} weight="bold" /></span><span>EvalPilot<small>SERVICE EXPERIENCE</small></span></a>
+      <button className="workspace-search" onClick={() => setSearchOpen(true)} aria-label="搜索工作区"><MagnifyingGlass size={17} /><span>搜索工作区</span><kbd>⌘ K</kbd></button>
+      <button className="workspace" onClick={() => go('settings')}><span className="workspace-icon">E</span><span>智能服务工作区<small>设计 · 验收 · 交付 · 改进</small></span><CaretDown size={13} /></button>
+      <nav aria-label="主导航">{routes.filter(route => !route.advanced).map(route => <Fragment key={route.id}>{route.group && <div className="nav-section-label">{route.group}</div>}<button className={`nav-item ${page === route.id ? 'active' : ''}`} title={route.name} aria-label={route.name} aria-current={page === route.id ? 'page' : undefined} onClick={() => go(route.id)}><route.icon size={19} weight={page === route.id ? 'duotone' : 'regular'} /><span>{route.name}</span>{page === route.id && <i className="nav-active-mark" />}</button></Fragment>)}</nav>
       <details className="secondary-navigation" key={routes.find(route => route.id === page)?.advanced ? 'advanced' : 'main'} open={routes.find(route => route.id === page)?.advanced || undefined}><summary>更多工具<CaretDown size={14} /></summary><nav aria-label="更多工具">{routes.filter(route => route.advanced).map(route => <button key={route.id} className={`nav-item ${page === route.id ? 'active' : ''}`} aria-current={page === route.id ? 'page' : undefined} onClick={() => go(route.id)}><route.icon size={18} /><span>{route.name}</span></button>)}</nav></details>
-      <div className="sidebar-bottom"><div className="workspace-health"><span className="health-dot" /><strong>本地引擎已就绪</strong><p>本地训练 · 外部调用须确认</p><button onClick={() => go('guide')}>如何开始使用 <ArrowUpRight size={13} /></button></div><div className="profile"><span>评</span><div>评测团队<small>Local workspace</small></div><ShieldCheck size={18} /></div></div>
+      <div className="sidebar-bottom"><div className="workspace-health"><span className={'health-dot' + (error ? ' offline' : '')} /><strong>{error ? '本地服务待重连' : '本地工作区已连接'}</strong><p>数据留在本机 · 外部调用须确认</p><button onClick={() => go('guide')}>查看能力边界 <ArrowUpRight size={13} /></button></div><div className="profile"><span>EP</span><div>个人工作区<small>LOCAL WORKSPACE</small></div><button className="navigation-collapse" title={compactNavigation ? '展开侧边导航' : '收起侧边导航'} aria-label={compactNavigation ? '展开侧边导航' : '收起侧边导航'} onClick={() => setNavigationMode(compactNavigation ? 'wide' : 'compact')}>{compactNavigation ? <CaretRight size={17} /> : <CaretLeft size={17} />}</button></div></div>
     </aside>
-    <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="icon-button menu-toggle" aria-label="打开导航" onClick={() => setMobile(true)}><List size={21} /></button><span>模型评测</span><CaretRight size={13} /><strong>{routes.find(route => route.id === page)?.name}</strong></div><div className="topbar-actions"><button className="appearance-shortcut" onClick={() => setConnectionOpen(true)} aria-label="连接模型 / API Key"><Plus size={18} /><span>连接模型</span></button><button className="appearance-shortcut" onClick={() => setGuideOpen(true)} aria-label="打开使用说明"><BookOpen size={18} /><span>使用说明</span></button><button className="appearance-shortcut" onClick={() => setAppearanceOpen(true)} aria-label="修改配色"><Palette size={18} /><span>外观</span></button><span className="top-avatar">评</span></div></header>
+    <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="icon-button menu-toggle" aria-label="打开导航" onClick={() => setMobile(true)}><List size={21} /></button><span>工作区</span><CaretRight size={13} /><strong>{routes.find(route => route.id === page)?.name}</strong><span className="environment-label">LOCAL</span></div><div className="topbar-actions"><button className="topbar-search" onClick={() => setSearchOpen(true)} aria-label="查找功能"><MagnifyingGlass size={16} /><span>查找功能</span><kbd>⌘ K</kbd></button><button className="appearance-shortcut" onClick={() => setGuideOpen(true)} aria-label="打开使用说明"><BookOpen size={17} /></button><button className="appearance-shortcut" onClick={() => appearance.update({ mode: appearance.mode === 'light' ? 'dark' : 'light' })} aria-label={appearance.mode === 'light' ? '切换深色模式' : '切换浅色模式'}>{appearance.mode === 'light' ? <Moon size={17} /> : <Sun size={17} />}</button><button className="appearance-shortcut" onClick={() => setAppearanceOpen(true)} aria-label="修改配色"><Palette size={17} /></button><button className="connect-model-button" onClick={() => setConnectionOpen(true)} aria-label="连接模型 / API Key"><Plus size={16} /><span>连接模型</span></button></div></header>
       <main className="main-content">{error && <div className="notice error" role="alert"><WarningCircle size={18} /><span>{error}。当前显示上次读取的数据。</span><button onClick={() => void refresh()}>重试</button></div>}{active && page !== 'benchmark' && <button className="active-run-bar" onClick={() => inspect(active)}><CircleNotch size={17} className="spin" /><span>{datasetShort(active.datasetId)} · {active.stage}</span><strong>查看进度 <ArrowRight size={14} /></strong></button>}{page === 'knowledge' && /^traces(?:\?|$)/.test(returnTo) && <div className="workflow-return"><a className="text-link" href={`#${returnTo}`}><CaretLeft size={15} />返回执行记录</a></div>}{page === 'knowledge' && !returnOverview && !/^traces(?:\?|$)/.test(returnTo) && runFromHash() && <div className="workflow-return"><a className="text-link" href={runFromHash().startsWith('MMRUN-') ? `#compare?mode=vision&mmrun=${encodeURIComponent(runFromHash())}` : runUrl('benchmark', runFromHash())}><CaretLeft size={15} />返回本批评测</a></div>}{content[page]}<footer className="page-footer"><span><ShieldCheck size={13} />外部模型仅确认后调用 · 业务动作仅沙箱</span><button onClick={() => go('guide')}>使用说明与能力边界 <ArrowUpRight size={13} /></button></footer></main>
     </div>
     {toast && <div className="toast" role="status"><Info size={18} /><span>{toast}</span><button onClick={() => setToast('')} aria-label="关闭提示"><X size={16} /></button></div>}
@@ -136,7 +156,7 @@ export default function SupportApp() {
     <Evidence sample={evidence} run={selected} state={state} close={() => setEvidence(null)} makeAction={makeAction} />
     <KnowledgeEditor policy={edit} close={() => setEdit(null)} submit={async (policy, content) => { await api(`/knowledge/${policy.id}`, { content, version: policy.version }); setEdit(null); await refresh(); notify('知识库新版本已保存。请重新运行中文业务回归。'); }} />
     <Modal open={uatOpen} onClose={() => setUatOpen(false)} title="中文客服业务回归" description="自编验收用例，校验引用、业务边界与转人工路径；不宣称是独立中文 Benchmark。" wide>{state.uat ? <div><div className="uat-summary"><strong>{state.uat.passed}<span> / {state.uat.total}</span></strong><div><h3>{state.uat.passed === state.uat.total ? '当前运行全部通过' : '当前运行仍有失败用例'}</h3><p><DateText value={state.uat.createdAt} /> · 知识快照 #{state.uat.knowledgeHash.slice(0,10)}</p></div></div><div className="uat-list">{state.uat.tests.map(test => <details key={test.id}><summary><Badge tone={test.passed ? 'green' : 'red'}>{test.passed ? '通过' : '失败'}</Badge><span>{test.text}</span><code>{test.id}</code><CaretDown size={15} /></summary><div className="content-box">{test.answer}</div><p>知识命中：{test.assertions.source ? '正确' : '失败'} · 转人工路径：{test.assertions.handoff ? '正确' : '失败'} · 边界表述：{test.assertions.boundary ? '完整' : '缺失'}</p></details>)}</div></div> : <Empty title="尚未执行业务回归" action={<Button primary onClick={runUat}>现在运行</Button>} />}</Modal>
-    <Modal open={searchOpen} onClose={() => setSearchOpen(false)} title="搜索工作区" description="快速进入功能页面"><SearchInput value={search} onChange={setSearch} placeholder="输入功能名称" /><div className="command-results">{routes.filter(route => route.name.includes(search)).map(route => <button key={route.id} onClick={() => { go(route.id); setSearchOpen(false); setSearch(''); }}><route.icon size={20} /><span>{route.name}</span><ArrowRight size={16} /></button>)}{routes.filter(route => route.name.includes(search)).length === 0 && <Empty title="未找到对应功能" description="试试“项目”“模型”或“使用说明”。" />}</div></Modal>
+    <Modal open={searchOpen} onClose={() => setSearchOpen(false)} title="搜索工作区" description="快速进入功能页面"><SearchInput value={search} onChange={setSearch} placeholder="输入功能名称" /><div className="command-results">{routes.filter(route => [route.name, ...(route.aliases || [])].some(name => name.toLowerCase().includes(search.toLowerCase()))).map(route => <button key={route.id} onClick={() => { go(route.id); setSearchOpen(false); setSearch(''); }}><route.icon size={20} /><span>{route.name}</span><ArrowRight size={16} /></button>)}{routes.filter(route => [route.name, ...(route.aliases || [])].some(name => name.toLowerCase().includes(search.toLowerCase()))).length === 0 && <Empty title="未找到对应功能" description="试试“项目”“模型”或“使用说明”。" />}</div></Modal>
   </div>;
 }
 
@@ -159,7 +179,7 @@ function Overview({ state, go, start, inspect, runUat, busy }: { state: State; g
 }
 
 function Datasets({ state, preview }: { state: State; preview: (dataset: Dataset) => void }) {
-  return <DatasetProjects corpora={state.corpora} references={state.datasets} preview={preview} />;
+  return <DatasetProjects corpora={state.corpora} qualityCorpora={state.qualityCorpora} references={state.datasets} preview={preview} />;
 }
 
 function RunSelector({ state, selected, choose }: { state: State; selected?: Run; choose: (id: string) => void }) { return <select className="select run-select" aria-label="选择评测实验" value={selected?.id || ''} onChange={event => choose(event.target.value)}>{state.runs.map(run => <option key={run.id} value={run.id}>{datasetShort(run.datasetId)} · {run.id}</option>)}</select>; }

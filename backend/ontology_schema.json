@@ -1,0 +1,62 @@
+{
+  "version": "aftersales-ontology-v2",
+  "title": "售后领域本体",
+  "boundary": "这是用于解释本体的人工编写示例，不是厂商故障手册。真实语料只按已有标注建立关系，不推断因果或自动形成维修结论。",
+  "classes": [
+    {"id": "device", "label": "设备", "description": "被服务的业务对象；设备叫法不能代替具体型号或身份。"},
+    {"id": "model", "label": "设备型号", "description": "规定故障码的适用范围；不同型号可以使用相同的代码。"},
+    {"id": "code", "label": "故障码", "description": "设备报告的标识，不是症状，也不是已确认的故障原因。"},
+    {"id": "component", "label": "部件", "description": "设备的组成部分；候选关联不等于已确认损坏。"},
+    {"id": "symptom", "label": "症状", "description": "用户观察到的现象，不能直接当作根因。"},
+    {"id": "action", "label": "服务动作", "description": "检查、澄清或升级处理建议，不代表已执行真实业务动作。"},
+    {"id": "ticket", "label": "工单", "description": "服务过程的业务记录；本演示没有连接真实工单系统。"}
+  ],
+  "entities": [
+    {"id": "equipment", "label": "整机", "class": "device", "aliases": ["主机", "机子", "机器", "设备"], "description": "这些叫法在本示例中归一到设备概念，不自动认定是同一台物理设备。"},
+    {"id": "model-a", "label": "A-100", "class": "model", "aliases": [], "description": "虚构型号，用来演示代码的适用范围。"},
+    {"id": "model-b", "label": "A-200", "class": "model", "aliases": [], "description": "另一个虚构型号，同名故障码并不共享诊断结论。"},
+    {"id": "code-a", "label": "E102 · A-100", "class": "code", "code": "E102", "model": "model-a", "aliases": [], "description": "虚构映射：仅在 A-100 示例范围内关联主控板这一候选部件。"},
+    {"id": "code-b", "label": "E102 · A-200", "class": "code", "code": "E102", "model": "model-b", "aliases": [], "description": "虚构映射：A-200 的 E102 关联供电模块候选，不能套用 A-100 关系。"},
+    {"id": "mainboard", "label": "主控板", "class": "component", "aliases": ["主控模块"], "description": "仅是示例候选部件，不能据此建议客户自行拆机或换板。"},
+    {"id": "power", "label": "供电模块", "class": "component", "aliases": [], "description": "用于展示同码不同型号的候选部件差异。"},
+    {"id": "display", "label": "显示模组", "class": "component", "aliases": [], "description": "设备部件示例；黑屏不一定由该部件造成。"},
+    {"id": "startup", "label": "启动异常", "class": "symptom", "aliases": ["开不了机", "无法开机", "启动不了"], "description": "范围较宽的现象；仍需核实指示灯、屏幕菜单等信息。"},
+    {"id": "black", "label": "屏幕黑屏", "class": "symptom", "aliases": ["黑屏", "屏幕不亮"], "description": "仅说明屏幕现象，不能与无法上电直接画等号。"},
+    {"id": "no-power", "label": "无法上电", "class": "symptom", "aliases": [], "description": "需要供电观察证据，不能从一句“开不了机”直接推断。"},
+    {"id": "ask-model", "label": "确认设备型号", "class": "action", "aliases": [], "description": "故障码缺少适用型号时，先澄清范围。"},
+    {"id": "check-state", "label": "核实外部状态", "class": "action", "aliases": [], "description": "核实指示灯、屏幕菜单及已尝试步骤，不指导拆机。"},
+    {"id": "handoff", "label": "专业售后复核", "class": "action", "aliases": ["找人工"], "description": "维修决策交给有资质人员；演示仅展示建议，不执行转接。"},
+    {"id": "ticket-example", "label": "待复核工单示例", "class": "ticket", "aliases": [], "description": "虚构记录，展示服务动作与业务记录之间的关系。"}
+  ],
+  "rules": [
+    {"id": "model-scope", "label": "故障码必须限定型号", "description": "同一个代码不能跨型号套用；型号缺失或多个型号混杂时先澄清。"},
+    {"id": "known-code", "label": "未知代码不补造映射", "description": "词典没有记录的代码保留为未知，不猜测关联部件。"},
+    {"id": "candidate-only", "label": "候选部件不等于维修结论", "description": "图中候选关联不能授权换件；必须由专业人员进一步核实。"},
+    {"id": "symptom-boundary", "label": "现象不能直接当作根因", "description": "“开不了机”归为启动异常，不直接等同于无法上电；黑屏也不等同于主板损坏。"}
+  ],
+  "relations": [
+    {"source": "equipment", "target": "model-a", "type": "has_model", "label": "示例可选型号"},
+    {"source": "equipment", "target": "model-b", "type": "has_model", "label": "示例可选型号"},
+    {"source": "code-a", "target": "model-a", "type": "scoped_to", "label": "适用于型号"},
+    {"source": "code-b", "target": "model-b", "type": "scoped_to", "label": "适用于型号"},
+    {"source": "code-a", "target": "mainboard", "type": "candidate_component", "label": "候选部件"},
+    {"source": "code-b", "target": "power", "type": "candidate_component", "label": "候选部件"},
+    {"source": "code-a", "target": "startup", "type": "presents_as", "label": "示例关联现象"},
+    {"source": "code-b", "target": "no-power", "type": "presents_as", "label": "示例关联现象"},
+    {"source": "equipment", "target": "mainboard", "type": "has_component", "label": "示例组成部件"},
+    {"source": "equipment", "target": "power", "type": "has_component", "label": "示例组成部件"},
+    {"source": "equipment", "target": "display", "type": "has_component", "label": "示例组成部件"},
+    {"source": "startup", "target": "check-state", "type": "next_step", "label": "需要核实"},
+    {"source": "black", "target": "check-state", "type": "next_step", "label": "需要核实"},
+    {"source": "mainboard", "target": "handoff", "type": "needs_review", "label": "需专业复核"},
+    {"source": "power", "target": "handoff", "type": "needs_review", "label": "需专业复核"},
+    {"source": "handoff", "target": "ticket-example", "type": "records_in", "label": "记录于（示例）"},
+    {"source": "code-a", "target": "rule:model-scope", "type": "governed_by", "label": "受约束"},
+    {"source": "code-b", "target": "rule:model-scope", "type": "governed_by", "label": "受约束"},
+    {"source": "mainboard", "target": "rule:candidate-only", "type": "governed_by", "label": "受约束"},
+    {"source": "power", "target": "rule:candidate-only", "type": "governed_by", "label": "受约束"},
+    {"source": "startup", "target": "rule:symptom-boundary", "type": "governed_by", "label": "受约束"},
+    {"source": "class:code", "target": "rule:known-code", "type": "governed_by", "label": "受约束"},
+    {"source": "rule:model-scope", "target": "ask-model", "type": "requires", "label": "缺失时要求"}
+  ]
+}
